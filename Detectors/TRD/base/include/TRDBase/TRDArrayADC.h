@@ -26,6 +26,7 @@ namespace trd
 
 // ported from cblume original code in AliRoot, possibly some modifications
 //
+#include "Rtypes.h"
 
 class AliTRDSignalIndex;
 class TRDArrayADC
