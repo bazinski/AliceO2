@@ -27,5 +27,3 @@
 #pragma link C++ class o2::trd::TRDArrayADC + ;
 
 #endif
-:
-#endif
