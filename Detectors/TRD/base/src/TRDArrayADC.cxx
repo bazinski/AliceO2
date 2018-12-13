@@ -34,8 +34,7 @@ Short_t *TRDArrayADC::fgLutPadNumbering = 0x0;
 
 //____________________________________________________________________________________
 TRDArrayADC::TRDArrayADC()
-               :TObject()
-               ,fNdet(0)
+               :fNdet(0)
                ,fNrow(0)
                ,fNcol(0)
 	       ,fNumberOfChannels(0)
