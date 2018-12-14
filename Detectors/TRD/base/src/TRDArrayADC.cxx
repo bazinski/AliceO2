@@ -169,9 +169,9 @@ Short_t TRDArrayADC::GetDataBits(Int_t row, Int_t col, Int_t time) const
   Short_t tempval = GetData(row,col,time);
   // Be aware of manipulations introduced by pad masking in the RawReader
   // Only output the manipulated Value
-  CLRBIT(tempval, 10);
-  CLRBIT(tempval, 11);
-  CLRBIT(tempval, 12);
+  tempval |= 0UL << 10;//CLRBIT(tempval, 10);
+  tempval |= 0UL << 11;//CLRBIT(tempval, 11);
+  tempval |= 0UL << 12;//CLRBIT(tempval, 12);
   return tempval;
 
 }
@@ -195,13 +195,13 @@ UChar_t TRDArrayADC::GetPadStatus(Int_t row, Int_t col, Int_t time) const
   UChar_t padstatus = 0;
   Short_t signal = GetData(row,col,time);
   if(signal > 0 && TESTBIT(signal, 10)){
-    if(TESTBIT(signal, 11))
-      if(TESTBIT(signal, 12))
+    if(signal & 0x800 )//TESTBIT(signal, 11))
+      if(signal & 0x1000)//TESTBIT(signal, 12))
 	padstatus = AliTRDCalPadStatus::kPadBridgedRight;
       else
 	padstatus = AliTRDCalPadStatus::kNotConnected;
     else
-      if(TESTBIT(signal, 12))
+      if(signal & 0x1000)//TESTBIT(signal, 12))
 	padstatus = AliTRDCalPadStatus::kPadBridgedLeft;
       else
 	padstatus = AliTRDCalPadStatus::kMasked;
