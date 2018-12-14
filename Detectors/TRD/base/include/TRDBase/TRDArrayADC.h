@@ -82,9 +82,10 @@ class TRDArrayADC
   Int_t fNumberOfChannels;  //  Number of MCM channels per row
   Int_t fNtime;   //Number of time bins
   Int_t fNAdim;   //Dimension of the ADC array
-  Short_t* fADC;  //[fNAdim]   //Pointer to adc values
-  static std::vector<Short_t> fgLutPadNumbering;   //  [fNcol] Look Up Table
-
+//  std::vector<Short_t> fADC;  //[fNAdim]   //Pointer to adc values
+  Short_t *fADC;  //[fNAdim]   //Pointer to adc values
+  //static std::vector<Short_t> fgLutPadNumbering;   //  [fNcol] Look Up Table
+  static Short_t *fgLutPadNumbering;   //  [fNcol] Look Up Table
   ClassDef(TRDArrayADC,1) //ADC container class
     
 };

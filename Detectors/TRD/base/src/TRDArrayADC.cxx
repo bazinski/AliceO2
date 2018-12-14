@@ -151,6 +151,7 @@ void TRDArrayADC::Allocate(Int_t nrow, Int_t ncol, Int_t ntime)
     }
   
   fADC = new Short_t[fNAdim];
+  //std::fill(fADC.begin(), myVector.end(), 0);
   memset(fADC,0,sizeof(Short_t)*fNAdim);
 
 }
