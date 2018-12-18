@@ -19,14 +19,15 @@
 #include <TH1F.h>
 #include <TH2F.h>
 
-#include "TRDBase/TRDgeometry.h"
-#include "TRDBase/TRDpadPlane.h"
+#include "TRDBase/TRDGeometry.h"
+#include "TRDBase/TRDPadPlane.h"
 #include "TRDBase/TRDCalSingleChamberStatus.h"  // test
 #include "TRDBase/TRDCalPadStatus.h"
 
 using namespace o2::trd;
 ClassImp(TRDCalPadStatus)
 
+const o2::detectors::DetID TRDGeometry::sDetID(o2::detectors::DetID::TRD);
 //_____________________________________________________________________________
 TRDCalPadStatus::TRDCalPadStatus()
 {
@@ -50,7 +51,7 @@ TRDCalPadStatus::TRDCalPadStatus(const Text_t *name, const Text_t *title)
   for (Int_t isec = 0; isec < kNsect; isec++) {
     for (Int_t ipla = 0; ipla < kNplan; ipla++) {
       for (Int_t icha = 0; icha < kNcham; icha++) {
-        Int_t idet = TRDgeometry::GetDetector(ipla,icha,isec);
+        Int_t idet = getDetector(ipla,icha,isec);
         fROC[idet] = new TRDCalSingleChamberStatus(ipla,icha,144);
       }
     }
@@ -120,24 +121,24 @@ Bool_t TRDCalPadStatus::CheckStatus(Int_t d, Int_t col, Int_t row, Int_t bitMask
   // Checks the pad status
   //
 
-  TRDCalSingleChamberStatus *roc = GetCalROC(d);
+  TRDCalSingleChamberStatus *roc = getCalROC(d);
   if (!roc) {
     return kFALSE;
   }
   else {
-    return (roc->GetStatus(col, row) & bitMask) ? kTRUE : kFALSE;
+    return (roc->getStatus(col, row) & bitMask) ? kTRUE : kFALSE;
   }
 
 }
 
 //_____________________________________________________________________________
-AliTRDCalSingleChamberStatus* TRDCalPadStatus::GetCalROC(Int_t p, Int_t c, Int_t s) const
+TRDCalSingleChamberStatus* TRDCalPadStatus::getCalROC(Int_t p, Int_t c, Int_t s) const
 { 
   //
   // Returns the readout chamber of this pad
   //
 
-  return fROC[TRDgeometry::GetDetector(p,c,s)];   
+  return fROC[getDetector(p,c,s)];   
 
 }
 
@@ -162,9 +163,9 @@ TH1F *TRDCalPadStatus::MakeHisto1D()
     {
       if (fROC[idet])
 	{
-	  for (Int_t ichannel=0; ichannel<fROC[idet]->GetNchannels(); ichannel++)
+	  for (Int_t ichannel=0; ichannel<fROC[idet]->getNchannels(); ichannel++)
 	    {
-	      Int_t status = (Int_t) fROC[idet]->GetStatus(ichannel);
+	      Int_t status = (Int_t) fROC[idet]->getStatus(ichannel);
 	      if(status==2)  status= 1;
 	      if(status==4)  status= 2;
 	      if(status==8)  status= 3;
@@ -187,10 +188,10 @@ TH2F *TRDCalPadStatus::MakeHisto2DSmPl(Int_t sm, Int_t pl)
   //
 
   gStyle->SetPalette(1);
-  TRDgeometry *trdGeo = new TRDgeometry();
-  TRDpadPlane *padPlane0 = trdGeo->GetPadPlane(pl,0);
-  Double_t row0    = padPlane0->GetRow0();
-  Double_t col0    = padPlane0->GetCol0();
+  TRDGeometry *trdGeo = new TRDGeometry();
+  TRDpadPlane *padPlane0 = trdGeo->getPadPlane(pl,0);
+  Double_t row0    = padPlane0->getRow0();
+  Double_t col0    = padPlane0->getCol0();
 
   char  name[1000];
   snprintf(name,1000,"%s Pad 2D sm %d pl %d",GetTitle(),sm,pl);
@@ -204,16 +205,16 @@ TH2F *TRDCalPadStatus::MakeHisto2DSmPl(Int_t sm, Int_t pl)
     Int_t det = offsetsmpl+k*6;
     if (fROC[det]){
       TRDCalSingleChamberStatus * calRoc = fROC[det];
-      for (Int_t icol=0; icol<calRoc->GetNcols(); icol++){
-	for (Int_t irow=0; irow<calRoc->GetNrows(); irow++){
+      for (Int_t icol=0; icol<calRoc->getNcols(); icol++){
+	for (Int_t irow=0; irow<calRoc->GgeNrows(); irow++){
 	  Int_t binz     = 0;
 	  Int_t kb       = kNcham-1-k;
-	  Int_t krow     = calRoc->GetNrows()-1-irow;
-	  Int_t kcol     = calRoc->GetNcols()-1-icol;
+	  Int_t krow     = calRoc->getNrows()-1-irow;
+	  Int_t kcol     = calRoc->getNcols()-1-icol;
 	  if(kb > 2) binz = 16*(kb-1)+12+krow+1+2*(kb+1);
 	  else binz = 16*kb+krow+1+2*(kb+1); 
 	  Int_t biny = kcol+1+2;
-	  Float_t value = calRoc->GetStatus(icol,irow);
+	  Float_t value = calRoc->getStatus(icol,irow);
 	  his->SetBinContent(binz,biny,value);
 	}
       }

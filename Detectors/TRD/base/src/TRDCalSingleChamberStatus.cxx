@@ -18,22 +18,20 @@
 
 #include "TRDBase/TRDCalSingleChamberStatus.h"
 #include <TMath.h>
+#include <Rtypes.h>
 #include "TRDBase/TRDCommonParam.h"
-//#include "AliLog.h"
 #include <FairLogger.h>
 
 using namespace o2::trd;
 
-const o2::detectors::DetID TRDGeometry::sDetID(o2::detectors::DetID::TRD);
 
 
-ClassImp(TRDCaliSingleChamberStatus);
+ClassImp(TRDCalSingleChamberStatus);
 
 
 //_____________________________________________________________________________
-TRDCaliSingleChamberStatus::TRDCaliSingleChamberStatus()
-  :TObject()
-  ,fPla(0)
+TRDCalSingleChamberStatus::TRDCalSingleChamberStatus()
+  :fPla(0)
   ,fCha(0)
   ,fNrows(0)
   ,fNcols(0)
@@ -47,7 +45,7 @@ TRDCaliSingleChamberStatus::TRDCaliSingleChamberStatus()
 }
 
 //_____________________________________________________________________________
-TRDCaliSingleChamberStatus::TRDCaliSingleChamberStatus(Int_t p, Int_t c, Int_t cols)
+TRDCalSingleChamberStatus::TRDCalSingleChamberStatus(Int_t p, Int_t c, Int_t cols)
   :fPla(p)
   ,fCha(c)
   ,fNrows(0)
@@ -136,9 +134,8 @@ TRDCaliSingleChamberStatus::TRDCaliSingleChamberStatus(Int_t p, Int_t c, Int_t c
 }
 
 //_____________________________________________________________________________
-TRDCaliSingleChamberStatus::TRDCaliSingleChamberStatus(const TRDCaliSingleChamberStatus &c)
-  :TObject(c)
-  ,fPla(c.fPla)
+TRDCalSingleChamberStatus::TRDCalSingleChamberStatus(const TRDCalSingleChamberStatus &c)
+  :fPla(c.fPla)
   ,fCha(c.fCha)
   ,fNrows(c.fNrows)
   ,fNcols(c.fNcols)
@@ -146,21 +143,21 @@ TRDCaliSingleChamberStatus::TRDCaliSingleChamberStatus(const TRDCaliSingleChambe
   ,fData(0)
 {
   //
-  // TRDCaliSingleChamberStatus copy constructor
+  // TRDCalSingleChamberStatus copy constructor
   //
 
   fData = new Char_t[fNchannels];
   for (Int_t iBin = 0; iBin < fNchannels; iBin++) {
-    fData[iBin] = ((TRDCaliSingleChamberStatus &) c).fData[iBin];
+    fData[iBin] = ((TRDCalSingleChamberStatus &) c).fData[iBin];
   }
 
 }
 
 //_____________________________________________________________________________
-TRDCaliSingleChamberStatus::~TRDCaliSingleChamberStatus()
+TRDCalSingleChamberStatus::~TRDCalSingleChamberStatus()
 {
   //
-  // TRDCaliSingleChamberStatus destructor
+  // TRDCalSingleChamberStatus destructor
   //
 
   if (fData) {
@@ -171,7 +168,7 @@ TRDCaliSingleChamberStatus::~TRDCaliSingleChamberStatus()
 }
 
 //_____________________________________________________________________________
-TRDCaliSingleChamberStatus &TRDCaliSingleChamberStatus::operator=(const TRDCaliSingleChamberStatus &c)
+TRDCalSingleChamberStatus &TRDCalSingleChamberStatus::operator=(const TRDCalSingleChamberStatus &c)
 {
   //
   // Assignment operator
@@ -200,7 +197,7 @@ TRDCaliSingleChamberStatus &TRDCaliSingleChamberStatus::operator=(const TRDCaliS
 }
 
 //_____________________________________________________________________________
-void TRDCaliSingleChamberStatus::Copy(TRDCalSingleChamberStatus &c) const
+void TRDCalSingleChamberStatus::Copy(TRDCalSingleChamberStatus &c) const
 {
   //
   // Copy function

@@ -18,7 +18,7 @@
 #include "DetectorsBase/GeometryManager.h"
 #include "TRDBase/TRDGeometry.h"
 #include "TRDBase/TRDPadPlane.h"
-#include "TRDBase/TRDfeeParam.h"
+#include "TRDBase/TRDFeeParam.h"
 #include "TRDBase/TRDCommonParam.h"
 
 using namespace o2::trd;
@@ -48,17 +48,17 @@ const o2::detectors::DetID TRDGeometry::sDetID(o2::detectors::DetID::TRD);
 ////////////////////////////////////////////////////////////////////////////
 
 
-ClassImp(TRDfeeParam)
+ClassImp(TRDFeeParam)
 
-TRDfeeParam *TRDfeeParam::fgInstance   = 0;
-Bool_t          TRDfeeParam::fgTerminated = kFALSE;
-Bool_t          TRDfeeParam::fgTracklet = kTRUE;
-Bool_t          TRDfeeParam::fgRejectMultipleTracklets = kFALSE;
-Bool_t          TRDfeeParam::fgUseMisalignCorr = kFALSE;
-Bool_t          TRDfeeParam::fgUseTimeOffset = kFALSE;
+TRDFeeParam *TRDFeeParam::fgInstance   = 0;
+Bool_t          TRDFeeParam::fgTerminated = kFALSE;
+Bool_t          TRDFeeParam::fgTracklet = kTRUE;
+Bool_t          TRDFeeParam::fgRejectMultipleTracklets = kFALSE;
+Bool_t          TRDFeeParam::fgUseMisalignCorr = kFALSE;
+Bool_t          TRDFeeParam::fgUseTimeOffset = kFALSE;
 
 //_____________________________________________________________________________
-TRDfeeParam* TRDfeeParam::Instance()
+TRDFeeParam* TRDFeeParam::Instance()
 {
   //
   // Instance constructor
@@ -69,7 +69,7 @@ TRDfeeParam* TRDfeeParam::Instance()
   }
 
   if (fgInstance == 0) {
-    fgInstance = new TRDfeeParam();
+    fgInstance = new TRDFeeParam();
   }  
 
   return fgInstance;
@@ -77,7 +77,7 @@ TRDfeeParam* TRDfeeParam::Instance()
 }
 
 //_____________________________________________________________________________
-void TRDfeeParam::Terminate()
+void TRDFeeParam::Terminate()
 {
   //
   // Terminate the class and release memory
@@ -93,22 +93,20 @@ void TRDfeeParam::Terminate()
 }
 
 //_____________________________________________________________________________
-TRDfeeParam::TRDfeeParam()
-  :TObject()
-  ,fCP(0)
+TRDFeeParam::TRDFeeParam()
+  :fCP(0)
   ,fRAWversion(3)
 {
   //
   // Default constructor
   //
   
-  fCP  = AliTRDCommonParam::Instance();
+  fCP  = TRDCommonParam::Instance();
 }
 
 //_____________________________________________________________________________
-TRDfeeParam::TRDfeeParam(TRootIoCtor *)
-  :TObject()
-  ,fCP(0)
+TRDFeeParam::TRDFeeParam(TRootIoCtor *)
+  :fCP(0)
   ,fRAWversion(0)
 {
   //
@@ -118,35 +116,34 @@ TRDfeeParam::TRDfeeParam(TRootIoCtor *)
 }
 
 //_____________________________________________________________________________
-TRDfeeParam::TRDfeeParam(const TRDfeeParam &p)
-  :TObject(p)
-  ,fCP(p.fCP)
+TRDFeeParam::TRDFeeParam(const TRDFeeParam &p)
+  :fCP(p.fCP)
   ,fRAWversion(p.fRAWversion)
 {
   //
-  // TRDfeeParam copy constructor
+  // TRDFeeParam copy constructor
   //
 
 }
 
 //_____________________________________________________________________________
-TRDfeeParam::~TRDfeeParam()
+TRDFeeParam::~TRDFeeParam()
 {
   //
-  // TRDfeeParam destructor
+  // TRDFeeParam destructor
   //
 
 }
 
 //_____________________________________________________________________________
-TRDfeeParam &TRDfeeParam::operator=(const TRDfeeParam &p)
+TRDFeeParam &TRDFeeParam::operator=(const TRDFeeParam &p)
 {
   //
   // Assignment operator
   //
 
   if (this != &p) {
-    ((TRDfeeParam &) p).Copy(*this);
+    ((TRDFeeParam &) p).Copy(*this);
   }
 
   return *this;
@@ -154,21 +151,20 @@ TRDfeeParam &TRDfeeParam::operator=(const TRDfeeParam &p)
 }
 
 //_____________________________________________________________________________
-void TRDfeeParam::Copy(TObject &p) const
+void TRDFeeParam::Copy(TRDFeeParam &p) const
 {
   //
   // Copy function
   //
 
-  ((TRDfeeParam &) p).fCP          = fCP;
-  ((TRDfeeParam &) p).fRAWversion  = fRAWversion;
+  ((TRDFeeParam &) p).fCP          = fCP;
+  ((TRDFeeParam &) p).fRAWversion  = fRAWversion;
   
-  TObject::Copy(p);
 
 }
 
 //_____________________________________________________________________________
-Int_t TRDfeeParam::GetPadRowFromMCM(Int_t irob, Int_t imcm) const
+Int_t TRDFeeParam::GetPadRowFromMCM(Int_t irob, Int_t imcm) const
 {
   //
   // Return on which pad row this mcm sits
@@ -179,7 +175,7 @@ Int_t TRDfeeParam::GetPadRowFromMCM(Int_t irob, Int_t imcm) const
 }
 
 //_____________________________________________________________________________
-Int_t TRDfeeParam::GetPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const
+Int_t TRDFeeParam::GetPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const
 {
   //
   // Return which pad is connected to this adc channel.
@@ -204,7 +200,7 @@ Int_t TRDfeeParam::GetPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const
 }
 
 //_____________________________________________________________________________
-Int_t TRDfeeParam::GetExtendedPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const
+Int_t TRDFeeParam::GetExtendedPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const
 {     
   //
   // Return which pad coresponds to the extended digit container pad numbering
@@ -221,7 +217,7 @@ Int_t TRDfeeParam::GetExtendedPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) 
 }
 
 //_____________________________________________________________________________
-Int_t TRDfeeParam::GetMCMfromPad(Int_t irow, Int_t icol) const
+Int_t TRDFeeParam::GetMCMfromPad(Int_t irow, Int_t icol) const
 {
   //
   // Return on which MCM this pad is directry connected.
@@ -235,7 +231,7 @@ Int_t TRDfeeParam::GetMCMfromPad(Int_t irow, Int_t icol) const
 }
 
 //_____________________________________________________________________________
-Int_t TRDfeeParam::GetMCMfromSharedPad(Int_t irow, Int_t icol) const
+Int_t TRDFeeParam::GetMCMfromSharedPad(Int_t irow, Int_t icol) const
 {
   //
   // Return on which MCM this pad is directry connected.
@@ -257,7 +253,7 @@ Int_t TRDfeeParam::GetMCMfromSharedPad(Int_t irow, Int_t icol) const
 }
 
 //_____________________________________________________________________________
-Int_t TRDfeeParam::GetROBfromPad(Int_t irow, Int_t icol) const
+Int_t TRDFeeParam::GetROBfromPad(Int_t irow, Int_t icol) const
 {
   //
   // Return on which rob this pad is
@@ -268,7 +264,7 @@ Int_t TRDfeeParam::GetROBfromPad(Int_t irow, Int_t icol) const
 }
 
 //_____________________________________________________________________________
-Int_t TRDfeeParam::GetROBfromSharedPad(Int_t irow, Int_t icol) const
+Int_t TRDFeeParam::GetROBfromSharedPad(Int_t irow, Int_t icol) const
 {
   //
   // Return on which rob this pad is for shared pads
@@ -280,7 +276,7 @@ Int_t TRDfeeParam::GetROBfromSharedPad(Int_t irow, Int_t icol) const
 }
 
 //_____________________________________________________________________________
-Int_t TRDfeeParam::GetRobSide(Int_t irob) const
+Int_t TRDFeeParam::GetRobSide(Int_t irob) const
 {
   //
   // Return on which side this rob sits (A side = 0, B side = 1)
@@ -293,7 +289,7 @@ Int_t TRDfeeParam::GetRobSide(Int_t irob) const
 }
 
 //_____________________________________________________________________________
-Int_t TRDfeeParam::GetColSide(Int_t icol) const
+Int_t TRDFeeParam::GetColSide(Int_t icol) const
 {
   //
   // Return on which side this column sits (A side = 0, B side = 1)
@@ -307,7 +303,7 @@ Int_t TRDfeeParam::GetColSide(Int_t icol) const
 
 
 
-UInt_t TRDfeeParam::AliToExtAli(Int_t rob, Int_t aliid)
+UInt_t TRDFeeParam::AliToExtAli(Int_t rob, Int_t aliid)
 {
    if(aliid!= 127)
       return ( (1 << 10) | (rob << 7) | aliid);
@@ -316,7 +312,7 @@ UInt_t TRDfeeParam::AliToExtAli(Int_t rob, Int_t aliid)
 }
 
 
-Int_t TRDfeeParam::ExtAliToAli(UInt_t dest, UShort_t linkpair, UShort_t rocType, Int_t *mcmList, Int_t listSize)
+Int_t TRDFeeParam::ExtAliToAli(UInt_t dest, UShort_t linkpair, UShort_t rocType, Int_t *mcmList, Int_t listSize)
 {
    // Converts an extended ALICE ID which identifies a single MCM or a group of MCMs to
    // the corresponding list of MCMs. Only broadcasts (127) are encoded as 127 
@@ -378,7 +374,7 @@ Int_t TRDfeeParam::ExtAliToAli(UInt_t dest, UShort_t linkpair, UShort_t rocType,
 }
 
 
-Short_t TRDfeeParam::GetRobAB( UShort_t robsel, UShort_t linkpair )
+Short_t TRDFeeParam::GetRobAB( UShort_t robsel, UShort_t linkpair )
 {
   // Converts the ROB part of the extended ALICE ID to robs
 
@@ -403,7 +399,7 @@ Short_t TRDfeeParam::GetRobAB( UShort_t robsel, UShort_t linkpair )
 }
 
 
-Short_t TRDfeeParam::ChipmaskToMCMlist( UInt_t cmA, UInt_t cmB, UShort_t linkpair, Int_t *mcmList, Int_t listSize )
+Short_t TRDFeeParam::ChipmaskToMCMlist( UInt_t cmA, UInt_t cmB, UShort_t linkpair, Int_t *mcmList, Int_t listSize )
 {
   // Converts the chipmask to a list of MCMs 
   
@@ -426,7 +422,7 @@ Short_t TRDfeeParam::ChipmaskToMCMlist( UInt_t cmA, UInt_t cmB, UShort_t linkpai
 
 
 //_____________________________________________________________________________
-void TRDfeeParam::SetRAWversion( Int_t rawver )
+void TRDFeeParam::SetRAWversion( Int_t rawver )
 {
   //
   // Set raw data version (major number only)

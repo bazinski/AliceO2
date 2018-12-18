@@ -12,6 +12,7 @@
 #ifndef O2_TRDCALSINGLECHAMBERSTATUS_H
 #define O2_TRDCALSINGLECHAMBERSTATUS_H
 
+#include <Rtypes.h>
 namespace o2
 {
 namespace trd
@@ -24,13 +25,12 @@ namespace trd
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-
 //_____________________________________________________________________________
-class TRDCalSingleChamberStatus
+class TRDCalSingleChamberStatus{
 
  public:
 
-  enum class { kMasked          = 2
+  enum { kMasked          = 2
              , kPadBridgedLeft  = 4
              , kPadBridgedRight = 8
              , kReadSecond      = 16 
@@ -41,24 +41,25 @@ class TRDCalSingleChamberStatus
   TRDCalSingleChamberStatus(const TRDCalSingleChamberStatus &c);
   virtual                      ~TRDCalSingleChamberStatus();
   TRDCalSingleChamberStatus &operator=(const TRDCalSingleChamberStatus &c);
+  void    Copy(TRDCalSingleChamberStatus &c) const;
 
 
-          Bool_t  IsMasked(Int_t col, Int_t row) const       { return ((GetStatus(col,row) & kMasked) 
+          Bool_t  IsMasked(Int_t col, Int_t row) const       { return ((getStatus(col,row) & kMasked) 
                                                                        ? kTRUE 
                                                                        : kFALSE);                 };
-	  Bool_t  IsBridgedLeft(Int_t col, Int_t row) const  { return ((GetStatus(col, row) & kPadBridgedLeft)                                            ? kTRUE                                                                         : kFALSE);                 };
-	  Bool_t  IsBridgedRight(Int_t col, Int_t row) const { return ((GetStatus(col, row) & kPadBridgedRight)                                           ? kTRUE                                                                         : kFALSE);                 };
-	  Bool_t  IsNotConnected(Int_t col, Int_t row) const { return ((GetStatus(col, row) & kNotConnected)                                           ? kTRUE                                                                         : kFALSE);                 };
-          Int_t   GetNrows() const                           { return fNrows;                     };
-          Int_t   GetNcols() const                           { return fNcols;                     };
+	  Bool_t  IsBridgedLeft(Int_t col, Int_t row) const  { return ((getStatus(col, row) & kPadBridgedLeft)                                            ? kTRUE                                                                         : kFALSE);                 };
+	  Bool_t  IsBridgedRight(Int_t col, Int_t row) const { return ((getStatus(col, row) & kPadBridgedRight)                                           ? kTRUE                                                                         : kFALSE);                 };
+	  Bool_t  IsNotConnected(Int_t col, Int_t row) const { return ((getStatus(col, row) & kNotConnected)                                           ? kTRUE                                                                         : kFALSE);                 };
+          Int_t   getNrows() const                           { return fNrows;                     };
+          Int_t   getNcols() const                           { return fNcols;                     };
 
-          Int_t   GetChannel(Int_t col, Int_t row) const     { return row+col*fNrows;             };
-          Int_t   GetNchannels() const                       { return fNchannels;                 };
-          Char_t  GetStatus(Int_t ich) const                 { return fData[ich];                 };
-          Char_t  GetStatus(Int_t col, Int_t row) const      { return fData[GetChannel(col,row)]; };
+          Int_t   getChannel(Int_t col, Int_t row) const     { return row+col*fNrows;             };
+          Int_t   getNchannels() const                       { return fNchannels;                 };
+          Char_t  getStatus(Int_t ich) const                 { return fData[ich];                 };
+          Char_t  getStatus(Int_t col, Int_t row) const      { return fData[getChannel(col,row)]; };
 
-          void    SetStatus(Int_t ich, Char_t vd)            { fData[ich] = vd;                   };
-          void    SetStatus(Int_t col, Int_t row, Char_t vd) { fData[GetChannel(col,row)] = vd;   };
+          void    setStatus(Int_t ich, Char_t vd)            { fData[ich] = vd;                   };
+          void    setStatus(Int_t col, Int_t row, Char_t vd) { fData[getChannel(col,row)] = vd;   };
 
  protected:
 

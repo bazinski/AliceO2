@@ -28,7 +28,8 @@ namespace trd
 //
 #include "Rtypes.h"
 
-class AliTRDSignalIndex;
+class TRDSignalIndex;
+
 class TRDArrayADC
 {
  public:
@@ -64,18 +65,18 @@ class TRDArrayADC
   Int_t   getDim() const {return fNAdim;};
   void    DeleteNegatives();
   void    Reset();
-  void    ConditionalReset(AliTRDSignalIndex* idx);
+  void    ConditionalReset(TRDSignalIndex* idx);
   inline  Short_t* getDataAddress(Int_t nrow, Int_t ncol, Int_t ntime = 0) const;
   inline  Short_t getData(Int_t nrow, Int_t ncol, Int_t ntime) const;
   inline  void    setData(Int_t nrow, Int_t ncol, Int_t ntime, Short_t value);
   static  void    CreateLut(); 
 
-  Bool_t  IsValid() { return !TestBit(kDataInvalid); }
-  void    setDataInvalid() { setBit(kDataInvalid); }
-  void    setDataValid() { ResetBit(kDataInvalid); }
+  Bool_t  IsValid() { return fStatusBit; }
+  void    setDataInvalid() { fStatusBit=false; }
+  void    setDataValid() { fStatusBit=true; }
 
  protected:
-
+  bool fStatusBit;
   Int_t fNdet;    //ID number of the chamber
   Int_t fNrow;    //Number of rows
   Int_t fNcol;    //Number of columns(pads)

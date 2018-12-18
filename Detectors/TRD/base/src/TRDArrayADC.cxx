@@ -18,15 +18,17 @@
 
 #include "TRDBase/TRDSimParam.h"
 #include <TMath.h>
+#include <Rtypes.h>
 #include "TRDBase/TRDCommonParam.h"
+#include <FairLogger.h>
+#include "TRDBase/TRDArrayADC.h"
+#include "TRDBase/TRDCalPadStatus.h"
+#include "TRDBase/TRDFeeParam.h"
+#include "TRDBase/TRDSignalIndex.h"
 
 using namespace o2::trd;
 ClassImp(TRDSimParam);
 
-#include "TRDArrayADC.h"
-#include "TRDCalPadStatus.h"
-#include "TRDfeeParam.h"
-#include "TRDSignalIndex.h"
 
 ClassImp(TRDArrayADC)
 
@@ -139,8 +141,8 @@ void TRDArrayADC::Allocate(Int_t nrow, Int_t ncol, Int_t ntime)
   fNrow=nrow;
   fNcol=ncol;
   fNtime=ntime;
-  Int_t adcchannelspermcm = AliTRDfeeParam::GetNadcMcm(); 
-  Int_t padspermcm = AliTRDfeeParam::GetNcolMcm(); 
+  Int_t adcchannelspermcm = TRDFeeParam::getNadcMcm(); 
+  Int_t padspermcm = TRDFeeParam::getNcolMcm(); 
   Int_t numberofmcms = fNcol/padspermcm; 
   fNumberOfChannels = numberofmcms*adcchannelspermcm; 
   fNAdim=nrow*fNumberOfChannels*ntime;
@@ -157,16 +159,16 @@ void TRDArrayADC::Allocate(Int_t nrow, Int_t ncol, Int_t ntime)
 }
 
 //____________________________________________________________________________________
-Short_t TRDArrayADC::GetDataBits(Int_t row, Int_t col, Int_t time) const
+Short_t TRDArrayADC::getDataBits(Int_t row, Int_t col, Int_t time) const
 {
   //
-  // Get the ADC value for a given position: row, col, time
+  // get the ADC value for a given position: row, col, time
   // Taking bit masking into account
   //
-  // Adapted from code of the class AliTRDclusterizer 
+  // Adapted from code of the class TRDclusterizer 
   //
 
-  Short_t tempval = GetData(row,col,time);
+  Short_t tempval = getData(row,col,time);
   // Be aware of manipulations introduced by pad masking in the RawReader
   // Only output the manipulated Value
   tempval |= 0UL << 10;//CLRBIT(tempval, 10);
@@ -177,7 +179,7 @@ Short_t TRDArrayADC::GetDataBits(Int_t row, Int_t col, Int_t time) const
 }
 
 //____________________________________________________________________________________
-UChar_t TRDArrayADC::GetPadStatus(Int_t row, Int_t col, Int_t time) const
+UChar_t TRDArrayADC::getPadStatus(Int_t row, Int_t col, Int_t time) const
 {
   // 
   // Returns the pad status stored in the pad signal
@@ -189,22 +191,22 @@ UChar_t TRDArrayADC::GetPadStatus(Int_t row, Int_t col, Int_t time) const
   //               Bridged Right Masking    8
   //               Not Connected Masking Digits
   //
-  // Adapted from code of the class AliTRDclusterizer
+  // Adapted from code of the class TRDclusterizer
   //
 
   UChar_t padstatus = 0;
-  Short_t signal = GetData(row,col,time);
+  Short_t signal = getData(row,col,time);
   if(signal > 0 && TESTBIT(signal, 10)){
     if(signal & 0x800 )//TESTBIT(signal, 11))
       if(signal & 0x1000)//TESTBIT(signal, 12))
-	padstatus = AliTRDCalPadStatus::kPadBridgedRight;
+	padstatus = TRDCalPadStatus::kPadBridgedRight;
       else
-	padstatus = AliTRDCalPadStatus::kNotConnected;
+	padstatus = TRDCalPadStatus::kNotConnected;
     else
       if(signal & 0x1000)//TESTBIT(signal, 12))
-	padstatus = AliTRDCalPadStatus::kPadBridgedLeft;
+	padstatus = TRDCalPadStatus::kPadBridgedLeft;
       else
-	padstatus = AliTRDCalPadStatus::kMasked;
+	padstatus = TRDCalPadStatus::kMasked;
   }
 
   return padstatus;
@@ -212,7 +214,7 @@ UChar_t TRDArrayADC::GetPadStatus(Int_t row, Int_t col, Int_t time) const
 }
 
 //____________________________________________________________________________________
-void TRDArrayADC::SetPadStatus(Int_t row, Int_t col, Int_t time, UChar_t status)
+void TRDArrayADC::setPadStatus(Int_t row, Int_t col, Int_t time, UChar_t status)
 {
   //
   // Setting the pad status into the signal using the Bits 10 to 14 
@@ -230,32 +232,32 @@ void TRDArrayADC::SetPadStatus(Int_t row, Int_t col, Int_t time, UChar_t status)
   //               Bridged Left masking:    Bit 11(0), Bit 12(1)
   //               Bridged Right masking:   Bit 11(1), Bit 12(1)
   // 
-  // Adapted from code of the class AliTRDclusterizer
+  // Adapted from code of the class TRDclusterizer
   //
 
-  Short_t signal = GetData(row,col,time);
+  Short_t signal = getData(row,col,time);
 
   // Only set the Pad Status if the signal is > 0
   if(signal > 0)
     {
       switch(status)
 	{
-	case AliTRDCalPadStatus::kMasked:
+	case TRDCalPadStatus::kMasked:
 	  SETBIT(signal, 10);
 	  CLRBIT(signal, 11);
 	  CLRBIT(signal, 12);
 	  break;
-	case AliTRDCalPadStatus::kNotConnected:
+	case TRDCalPadStatus::kNotConnected:
 	  SETBIT(signal, 10);
 	  SETBIT(signal, 11);
 	  CLRBIT(signal, 12);
 	  break;
-	case AliTRDCalPadStatus::kPadBridgedLeft:
+	case TRDCalPadStatus::kPadBridgedLeft:
 	  SETBIT(signal, 10);
 	  CLRBIT(signal, 11);
 	  SETBIT(signal, 12);
 	  break;
-	case AliTRDCalPadStatus::kPadBridgedRight:
+	case TRDCalPadStatus::kPadBridgedRight:
 	  SETBIT(signal, 10);
 	  SETBIT(signal, 11);
 	  SETBIT(signal, 12);
@@ -265,7 +267,7 @@ void TRDArrayADC::SetPadStatus(Int_t row, Int_t col, Int_t time, UChar_t status)
 	  CLRBIT(signal, 11);
 	  CLRBIT(signal, 12);
 	}
-      SetData(row, col, time, signal);
+      setData(row, col, time, signal);
     }
 
 }
@@ -276,10 +278,10 @@ Bool_t TRDArrayADC::IsPadCorrupted(Int_t row, Int_t col, Int_t time)
   // 
   // Checks if the pad has any masking as corrupted (Bit 10 in signal set)
   // 
-  // Adapted from code of the class AliTRDclusterizer
+  // Adapted from code of the class TRDclusterizer
   //
 
-  Short_t signal = GetData(row,col,time);
+  Short_t signal = getData(row,col,time);
   return (signal > 0 && TESTBIT(signal, 10)) ? kTRUE : kFALSE;
 
 }
@@ -584,14 +586,14 @@ void TRDArrayADC::Reset()
   memset(fADC,0,sizeof(Short_t)*fNAdim);
 }
 //________________________________________________________________________________
-void TRDArrayADC::ConditionalReset(AliTRDSignalIndex* idx)
+void TRDArrayADC::ConditionalReset(TRDSignalIndex* idx)
 {
   //
   // Reset the array, the old contents are deleted
   // The array keeps the same dimensions as before
   //
  
-  if(idx->GetNoOfIndexes()>25)
+  if(idx->getNoOfIndexes()>25)
     memset(fADC,0,sizeof(Short_t)*fNAdim);
   else
     {
@@ -614,8 +616,8 @@ void TRDArrayADC::CreateLut()
 
   if(fgLutPadNumbering)  return;
   
-   fgLutPadNumbering = new Short_t[AliTRDfeeParam::GetNcol()];
-   memset(fgLutPadNumbering,0,sizeof(Short_t)*AliTRDfeeParam::GetNcol());
+   fgLutPadNumbering = new Short_t[TRDFeeParam::getNcol()];
+   memset(fgLutPadNumbering,0,sizeof(Short_t)*TRDFeeParam::getNcol());
 
   for(Int_t mcm=0; mcm<8; mcm++)
     {

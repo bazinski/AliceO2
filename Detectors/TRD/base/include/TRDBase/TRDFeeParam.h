@@ -51,54 +51,54 @@ class TRDFeeParam
   TRDFeeParam(const TRDFeeParam &p);
   virtual           ~TRDFeeParam();
   TRDFeeParam    &operator=(const TRDFeeParam &p);
-  virtual void       Copy(TObject &p) const;
+  virtual void       Copy(TRDFeeParam  &p) const;
 
   static TRDFeeParam *Instance();  // Singleton
   static void            Terminate();
 
   // Translation from MCM to Pad and vice versa
-  virtual Int_t    GetPadRowFromMCM(Int_t irob, Int_t imcm) const;
-  virtual Int_t    GetPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const;
-  virtual Int_t    GetExtendedPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const;
-  virtual Int_t    GetMCMfromPad(Int_t irow, Int_t icol) const;
-  virtual Int_t    GetMCMfromSharedPad(Int_t irow, Int_t icol) const;
-  virtual Int_t    GetROBfromPad(Int_t irow, Int_t icol) const;
-  virtual Int_t    GetROBfromSharedPad(Int_t irow, Int_t icol) const;
-  virtual Int_t    GetRobSide(Int_t irob) const;
-  virtual Int_t    GetColSide(Int_t icol) const;
+  virtual Int_t    getPadRowFromMCM(Int_t irob, Int_t imcm) const;
+  virtual Int_t    getPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const;
+  virtual Int_t    getExtendedPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const;
+  virtual Int_t    getMCMfromPad(Int_t irow, Int_t icol) const;
+  virtual Int_t    getMCMfromSharedPad(Int_t irow, Int_t icol) const;
+  virtual Int_t    getROBfromPad(Int_t irow, Int_t icol) const;
+  virtual Int_t    getROBfromSharedPad(Int_t irow, Int_t icol) const;
+  virtual Int_t    getRobSide(Int_t irob) const;
+  virtual Int_t    getColSide(Int_t icol) const;
 
   // SCSN-related
   static  UInt_t   AliToExtAli(Int_t rob, Int_t aliid);  // Converts the MCM-ROB combination to the extended MCM ALICE ID (used to address MCMs on the SCSN Bus)
   static  Int_t    ExtAliToAli( UInt_t dest, UShort_t linkpair, UShort_t rocType, Int_t *list, Int_t listSize);  // translates an extended MCM ALICE ID to a list of MCMs
   static  Short_t  ChipmaskToMCMlist( UInt_t cmA, UInt_t cmB, UShort_t linkpair, Int_t *mcmList, Int_t listSize );
-  static  Short_t  GetRobAB( UShort_t robsel, UShort_t linkpair );  // Returns the chamber side (A=0, B=0) of a ROB
+  static  Short_t  getRobAB( UShort_t robsel, UShort_t linkpair );  // Returns the chamber side (A=0, B=0) of a ROB
 
   // geometry
-  static  Float_t  GetSamplingFrequency() { return (Float_t)fgkLHCfrequency / 4000000.0; }
-  static  Int_t    GetNmcmRob()           { return fgkNmcmRob;      }
-  static  Int_t    GetNmcmRobInRow()      { return fgkNmcmRobInRow; }
-  static  Int_t    GetNmcmRobInCol()      { return fgkNmcmRobInCol; }
-  static  Int_t    GetNrobC0()            { return fgkNrobC0;       }
-  static  Int_t    GetNrobC1()            { return fgkNrobC1;       }
-  static  Int_t    GetNadcMcm()           { return fgkNadcMcm;      }
-  static  Int_t    GetNcol()              { return fgkNcol;         }
-  static  Int_t    GetNcolMcm()           { return fgkNcolMcm;      }
-  static  Int_t    GetNrowC0()            { return fgkNrowC0;       }
-  static  Int_t    GetNrowC1()            { return fgkNrowC1;       }
+  static  Float_t  getSamplingFrequency() { return (Float_t)fgkLHCfrequency / 4000000.0; }
+  static  Int_t    getNmcmRob()           { return fgkNmcmRob;      }
+  static  Int_t    getNmcmRobInRow()      { return fgkNmcmRobInRow; }
+  static  Int_t    getNmcmRobInCol()      { return fgkNmcmRobInCol; }
+  static  Int_t    getNrobC0()            { return fgkNrobC0;       }
+  static  Int_t    getNrobC1()            { return fgkNrobC1;       }
+  static  Int_t    getNadcMcm()           { return fgkNadcMcm;      }
+  static  Int_t    getNcol()              { return fgkNcol;         }
+  static  Int_t    getNcolMcm()           { return fgkNcolMcm;      }
+  static  Int_t    getNrowC0()            { return fgkNrowC0;       }
+  static  Int_t    getNrowC1()            { return fgkNrowC1;       }
 
   // tracklet simulation
-	  Bool_t   GetTracklet()         const { return fgTracklet; } 
-  static  void     SetTracklet(Bool_t trackletSim = kTRUE) { fgTracklet = trackletSim; }
-          Bool_t   GetRejectMultipleTracklets() const { return fgRejectMultipleTracklets; }
-  static  void     SetRejectMultipleTracklets(Bool_t rej = kTRUE) { fgRejectMultipleTracklets = rej; }
-          Bool_t   GetUseMisalignCorr()            const { return fgUseMisalignCorr; }
-  static  void     SetUseMisalignCorr(Bool_t misalign = kTRUE) { fgUseMisalignCorr = misalign; }
-          Bool_t   GetUseTimeOffset()              const { return fgUseTimeOffset; }
-  static  void     SetUseTimeOffset(Bool_t timeOffset = kTRUE) { fgUseTimeOffset = timeOffset; }
+	  Bool_t   getTracklet()         const { return fgTracklet; } 
+  static  void     setTracklet(Bool_t trackletSim = kTRUE) { fgTracklet = trackletSim; }
+          Bool_t   getRejectMultipleTracklets() const { return fgRejectMultipleTracklets; }
+  static  void     setRejectMultipleTracklets(Bool_t rej = kTRUE) { fgRejectMultipleTracklets = rej; }
+          Bool_t   getUseMisalignCorr()            const { return fgUseMisalignCorr; }
+  static  void     setUseMisalignCorr(Bool_t misalign = kTRUE) { fgUseMisalignCorr = misalign; }
+          Bool_t   getUseTimeOffset()              const { return fgUseTimeOffset; }
+  static  void     setUseTimeOffset(Bool_t timeOffset = kTRUE) { fgUseTimeOffset = timeOffset; }
 
   // Concerning raw data format
-          Int_t    GetRAWversion() const                    { return fRAWversion;        }
-          void     SetRAWversion( Int_t rawver );
+          Int_t    getRAWversion() const                    { return fRAWversion;        }
+          void     setRAWversion( Int_t rawver );
 
  protected:
 

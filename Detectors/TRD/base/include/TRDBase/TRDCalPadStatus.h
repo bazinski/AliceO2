@@ -33,8 +33,8 @@ class TRDCalPadStatus {
 
  public:
   
-  enum class { kNplan = 6, kNcham = 5, kNsect = 18, kNdet = 540 };
-  enum class { kMasked = 2, kPadBridgedLeft = 4, kPadBridgedRight = 8, kReadSecond = 16 , kNotConnected = 32};
+  enum { kNplan = 6, kNcham = 5, kNsect = 18, kNdet = 540 };
+  enum { kMasked = 2, kPadBridgedLeft = 4, kPadBridgedRight = 8, kReadSecond = 16 , kNotConnected = 32};
 
   TRDCalPadStatus();
   TRDCalPadStatus(const Text_t* name, const Text_t* title);
