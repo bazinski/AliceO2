@@ -27,10 +27,11 @@ namespace trd
 // ported from cblume original code in AliRoot, possibly some modifications
 //
 #include "Rtypes.h"
+#include "TObject.h"
 
 class TRDSignalIndex;
 
-class TRDArrayADC
+class TRDArrayADC : public TObject
 {
  public:
 
@@ -70,13 +71,12 @@ class TRDArrayADC
   inline  Short_t getData(Int_t nrow, Int_t ncol, Int_t ntime) const;
   inline  void    setData(Int_t nrow, Int_t ncol, Int_t ntime, Short_t value);
   static  void    CreateLut(); 
-
-  Bool_t  IsValid() { return fStatusBit; }
-  void    setDataInvalid() { fStatusBit=false; }
-  void    setDataValid() { fStatusBit=true; }
+  Bool_t  IsValid() { return !TestBit(kDataInvalid); }
+  void    SetDataInvalid() { SetBit(kDataInvalid); }
+  void    SetDataValid() { ResetBit(kDataInvalid); }
 
  protected:
-  bool fStatusBit;
+  
   Int_t fNdet;    //ID number of the chamber
   Int_t fNrow;    //Number of rows
   Int_t fNcol;    //Number of columns(pads)

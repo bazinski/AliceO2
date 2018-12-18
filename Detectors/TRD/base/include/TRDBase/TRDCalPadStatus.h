@@ -12,6 +12,9 @@
 #ifndef O2_TRDCALPADSTATUS_H
 #define O2_TRDCALPADSTATUS_H
 
+#include "TH1F.h"
+#include "TH2F.h"
+
 namespace o2
 {
 namespace trd
@@ -24,12 +27,9 @@ namespace trd
 ///////////////////////////////////////////////////////////////////////////////
 
 
-
 class TRDCalSingleChamberStatus;
-class TH1F;
-class TH2F;
 
-class TRDCalPadStatus {
+class TRDCalPadStatus : public TNamed {
 
  public:
   
@@ -56,8 +56,8 @@ class TRDCalPadStatus {
 	                                       { return CheckStatus(d, col, row, kNotConnected); };
           Bool_t      CheckStatus(Int_t d, Int_t col, Int_t row, Int_t bitMask) const;
 
-  TRDCalSingleChamberStatus *GetCalROC(Int_t d) const { return fROC[d]; };
-  TRDCalSingleChamberStatus *GetCalROC(Int_t p, Int_t c, Int_t s) const;
+  TRDCalSingleChamberStatus *getCalROC(Int_t d) const { return fROC[d]; };
+  TRDCalSingleChamberStatus *getCalROC(Int_t p, Int_t c, Int_t s) const;
 
   // Plot functions
   TH1F    *MakeHisto1D();

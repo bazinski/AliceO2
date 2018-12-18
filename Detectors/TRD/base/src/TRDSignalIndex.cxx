@@ -170,7 +170,7 @@ void TRDSignalIndex::Copy(TRDSignalIndex &a) const
       delete [] a.fBoolIndex;
     }
   a.fBoolIndex = new Bool_t[fMaxLimit];
-  memcpy(na.fBoolIndex, fBoolIndex, fMaxLimit*sizeof(Bool_t));
+  memcpy(a.fBoolIndex, fBoolIndex, fMaxLimit*sizeof(Bool_t));
 
   if(a.fSortedIndex)
     {

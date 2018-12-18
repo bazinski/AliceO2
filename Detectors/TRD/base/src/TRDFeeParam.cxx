@@ -25,7 +25,6 @@ using namespace o2::trd;
 
 //_____________________________________________________________________________
 
-const o2::detectors::DetID TRDGeometry::sDetID(o2::detectors::DetID::TRD);
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -164,7 +163,7 @@ void TRDFeeParam::Copy(TRDFeeParam &p) const
 }
 
 //_____________________________________________________________________________
-Int_t TRDFeeParam::GetPadRowFromMCM(Int_t irob, Int_t imcm) const
+Int_t TRDFeeParam::getPadRowFromMCM(Int_t irob, Int_t imcm) const
 {
   //
   // Return on which pad row this mcm sits
@@ -175,7 +174,7 @@ Int_t TRDFeeParam::GetPadRowFromMCM(Int_t irob, Int_t imcm) const
 }
 
 //_____________________________________________________________________________
-Int_t TRDFeeParam::GetPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const
+Int_t TRDFeeParam::getPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const
 {
   //
   // Return which pad is connected to this adc channel.
@@ -191,7 +190,7 @@ Int_t TRDFeeParam::GetPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const
   //
 
   if (iadc < 0 || iadc > fgkNadcMcm ) return -100;
-  Int_t mcmcol = imcm%fgkNmcmRobInCol + GetRobSide(irob)*fgkNmcmRobInCol;  // MCM column number on ROC [0..7]
+  Int_t mcmcol = imcm%fgkNmcmRobInCol + getRobSide(irob)*fgkNmcmRobInCol;  // MCM column number on ROC [0..7]
   Int_t padcol = mcmcol*fgkNcolMcm + fgkNcolMcm + 1 - iadc;
   if( padcol < 0 || padcol >= fgkNcol ) return -1;   // this is commented because of reason above OK
 
@@ -200,7 +199,7 @@ Int_t TRDFeeParam::GetPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const
 }
 
 //_____________________________________________________________________________
-Int_t TRDFeeParam::GetExtendedPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const
+Int_t TRDFeeParam::getExtendedPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) const
 {     
   //
   // Return which pad coresponds to the extended digit container pad numbering
@@ -209,7 +208,7 @@ Int_t TRDFeeParam::GetExtendedPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) 
   //
     
   if (iadc < 0 || iadc > fgkNadcMcm ) return -100;
-  Int_t mcmcol = imcm%fgkNmcmRobInCol + GetRobSide(irob)*fgkNmcmRobInCol;  // MCM column number on ROC [0..7]
+  Int_t mcmcol = imcm%fgkNmcmRobInCol + getRobSide(irob)*fgkNmcmRobInCol;  // MCM column number on ROC [0..7]
   Int_t padcol = mcmcol*fgkNadcMcm + fgkNcolMcm + 2 - iadc;
 
   return padcol;
@@ -217,7 +216,7 @@ Int_t TRDFeeParam::GetExtendedPadColFromADC(Int_t irob, Int_t imcm, Int_t iadc) 
 }
 
 //_____________________________________________________________________________
-Int_t TRDFeeParam::GetMCMfromPad(Int_t irow, Int_t icol) const
+Int_t TRDFeeParam::getMCMfromPad(Int_t irow, Int_t icol) const
 {
   //
   // Return on which MCM this pad is directry connected.
@@ -231,7 +230,7 @@ Int_t TRDFeeParam::GetMCMfromPad(Int_t irow, Int_t icol) const
 }
 
 //_____________________________________________________________________________
-Int_t TRDFeeParam::GetMCMfromSharedPad(Int_t irow, Int_t icol) const
+Int_t TRDFeeParam::getMCMfromSharedPad(Int_t irow, Int_t icol) const
 {
   //
   // Return on which MCM this pad is directry connected.
@@ -253,30 +252,30 @@ Int_t TRDFeeParam::GetMCMfromSharedPad(Int_t irow, Int_t icol) const
 }
 
 //_____________________________________________________________________________
-Int_t TRDFeeParam::GetROBfromPad(Int_t irow, Int_t icol) const
+Int_t TRDFeeParam::getROBfromPad(Int_t irow, Int_t icol) const
 {
   //
   // Return on which rob this pad is
   //
 
-  return (irow/fgkNmcmRobInRow)*2 + GetColSide(icol);
+  return (irow/fgkNmcmRobInRow)*2 + getColSide(icol);
 
 }
 
 //_____________________________________________________________________________
-Int_t TRDFeeParam::GetROBfromSharedPad(Int_t irow, Int_t icol) const
+Int_t TRDFeeParam::getROBfromSharedPad(Int_t irow, Int_t icol) const
 {
   //
   // Return on which rob this pad is for shared pads
   //
 
-  if(icol<72) return (irow/fgkNmcmRobInRow)*2 + GetColSide(icol+5);
-  else return (irow/fgkNmcmRobInRow)*2 + GetColSide(icol-5);
+  if(icol<72) return (irow/fgkNmcmRobInRow)*2 + getColSide(icol+5);
+  else return (irow/fgkNmcmRobInRow)*2 + getColSide(icol-5);
 
 }
 
 //_____________________________________________________________________________
-Int_t TRDFeeParam::GetRobSide(Int_t irob) const
+Int_t TRDFeeParam::getRobSide(Int_t irob) const
 {
   //
   // Return on which side this rob sits (A side = 0, B side = 1)
@@ -289,7 +288,7 @@ Int_t TRDFeeParam::GetRobSide(Int_t irob) const
 }
 
 //_____________________________________________________________________________
-Int_t TRDFeeParam::GetColSide(Int_t icol) const
+Int_t TRDFeeParam::getColSide(Int_t icol) const
 {
   //
   // Return on which side this column sits (A side = 0, B side = 1)
@@ -329,7 +328,7 @@ Int_t TRDFeeParam::ExtAliToAli(UInt_t dest, UShort_t linkpair, UShort_t rocType,
   
   rob = dest >> 7;                              // Extract ROB pattern from dest.
   mcm = dest & 0x07F;                           // Extract MCM pattern from dest.
-  robAB = GetRobAB( rob, linkpair ); // Get which ROB sides are selected.
+  robAB = getRobAB( rob, linkpair ); // Get which ROB sides are selected.
   
   // Abort if no ROB is selected
   if( robAB == 0 ) {
@@ -374,7 +373,7 @@ Int_t TRDFeeParam::ExtAliToAli(UInt_t dest, UShort_t linkpair, UShort_t rocType,
 }
 
 
-Short_t TRDFeeParam::GetRobAB( UShort_t robsel, UShort_t linkpair )
+Short_t TRDFeeParam::getRobAB( UShort_t robsel, UShort_t linkpair )
 {
   // Converts the ROB part of the extended ALICE ID to robs
 
@@ -422,7 +421,7 @@ Short_t TRDFeeParam::ChipmaskToMCMlist( UInt_t cmA, UInt_t cmB, UShort_t linkpai
 
 
 //_____________________________________________________________________________
-void TRDFeeParam::SetRAWversion( Int_t rawver )
+void TRDFeeParam::setRAWversion( Int_t rawver )
 {
   //
   // Set raw data version (major number only)

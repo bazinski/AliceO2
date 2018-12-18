@@ -19,6 +19,7 @@
 #include "TRDBase/TRDSimParam.h"
 #include <TMath.h>
 #include <Rtypes.h>
+#include "TObject.h"
 #include "TRDBase/TRDCommonParam.h"
 #include <FairLogger.h>
 #include "TRDBase/TRDArrayADC.h"
@@ -36,7 +37,8 @@ Short_t *TRDArrayADC::fgLutPadNumbering = 0x0;
 
 //____________________________________________________________________________________
 TRDArrayADC::TRDArrayADC()
-               :fNdet(0)
+               :TObject()
+                ,fNdet(0)
                ,fNrow(0)
                ,fNcol(0)
 	       ,fNumberOfChannels(0)
@@ -54,7 +56,8 @@ TRDArrayADC::TRDArrayADC()
 
 //____________________________________________________________________________________
 TRDArrayADC::TRDArrayADC(Int_t nrow, Int_t ncol, Int_t ntime)
-               :fNdet(0)               
+               :TObject()
+               ,fNdet(0)               
                ,fNrow(0)
                ,fNcol(0)
 	       ,fNumberOfChannels(0)
@@ -73,7 +76,8 @@ TRDArrayADC::TRDArrayADC(Int_t nrow, Int_t ncol, Int_t ntime)
 
 //____________________________________________________________________________________
 TRDArrayADC::TRDArrayADC(const TRDArrayADC &b)
-               :fNdet(b.fNdet)
+               :TObject(b)
+                ,fNdet(b.fNdet)
                ,fNrow(b.fNrow)
                ,fNcol(b.fNcol)
 	       ,fNumberOfChannels(b.fNumberOfChannels)
@@ -117,6 +121,7 @@ TRDArrayADC &TRDArrayADC::operator=(const TRDArrayADC &b)
     {
       delete [] fADC;
     }
+  TObject::operator=(b);
   fNdet=b.fNdet;
   fNrow=b.fNrow;
   fNcol=b.fNcol;
