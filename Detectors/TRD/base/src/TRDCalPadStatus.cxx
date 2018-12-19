@@ -14,11 +14,11 @@
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "TH1F.h"
-#include "TH2F.h"
-#include "TNamed.h"
-#include "TStyle.h"
-#include "TCanvas.h"
+#include <TH1F.h>
+#include <TH2F.h>
+#include <TNamed.h>
+#include <TStyle.h>
+#include <TCanvas.h>
 
 #include "TRDBase/TRDGeometryBase.h"
 #include "DetectorsCommonDataFormats/DetMatrixCache.h"
@@ -54,12 +54,12 @@ TRDCalPadStatus::TRDCalPadStatus(const Text_t *name, const Text_t *title)
   //
   // TRDCalPadStatus constructor
   //
-  TRDGeometry fgeom;
+  //TRDGeometry fgeom;
   for (Int_t isec = 0; isec < kNsect; isec++) {
     for (Int_t ipla = 0; ipla < kNplan; ipla++) {
       for (Int_t icha = 0; icha < kNcham; icha++) {
-        //Int_t idet = o2::trd::TRDGeometryBase::getDetector(ipla,icha,isec);
-        Int_t idet = fgeom.getDetector(ipla,icha,isec);//TRDGeometryBase::getDetector(ipla,icha,isec);
+        Int_t idet = o2::trd::TRDGeometry::getDetector(ipla,icha,isec);
+    //    Int_t idet = fgeom.getDetector(ipla,icha,isec);//TRDGeometryBase::getDetector(ipla,icha,isec);
         fROC[idet] = new TRDCalSingleChamberStatus(ipla,icha,144);
       }
     }
@@ -146,8 +146,9 @@ TRDCalSingleChamberStatus* TRDCalPadStatus::getCalROC(Int_t p, Int_t c, Int_t s)
   //
   // Returns the readout chamber of this pad
   //
-  TRDGeometry fgeom;
-  return fROC[fgeom.getDetector(p,c,s)];   
+  //TRDGeometry fgeom;
+  //return fROC[fgeom.getDetector(p,c,s)];   
+  return fROC[o2::trd::TRDGeometry::getDetector(p,c,s)];   
 
 }
 
@@ -265,9 +266,9 @@ void TRDCalPadStatus::PlotHistos2DSm(Int_t sm, const char *name)
   //
   // Make 2D graph
   //
-
-  //gStyle->SetPalette(1);
-  TCanvas *c1 = new TCanvas(name,name,600,800);//50,50,600,800);
+ 
+  gStyle->SetPalette(1);
+  TCanvas *c1 = new TCanvas(name,name,50,50,600,800);
   c1->Divide(3,2);
   c1->cd(1);
   MakeHisto2DSmPl(sm,0)->Draw("colz");

@@ -41,6 +41,16 @@ class TRDGeometry : public TRDGeometryBase, public o2::detectors::DetMatrixCache
   bool chamberInGeometry(int det) const;
   std::vector<std::string> const& getSensitiveTRDVolumes() const { return mSensitiveVolumeNames; }
 
+//  static int getDetectorSec(int det) { return (det % (kNlayer * kNstack)); }
+//  static int getDetectorSec(int layer, int stack) { return (layer + stack * kNlayer); }
+  static int getDetector(int layer, int stack, int sector) { return (layer + stack * kNlayer + sector * kNlayer * kNstack); }                                                                          
+//  static int getLayer(int det) { return (det % kNlayer); }
+//  static int getStack(int det) { return ((det % (kNlayer * kNstack)) / kNlayer); }
+
+
+
+
+
  protected:
   virtual void fillMatrixCache(int mask) override;
 
