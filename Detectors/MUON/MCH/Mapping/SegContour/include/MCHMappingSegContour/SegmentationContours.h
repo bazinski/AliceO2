@@ -18,7 +18,7 @@
 #include "MCHContour/Contour.h"
 #include "MCHContour/Polygon.h"
 #include "MCHContour/BBox.h"
-#include "MCHMappingInterface/Segmentation.h"
+#include "MCHMappingInterface/CathodeSegmentation.h"
 
 namespace o2
 {
@@ -27,19 +27,19 @@ namespace mch
 namespace mapping
 {
 
-std::vector<std::vector<o2::mch::contour::Polygon<double>>> getPadPolygons(const Segmentation& seg);
+std::vector<std::vector<o2::mch::contour::Polygon<double>>> getPadPolygons(const CathodeSegmentation& seg);
 
-std::vector<std::vector<int>> getPadChannels(const Segmentation& seg);
+std::vector<std::vector<int>> getPadChannels(const CathodeSegmentation& seg);
 
-std::vector<o2::mch::contour::Contour<double>> getDualSampaContours(const Segmentation& seg);
+std::vector<o2::mch::contour::Contour<double>> getDualSampaContours(const CathodeSegmentation& seg);
 
-o2::mch::contour::Contour<double> getDualSampaContour(const Segmentation& seg, int dualSampaId);
+o2::mch::contour::Contour<double> getDualSampaContour(const CathodeSegmentation& seg, int dualSampaId);
 
-std::vector<o2::mch::contour::Polygon<double>> getPadPolygons(const Segmentation& seg, int dualSampaId);
+std::vector<o2::mch::contour::Polygon<double>> getPadPolygons(const CathodeSegmentation& seg, int dualSampaId);
 
-o2::mch::contour::Contour<double> getEnvelop(const Segmentation& seg);
+o2::mch::contour::Contour<double> getEnvelop(const CathodeSegmentation& seg);
 
-o2::mch::contour::BBox<double> getBBox(const Segmentation& seg);
+o2::mch::contour::BBox<double> getBBox(const CathodeSegmentation& seg);
 } // namespace mapping
 } // namespace mch
 } // namespace o2
