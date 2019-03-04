@@ -1,5 +1,12 @@
-
-
+// Copyright CERN and copyright holders of ALICE O2. This software is
+// distributed under the terms of the GNU General Public License v3 (GPL
+// Version 3), copied verbatim in the file "COPYING".
+//
+// See http://alice-o2.web.cern.ch/license for full licensing information.
+//
+// In applying this license CERN does not waive the privileges and immunities
+// granted to it by virtue of its status as an Intergovernmental Organization
+// or submit itself to any jurisdiction.
 
 #ifndef O2_MCH_CLUSTERFINDERMLEM_H
 #define O2_MCH_CLUSTERFINDERMLEM_H
@@ -11,6 +18,10 @@
 //  Author Alexander Zinchenko, JINR Dubna; Laurent Aphecetche, SUBATECH
 //
 
+namespace o2 {
+namespace mch {
+
+        
 class TH2D;
 class TMinuit;
 
@@ -29,7 +40,7 @@ public:
 
   virtual bool needSegmentation() const { return kTRUE; }
   
-  using AliMUONVClusterFinder::Prepare;
+  using VirtualClusterFinder::Prepare;
 
   virtual bool prepare(int detElemId,
                          TObjArray* pads[2],
@@ -122,7 +133,7 @@ private:
   
   AliMUONVClusterFinder* mPreClusterFinder; //!<! the pre-clustering worker
   Cluster* mPreCluster; //!<! current pre-cluster
-  TObjArray mClusterList; //!<! clusters corresponding to the current pre-cluster
+  std::vector<Cluster>  mClusterList; //!<! clusters corresponding to the current pre-cluster
   
   int mEventNumber; //!<! current event being processed
   int mDetElemId; //!<! current DE being processed
@@ -137,7 +148,7 @@ private:
   TH2D *mHistMlem; //!<! histogram for MLEM procedure
   TH2D *mHistAnode; //!<! histogram for local maxima search
   
-  TObjArray* fPixArray; //!<! collection of pixels
+  std::vector<Pixel> fPixArray; //!<! collection of pixels
   int mDebug; //!<! debug level
   bool mPlot; //!<! whether we should plot thing (for debug only, quite slow!)
   
@@ -151,5 +162,6 @@ private:
   
   ClassDef(ClusterFinder_MLEM,0) // cluster finder in MUON arm of ALICE
 };
-
+}//end namespace mch
+}//end namespace o2
 #endif

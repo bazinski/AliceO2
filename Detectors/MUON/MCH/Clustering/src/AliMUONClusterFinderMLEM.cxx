@@ -1,22 +1,5 @@
-/**************************************************************************
- * Copyright(c) 1998-1999, ALICE Experiment at CERN, All rights reserved. *
- *                                                                        *
- * Author: The ALICE Off-line Project.                                    *
- * Contributors are mentioned in the code where appropriate.              *
- *                                                                        *
- * Permission to use, copy, modify and distribute this software and its   *
- * documentation strictly for non-commercial purposes is hereby granted   *
- * without fee, provided that the above copyright notice appears in all   *
- * copies and that both the copyright notice and this permission notice   *
- * appear in the supporting documentation. The authors make no claims     *
- * about the suitability of this software for any purpose. It is          *
- * provided "as is" without express or implied warranty.                  *
- **************************************************************************/
-
-/* $Id$ */
-
 //-----------------------------------------------------------------------------
-/// \class AliMUONClusterFinderMLEM
+/// \class ClusterFinder_MLEM
 /// 
 /// Clusterizer class based on the Expectation-Maximization algorithm
 ///
@@ -28,12 +11,11 @@
 /// Alexander Zinchenko, JINR Dubna, for the hardcore of it ;-)
 //-----------------------------------------------------------------------------
 
-#include "AliMUONClusterFinderMLEM.h"
-#include "AliLog.h"
-#include "AliMUONCluster.h"
-#include "AliMUONClusterSplitterMLEM.h"
+#include "MCHClustering/ClusterFinder_MLEM.h"
+#include "MCHClustering/Cluster.h"
+#include "MCHClustering/ClusterSplitterMLEM.h"
 #include "AliMUONVDigit.h"
-#include "AliMUONPad.h"
+#include "MCHClustering/Pad.h"
 #include "AliMUONPreClusterFinder.h"
 #include "AliMpPad.h"
 #include "AliMpVPadIterator.h"
@@ -47,112 +29,108 @@
 #include <TMath.h>
 #include "AliCodeTimer.h"
 
-using std::endl;
-using std::cout;
-/// \cond CLASSIMP
-ClassImp(AliMUONClusterFinderMLEM)
-/// \endcond
+using namespace std;
+using namespace o2::mch;
  
-const Double_t AliMUONClusterFinderMLEM::fgkDistancePrecision = 1e-3; // (cm) used to check overlaps and so on
-const TVector2 AliMUONClusterFinderMLEM::fgkIncreaseSize(-AliMUONClusterFinderMLEM::fgkDistancePrecision,-AliMUONClusterFinderMLEM::fgkDistancePrecision);
-const TVector2 AliMUONClusterFinderMLEM::fgkDecreaseSize(AliMUONClusterFinderMLEM::fgkDistancePrecision,AliMUONClusterFinderMLEM::fgkDistancePrecision);
+const double ClusterFinder_MLEM::mgkDistancePrecision = 1e-3; // (cm) used to check overlaps and so on
+const TVector2 ClusterFinder_MLEM::fgkIncreaseSize(-ClusterFinder_MLEM::mgkDistancePrecision,-ClusterFinder_MLEM::mgkDistancePrecision);
+const TVector2 ClusterFinder_MLEM::fgkDecreaseSize(ClusterFinder_MLEM::mgkDistancePrecision,ClusterFinder_MLEM::mgkDistancePrecision);
 
 // Status flags for pads
-const Int_t AliMUONClusterFinderMLEM::fgkZero = 0x0; ///< pad "basic" state
-const Int_t AliMUONClusterFinderMLEM::fgkMustKeep = 0x1; ///< do not kill (for pixels)
-const Int_t AliMUONClusterFinderMLEM::fgkUseForFit = 0x10; ///< should be used for fit
-const Int_t AliMUONClusterFinderMLEM::fgkOver = 0x100; ///< processing is over
-const Int_t AliMUONClusterFinderMLEM::fgkModified = 0x1000; ///< modified pad charge 
-const Int_t AliMUONClusterFinderMLEM::fgkCoupled = 0x10000; ///< coupled pad  
+const int ClusterFinder_MLEM::mgkZero = 0x0; ///< pad "basic" state
+const int ClusterFinder_MLEM::mgkMustKeep = 0x1; ///< do not kill (for pixels)
+const int ClusterFinder_MLEM::mgkUseForFit = 0x10; ///< should be used for fit
+const int ClusterFinder_MLEM::mgkOver = 0x100; ///< processing is over
+const int ClusterFinder_MLEM::mgkModified = 0x1000; ///< modified pad charge 
+const int ClusterFinder_MLEM::mgkCoupled = 0x10000; ///< coupled pad  
 
 //_____________________________________________________________________________
-AliMUONClusterFinderMLEM::AliMUONClusterFinderMLEM(Bool_t plot, AliMUONVClusterFinder* clusterFinder)
-  : AliMUONVClusterFinder(),
-fPreClusterFinder(clusterFinder),
-fPreCluster(0x0),
-fClusterList(),
-fEventNumber(0),
-fDetElemId(-1),
-fClusterNumber(0),
-fHistMlem(0x0),
-fHistAnode(0x0),
-fPixArray(new TObjArray(20)),
-fDebug(0),
-fPlot(plot),
-fSplitter(0x0),
-fNClusters(0),
-fNAddVirtualPads(0),
-fLowestPixelCharge(0),
-fLowestPadCharge(0),
-fLowestClusterCharge(0)
+ClusterFinder_MLEM::ClusterFinder_MLEM(bool plot, VirtualClusterFinder* clusterFinder)
+  : VirtualClusterFinder(),
+mPreClusterFinder(clusterFinder),
+mPreCluster(nullptr),
+mClusterList(),
+mEventNumber(0),
+mDetElemId(-1),
+mClusterNumber(0),
+mHistMlem(nullptr),
+mHistAnode(nullptr),
+mPixArray(new TObjArray(20)),
+mDebug(0),
+mPlot(plot),
+mSplitter(nullptr),
+mNClusters(0),
+mNAddVirtualPads(0),
+mLowestPixelCharge(0),
+mLowestPadCharge(0),
+mLowestClusterCharge(0)
 {
   /// Constructor
 
-  fkSegmentation[1] = fkSegmentation[0] = 0x0; 
+  mkSegmentation[1] = mkSegmentation[0] = 0x0; 
 
-  if (fPlot) fDebug = 1;
+  if (mPlot) mDebug = 1;
 }
 
 //_____________________________________________________________________________
-AliMUONClusterFinderMLEM::~AliMUONClusterFinderMLEM()
+ClusterFinder_MLEM::~ClusterFinder_MLEM()
 {
 /// Destructor
-  delete fPixArray; fPixArray = 0;
+  delete mPixArray; mPixArray = 0;
 //  delete fDraw;
-  delete fPreClusterFinder;
-  delete fSplitter;
-  AliInfo(Form("Total clusters %d AddVirtualPad needed %d",
-               fNClusters,fNAddVirtualPads));
+  delete mPreClusterFinder;
+  delete mSplitter;
+  LOG (info) << "Total clusters " << mNClusters << " AddVirtualPad needed " << fNAddVirtualPads;
 }
 
 //_____________________________________________________________________________
-Bool_t 
-AliMUONClusterFinderMLEM::Prepare(Int_t detElemId,
+bool 
+ClusterFinder_MLEM::prepare(int detElemId,
                                   TObjArray* pads[2],
-                                  const AliMpArea& area,
+                                  const MpArea& area,
                                   const AliMpVSegmentation* seg[2])
 {
   /// Prepare for clustering
 //  AliCodeTimerAuto("",0)
   
-  for ( Int_t i = 0; i < 2; ++i )
+  for ( int i = 0; i < 2; ++i )
   {
-    fkSegmentation[i] = seg[i];
+    mkSegmentation[i] = seg[i];
   }
   
   // Find out the DetElemId
-  fDetElemId = detElemId;
+  mDetElemId = detElemId;
   
-  delete fSplitter;
-  fSplitter = new AliMUONClusterSplitterMLEM(fDetElemId,
-                                             fPixArray,
-                                             fLowestPixelCharge,
-                                             fLowestPadCharge,
-                                             fLowestClusterCharge);
-  fSplitter->SetDebug(fDebug);
+  delete mSplitter;
+  mSplitter = new ClusterSplitterMLEM(mDetElemId,
+                                             mPixArray,
+                                             mLowestPixelCharge,
+                                             mLowestPadCharge,
+                                             mLowestClusterCharge);
+  mSplitter->setDebug(mDebug);
     
   // find out current event number, and reset the cluster number
-  AliRunLoader *runLoader = AliRunLoader::Instance();
-  fEventNumber = runLoader ? runLoader->GetEventNumber() : 0;
-  fClusterNumber = -1;
-  fClusterList.Delete();
-  fPixArray->Delete();
+  //AliRunLoader *runLoader = AliRunLoader::Instance();
+  mEventNumber = -1;//runLoader ? runLoader->GetEventNumber() : 0; //TODO determine runnumber ?
+  mClusterNumber = -1;
+  mClusterList.Delete();
+  mPixArray->Delete();
 
-  AliDebug(3,Form("EVT %d DE %d",fEventNumber,fDetElemId));
+  LOG (debug2) << "EVT " << mEventNumber << " DE " << mDetElemId;
   
-  if ( fPreClusterFinder->NeedSegmentation() )
+  if ( mPreClusterFinder->needSegmentation() )
   {
-    return fPreClusterFinder->Prepare(detElemId,pads,area,seg);
+    return mPreClusterFinder->prepare(detElemId,pads,area,seg);
   }
   else
   {
-    return fPreClusterFinder->Prepare(detElemId,pads,area);
+    return mPreClusterFinder->prepare(detElemId,pads,area);
   }
 }
 
 //_____________________________________________________________________________
-AliMUONCluster* 
-AliMUONClusterFinderMLEM::NextCluster()
+Cluster* 
+ClusterFinder_MLEM::nextCluster()
 {
   /// Return next cluster
 //  AliCodeTimerAuto("",0)
@@ -175,7 +153,7 @@ AliMUONClusterFinderMLEM::NextCluster()
   // if the cluster list is exhausted, we need to go to the next
   // pre-cluster and treat it
 
-  fPreCluster = fPreClusterFinder->NextCluster();
+  fPreCluster = fPreClusterFinder->nextCluster();
 
   fPixArray->Delete();
   fClusterList.Delete(); // reset the list of clusters for this pre-cluster
@@ -187,63 +165,64 @@ AliMUONClusterFinderMLEM::NextCluster()
     return 0x0;
   }
     
-  WorkOnPreCluster();
+  workOnPreCluster();
 
   // WorkOnPreCluster may have used only part of the pads, so we check that
   // now, and let the unused pads be reused by the preclustering...
   
-  Int_t mult = fPreCluster->Multiplicity();
-  for ( Int_t i = 0; i < mult; ++i )
+  int mult = mPreCluster->multiplicity();
+  for ( int i = 0; i < mult; ++i )
   {
-    AliMUONPad* pad = fPreCluster->Pad(i);
+    Pad* pad = mPreCluster->pad(i);
     if ( !pad->IsUsed() )
     {
-      fPreClusterFinder->UsePad(*pad);
+      mPreClusterFinder->usePad(*pad);
     }
   }
   
-  return NextCluster();
+  return nextCluster();
 }
 
 //_____________________________________________________________________________
-Bool_t
-AliMUONClusterFinderMLEM::WorkOnPreCluster()
+bool
+ClusterFinder_MLEM::workOnPreCluster()
 {
   /// Starting from a precluster, builds a pixel array, and then
   /// extract clusters from this array
   
   //  AliCodeTimerAuto("",0)	
 
-  if (fDebug) {
-    cout << " *** Event # " << fEventNumber 
-	 << " det. elem.: " << fDetElemId << endl;
-    for (Int_t j = 0; j < fPreCluster->Multiplicity(); ++j) {
-      AliMUONPad* pad = fPreCluster->Pad(j);
+  if (mDebug) {
+    cout << " *** Event # " << mEventNumber 
+	 << " det. elem.: " << mDetElemId << endl;
+    for (int j = 0; j < mPreCluster->multiplicity(); ++j) {
+      Pad* pad = mPreCluster->pad(j);
       printf(" bbb %3d %1d %8.4f %8.4f %8.4f %8.4f %6.1f %3d %3d %2d %1d %1d \n",
-	     j, pad->Cathode(), pad->Coord(0), pad->Coord(1), pad->DX()*2, pad->DY()*2,
-             pad->Charge(), pad->Ix(), pad->Iy(), pad->Status(), pad->IsReal(), pad->IsSaturated());
+	     j, pad->cathode(), pad->coord(0), pad->coord(1), pad->dX()*2, pad->dY()*2,
+             pad->charge(), pad->ix(), pad->iy(), pad->status(), pad->isReal(), pad->isSaturated());
     }
   }
 
-  AliMUONCluster* cluster = CheckPrecluster(*fPreCluster);
+  std::unique_ptr<Cluster*> cluster( checkPrecluster(*mPreCluster));
   if (!cluster) return kFALSE;
 
-  BuildPixArray(*cluster);
+  buildPixArray(*cluster);
   
-  if ( fPixArray->GetLast() < 0 )
+  if ( mPixArray->getLast() < 0 )
   {
-    AliDebug(1,"No pixel for the above cluster");
+    LOG (debug) << "No pixel for the above cluster";
     delete cluster;
     return kFALSE;
   }
   
   // Use MLEM for cluster finder
-  Int_t nMax = 1, localMax[100], maxPos[100];
-  Double_t maxVal[100];
+  int nMax = 1;
+  std::vector<int> localMax(100), maxPos(100);
+  std::vector<double> maxVal(100);
   
-  Int_t iSimple = 0, nInX = -1, nInY;
+  int iSimple = 0, nInX = -1, nInY;
   
-  PadsInXandY(*cluster,nInX, nInY);
+  padsInXandY(*cluster,nInX, nInY);
   
   if (nInX < 4 && nInY < 4) 
   {
@@ -251,36 +230,36 @@ AliMUONClusterFinderMLEM::WorkOnPreCluster()
   }
   else 
   {
-    nMax = FindLocalMaxima(fPixArray, localMax, maxVal); // for small clusters just to tag pixels
+    nMax = findLocalMaxima(mPixArray, localMax, maxVal); // for small clusters just to tag pixels
     if (nMax > 1) {
-      if (cluster->Multiplicity() <= 50) nMax = 1; // for small clusters 
+      if (cluster->multiplicity() <= 50) nMax = 1; // for small clusters 
       if (nMax > 1) TMath::Sort(nMax, maxVal, maxPos, kTRUE); // in descending order
     }
   }
   
-  for (Int_t i = 0; i < nMax; ++i) 
+  for (int i = 0; i < nMax; ++i) 
   {
     if (nMax > 1) 
     {
-      FindCluster(*cluster,localMax, maxPos[i]);
+      findCluster(*cluster,localMax, maxPos[i]);
     }
 
-    MainLoop(*cluster,iSimple);
+    mainLoop(*cluster,iSimple);
 
     if (i < nMax-1) 
     {
-      Int_t mult = cluster->Multiplicity();
-      for (Int_t j = 0; j < mult; ++j) 
+      int mult = cluster->multiplicity();
+      for (int j = 0; j < mult; ++j) 
       {
-        AliMUONPad* pad = cluster->Pad(j);
+        Pad* pad = cluster->pad(j);
         //if ( pad->Status() == 0 ) continue; // pad charge was not modified
-        if ( pad->Status() != fgkOver ) continue; // pad was not used
+        if ( pad->status() != mgkOver ) continue; // pad was not used
         //pad->SetStatus(0);
-        pad->SetStatus(fgkZero);
-        pad->RevertCharge(); // use backup charge value
+        pad->setStatus(mgkZero);
+        pad->revertCharge(); // use backup charge value
       }
     }
-  } // for (Int_t i=0; i<nMax;
+  } // for (int i=0; i<nMax;
   delete fHistMlem;
   delete fHistAnode;
   fHistMlem = fHistAnode = 0x0;
@@ -289,80 +268,80 @@ AliMUONClusterFinderMLEM::WorkOnPreCluster()
 }
 
 //_____________________________________________________________________________
-Bool_t 
-AliMUONClusterFinderMLEM::Overlap(const AliMUONPad& pad, const AliMUONPad& pixel)
+bool 
+ClusterFinder_MLEM::overlap(const Pad& pad, const Pad& pixel)
 {
   /// Check if the pad and the pixel overlaps
 
   // make a fake pad from the pixel
-  AliMUONPad tmp(pad.DetElemId(),pad.Cathode(),pad.Ix(),pad.Iy(),
-                 pixel.Coord(0),pixel.Coord(1),
-                 pixel.Size(0),pixel.Size(1),0);
+  Pad tmp(pad.detElemId(),pad.cathode(),pad.ix(),pad.iy(),
+                 pixel.coord(0),pixel.coord(1),
+                 pixel.size(0),pixel.size(1),0);
   
-  return AliMUONPad::AreOverlapping(pad,tmp,fgkDecreaseSize);
+  return Pad::areOverlapping(pad,tmp,mgkDecreaseSize);
 }
 
 //_____________________________________________________________________________
-AliMUONCluster* 
-AliMUONClusterFinderMLEM::CheckPrecluster(const AliMUONCluster& origCluster)
+Cluster* 
+ClusterFinder_MLEM::checkPrecluster(const Cluster& origCluster)
 {
   /// Check precluster in order to attempt to simplify it (mostly for
   /// two-cathode preclusters)
     
-  AliCodeTimerAuto("",0)
+//  AliCodeTimerAuto("",0)
 
   // Disregard small clusters (leftovers from splitting or noise)
-  if ((origCluster.Multiplicity()==1 || origCluster.Multiplicity()==2) &&
-      origCluster.Charge(0)+origCluster.Charge(1) < fLowestClusterCharge )
+  if ((origCluster.multiplicity()==1 || origCluster.multiplicity()==2) &&
+      origCluster.charge(0)+origCluster.charge(1) < mLowestClusterCharge )
   { 
     return 0x0;
   }
 
-  AliMUONCluster* cluster = new AliMUONCluster(origCluster);
+  Cluster* cluster = new Cluster(origCluster); // TODO why bother to copy  ?
 
   AliDebug(2,"Start of CheckPreCluster=");
   //StdoutToAliDebug(2,cluster->Print("full"));
 
-  AliMUONCluster* rv(0x0);
+  Cluster* rv(nullptr);
   
-  if (cluster->Multiplicity(0) && cluster->Multiplicity(1))
+  if (cluster->multiplicity(0) && cluster->multiplicity(1))
   { 
-    rv = CheckPreclusterTwoCathodes(cluster);
+    rv = checkPreclusterTwoCathodes(cluster);
   }
   else
   {
-    rv = cluster;
+    rv = cluster; //TODO given how often this is called, why bother with the copy?
   }
   return rv;
 }
 
 //_____________________________________________________________________________
-AliMUONCluster*
-AliMUONClusterFinderMLEM::CheckPreclusterTwoCathodes(AliMUONCluster* cluster)
+Cluster*
+ClusterFinder_MLEM::checkPreclusterTwoCathodes(Cluster* cluster)
 {
   /// Check two-cathode cluster
   
-  Int_t npad = cluster->Multiplicity();
-  Int_t* flags = new Int_t[npad];
-  for (Int_t j = 0; j < npad; ++j) flags[j] = 0;
+  int npad = cluster->multiplicity();
+  int* flags = new int[npad];
+  for (int j = 0; j < npad; ++j) flags[j] = 0;
   
   // Check pad overlaps
-  for ( Int_t i = 0; i < npad; ++i) 
+  for ( int i = 0; i < npad; ++i) 
   {
-    AliMUONPad* padi = cluster->Pad(i);
-    if ( padi->Cathode() != 0 ) continue;
-    for (Int_t j = i+1; j < npad; ++j) 
+    Pad* padi = cluster->Pad(i);
+    if ( padi->cathode() != 0 ) continue;
+    for (int j = i+1; j < npad; ++j) 
     {
-      AliMUONPad* padj = cluster->Pad(j);
-      if ( padj->Cathode() != 1 ) continue;
-      if ( !AliMUONPad::AreOverlapping(*padi,*padj,fgkDecreaseSize) ) continue;
+      Pad* padj = cluster->pad(j);
+      if ( padj->cathode() != 1 ) continue;
+      if ( !Pad::areOverlapping(*padi,*padj,mgkDecreaseSize) ) continue;
       flags[i] = flags[j] = 1; // mark overlapped pads
     } 
   } 
   
   // Check if all pads overlap
-  Int_t nFlags=0;
-  for (Int_t i = 0; i < npad; ++i) 
+  int nFlags=0;
+  for (int i = 0; i < npad; ++i) 
   {
     if (!flags[i]) ++nFlags;
   }
@@ -370,90 +349,88 @@ AliMUONClusterFinderMLEM::CheckPreclusterTwoCathodes(AliMUONCluster* cluster)
   if (nFlags > 0) 
   {
     // not all pads overlap.
-    if (fDebug) cout << " nFlags: " << nFlags << endl;
+    if (mDebug) cout << " nFlags: " << nFlags << endl;
     TObjArray toBeRemoved;
-    for (Int_t i = 0; i < npad; ++i) 
+    for (int i = 0; i < npad; ++i) 
     {
-      AliMUONPad* pad = cluster->Pad(i);
+      Pad* pad = cluster->Pad(i);
       if (flags[i]) continue;
-      Int_t cath = pad->Cathode();
-      Int_t cath1 = TMath::Even(cath);
+      int cath = pad->cathode();
+      int cath1 = TMath::Even(cath);
       // Check for edge effect (missing pads on the _other_ cathode)
       AliMpPad mpPad =
-      fkSegmentation[cath1]->PadByPosition(pad->Position().X(),
-                                           pad->Position().Y(),kFALSE);
-      if (!mpPad.IsValid()) continue;
+      mkSegmentation[cath1]->padByPosition(pad->position().x(),
+                                           pad->position().y(),kFALSE);
+      if (!mpPad.isValid()) continue;
       if (nFlags == 1 && pad->Charge() < fLowestPadCharge) continue; 
-      AliDebug(2,Form("Releasing the following pad : de,cath,ix,iy %d,%d,%d,%d charge %e",
-                      fDetElemId,pad->Cathode(),pad->Ix(),pad->Iy(),pad->Charge()));
-      toBeRemoved.AddLast(pad);
-      fPreCluster->Pad(i)->Release();
+      LOG (debug1) << "Releasing the following pad : de,cath,ix,iy" <<  fDetElemId,pad->Cathode() << "," << pad->Ix() <<"," << pad->Iy() <<" charge : " << pad->Charge();
+      toBeRemoved.addLast(pad);
+      mPreCluster->pad(i)->release();
     }
-    Int_t nRemove = toBeRemoved.GetEntriesFast();
-    for ( Int_t i = 0; i < nRemove; ++i )
+    int nRemove = toBeRemoved.GetEntriesFast();
+    for ( int i = 0; i < nRemove; ++i )
     {
-      cluster->RemovePad(static_cast<AliMUONPad*>(toBeRemoved.UncheckedAt(i)));
+      cluster->RemovePad(static_cast<Pad*>(toBeRemoved.UncheckedAt(i)));
     }
   } 
   
   // Check correlations of cathode charges
-  if ( !cluster->IsSaturated() && cluster->ChargeAsymmetry() > 1 )
+  if ( !cluster->isSaturated() && cluster->chargeAsymmetry() > 1 )
   {
     // big difference
-    Int_t cathode = cluster->MaxRawChargeCathode();
-    Int_t imin(-1);
-    Int_t imax(-1);
-    Double_t cmax(0);
-    Double_t cmin(1E9);
+    int cathode = cluster->maxRawChargeCathode();
+    int imin(-1);
+    int imax(-1);
+    double cmax(0);
+    double cmin(1E9);
     
     // get min and max pad charges on the cathode opposite to the 
     // max pad (given by MaxRawChargeCathode())
     //
-    Int_t mult = cluster->Multiplicity();
-    for ( Int_t i = 0; i < mult; ++i )
+    int mult = cluster->multiplicity();
+    for ( int i = 0; i < mult; ++i )
     {
-      AliMUONPad* pad = cluster->Pad(i);
-      if ( pad->Cathode() != cathode || !pad->IsReal() )
+      Pad* pad = cluster->pad(i);
+      if ( pad->cathode() != cathode || !pad->isReal() )
       {
         // only consider pads in the opposite cathode, and
         // only consider real pads (i.e. exclude the virtual ones)
         continue;
       }
-      if ( pad->Charge() < cmin )
+      if ( pad->charge() < cmin )
       {
-        cmin = pad->Charge();
+        cmin = pad->charge();
         imin = i;
 	if (imax < 0) {
 	  imax = imin;
 	  cmax = cmin;
 	}
       }
-      else if ( pad->Charge() > cmax )
+      else if ( pad->charge() > cmax )
       {
-        cmax = pad->Charge();
+        cmax = pad->charge();
         imax = i;
       }      
     }
-    AliDebug(2,Form("Pad imin,imax %d,%d cmin,cmax %e,%e",
-                    imin,imax,cmin,cmax));
+    LOG (debug1) << "Pad imin,imax " << imin << "," << imax << " cmin,cmax " <<  cmin << "," << cmax;
     //
     // arrange pads according to their distance to the max, normalized
     // to the pad size
-    Double_t* dist = new Double_t[mult];
-    Double_t dxMin(1E9);
-    Double_t dyMin(1E9);
-    Double_t dmin(0);
+    double* dist = new double[mult];
+    double dxMin(1E9);
+    double dyMin(1E9);
+    double dmin(0);
     
-    AliMUONPad* padmax = cluster->Pad(imax);
+    AliMUONPad* padmax = cluster->pad(imax);
     
-    for ( Int_t i = 0; i < mult; ++i )
+    for ( int i = 0; i < mult; ++i )
     {
       dist[i] = 0.0;
       if ( i == imax) continue;
-      AliMUONPad* pad = cluster->Pad(i);
-      if ( pad->Cathode() != cathode || !pad->IsReal() ) continue;
-      Double_t dx = (pad->X()-padmax->X())/padmax->DX()/2.0;
-      Double_t dy = (pad->Y()-padmax->Y())/padmax->DY()/2.0;
+      Pad* pad = cluster->pad(i);
+      if ( pad->cathode() != cathode || !pad->isReal() ) continue;
+      double dx = (pad->x()-padmax->x())/padmax->dX()/2.0;
+      double dy = (pad->y()-padmax->y())/padmax->dY()/2.0;
       dist[i] = TMath::Sqrt(dx*dx+dy*dy);
       if ( i == imin )
       {
@@ -464,19 +441,19 @@ AliMUONClusterFinderMLEM::CheckPreclusterTwoCathodes(AliMUONCluster* cluster)
     }
     
     TMath::Sort(mult,dist,flags,kFALSE); // in ascending order
-    Double_t xmax(-1), distPrev(999);
+    double xmax(-1), distPrev(999);
     TObjArray toBeRemoved;
     
-    for ( Int_t i = 0; i < mult; ++i )
+    for ( int i = 0; i < mult; ++i )
     {
-      Int_t indx = flags[i];
-      AliMUONPad* pad = cluster->Pad(indx);
-      if ( pad->Cathode() != cathode || !pad->IsReal() ) continue;
+      int indx = flags[i];
+      Pad* pad = cluster->pad(indx);
+      if ( pad->cathode() != cathode || !pad->isReal() ) continue;
       if ( dist[indx] > dmin )
       {
         // farther than the minimum pad
-        Double_t dx = (pad->X()-padmax->X())/padmax->DX()/2.0;
-        Double_t dy = (pad->Y()-padmax->Y())/padmax->DY()/2.0;
+        double dx = (pad->x()-padmax->x())/padmax->dX()/2.0;
+        double dy = (pad->y()-padmax->y())/padmax->dY()/2.0;
         dx *= dxMin;
         dy *= dyMin;
         if (dx >= 0 && dy >= 0) continue;
@@ -484,38 +461,36 @@ AliMUONClusterFinderMLEM::CheckPreclusterTwoCathodes(AliMUONCluster* cluster)
         if (TMath::Abs(dy) > TMath::Abs(dx) && dy >= 0) continue;        
       }
       if (dist[indx] > distPrev + 1) break; // overstepping empty pads
-      if ( pad->Charge() <= cmax || TMath::Abs(dist[indx]-xmax) < 1E-3 )
+      if ( pad->charge() <= cmax || TMath::Abs(dist[indx]-xmax) < 1E-3 )
       {
         // release pad
         if (TMath::Abs(dist[indx]-xmax) < 1.e-3) 
         {
-          cmax = TMath::Max(pad->Charge(),cmax);
+          cmax = TMath::Max(pad->charge(),cmax);
         }
         else
         {
-          cmax = pad->Charge();
+          cmax = pad->charge();
         }
         xmax = dist[indx];
 	distPrev = dist[indx];
-        AliDebug(2,Form("Releasing the following pad : de,cath,ix,iy %d,%d,%d,%d charge %e",
-                        fDetElemId,pad->Cathode(),pad->Ix(),pad->Iy(),
-                        pad->Charge()));
+       LOG (debug1) << "Releasing the following pad : de,cath,ix,iy " << fDetElemId,pad->cathode() << "," << pad->Ix() << "," << pad->Iy() << " charge "  <<    pad->charge();
   
         toBeRemoved.AddLast(pad);
-        fPreCluster->Pad(indx)->Release();
+        fPreCluster->pad(indx)->release();
       }
     }
-    Int_t nRemove = toBeRemoved.GetEntriesFast();
-    for ( Int_t i = 0; i < nRemove; ++i )
+    int nRemove = toBeRemoved.GetEntriesFast();
+    for ( int i = 0; i < nRemove; ++i )
     {
-      cluster->RemovePad(static_cast<AliMUONPad*>(toBeRemoved.UncheckedAt(i)));
+      cluster->removePad(static_cast<AliMUONPad*>(toBeRemoved.UncheckedAt(i)));
     }    
     delete[] dist;
   }
   
   delete[] flags;
   
-  AliDebug(2,"End of CheckPreClusterTwoCathodes=");
+  LOG (debug1) << "End of CheckPreClusterTwoCathodes=";
   //StdoutToAliDebug(2,cluster->Print("full"));
 
   return cluster;    
@@ -523,31 +498,31 @@ AliMUONClusterFinderMLEM::CheckPreclusterTwoCathodes(AliMUONCluster* cluster)
 
 //_____________________________________________________________________________
 void
-AliMUONClusterFinderMLEM::CheckOverlaps()
+ClusterFinder_MLEM::checkOverlaps()
 {
   /// For debug only : check if some pixels overlap...
   
-  Int_t nPix = fPixArray->GetLast()+1;
-  Int_t dummy(0);
+  int nPix = fPixArray->GetLast()+1;
+  int dummy(0);
   
-  for ( Int_t i = 0; i < nPix; ++i )
+  for ( int i = 0; i < nPix; ++i )
   {
-    AliMUONPad* pixelI = Pixel(i);
-    AliMUONPad pi(dummy,dummy,dummy,dummy,
-                  pixelI->Coord(0),pixelI->Coord(1),
-                  pixelI->Size(0),pixelI->Size(1),0.0);
+    Pad* pixelI = Pixel(i);
+    Pad pi(dummy,dummy,dummy,dummy,
+                  pixelI->coord(0),pixelI->coord(1),
+                  pixelI->size(0),pixelI->size(1),0.0);
     
-    for ( Int_t j = i+1; j < nPix; ++j )
+    for ( int j = i+1; j < nPix; ++j )
     {
-      AliMUONPad* pixelJ = Pixel(j);
-      AliMUONPad pj(dummy,dummy,dummy,dummy,
-                    pixelJ->Coord(0),pixelJ->Coord(1),
-                    pixelJ->Size(0),pixelJ->Size(1),0.0);  
-      AliMpArea area;
+      Pad* pixelJ = Pixel(j);
+      Pad pj(dummy,dummy,dummy,dummy,
+                    pixelJ->coord(0),pixelJ->coord(1),
+                    pixelJ->size(0),pixelJ->size(1),0.0);  
+      MpArea area;
       
-      if ( AliMUONPad::AreOverlapping(pi,pj,fgkDecreaseSize,area) )
+      if ( Pad::AreOverlapping(pi,pj,mgkDecreaseSize,area) )
       {
-        AliInfo(Form("The following 2 pixels (%d and %d) overlap !",i,j));
+        LOG (info)  << "The following 2 pixels ("<< i << " and " << j << ") overlap !";
 	/*
         StdoutToAliInfo(pixelI->Print();
                         cout << " Surface = " << pixelI->Size(0)*pixelI->Size(1)*4 << endl;
@@ -563,80 +538,77 @@ AliMUONClusterFinderMLEM::CheckOverlaps()
 }
 
 //_____________________________________________________________________________
-void AliMUONClusterFinderMLEM::BuildPixArray(AliMUONCluster& cluster)
+void ClusterFinder_MLEM::buildPixArray(Cluster& cluster)
 {
   /// Build pixel array for MLEM method
   
-  Int_t npad = cluster.Multiplicity();
+  int npad = cluster.multiplicity();
   if (npad<=0) 
   {
-    AliWarning("Got no pad at all ?!");
+    LOG (warn) << "Got no pad at all ?!";
   }
   
   fPixArray->Delete();
-  BuildPixArrayOneCathode(cluster);
+  buildPixArrayOneCathode(cluster);
   
-  Int_t nPix = fPixArray->GetLast()+1;
+  int nPix = fPixArray->GetLast()+1;
   
-//  AliDebug(2,Form("nPix after BuildPixArray=%d",nPix));
+   LOG (debug3) << "nPix after BuildPixArray=" << nPix;
   
   if ( nPix > npad ) 
   {
-//    AliDebug(2,Form("Will trim number of pixels to number of pads"));
+   LOG (debug3) << "Will trim number of pixels to number of pads";
     
     // Too many pixels - sort and remove pixels with the lowest signal
     fPixArray->Sort();
-    for ( Int_t i = npad; i < nPix; ++i ) 
+    for ( int i = npad; i < nPix; ++i ) 
     {
-      RemovePixel(i);
+      removePixel(i);
     }
     fPixArray->Compress();
   } // if (nPix > npad)
 
-//  StdoutToAliDebug(2,cout << "End of BuildPixelArray:" << endl;
-//                   fPixArray->Print(););
-  //CheckOverlaps();//FIXME : this is for debug only. Remove it.
 }
 
 //_____________________________________________________________________________
-void AliMUONClusterFinderMLEM::BuildPixArrayOneCathode(AliMUONCluster& cluster)
+void ClusterFinder_MLEM::buildPixArrayOneCathode(AliMUONCluster& cluster)
 {
   /// Build the pixel array
 
-//  AliDebug(2,Form("cluster.Multiplicity=%d",cluster.Multiplicity()));
+  LOG (debug3) << "cluster.Multiplicity=" << cluster.multiplicity();
 
-  TVector2 dim = cluster.MinPadDimensions (-1, kFALSE);
-  Double_t width[2] = {dim.X(), dim.Y()}, xy0[2]={99999,99999};
-  Int_t found[2] = {0,0}, mult = cluster.Multiplicity();
+  TVector2 dim = cluster.minPadDimensions (-1, kFALSE);
+  double width[2] = {dim.x(), dim.y()}, xy0[2]={99999,99999};
+  int found[2] = {0,0}, mult = cluster.multiplicity();
 
-  for ( Int_t i = 0; i < mult; ++i) {
-    AliMUONPad* pad = cluster.Pad(i);
-    for (Int_t j = 0; j < 2; ++j) {
+  for ( int i = 0; i < mult; ++i) {
+    Pad* pad = cluster.pad(i);
+    for (int j = 0; j < 2; ++j) {
       if (found[j] == 0 && TMath::Abs(pad->Size(j)-width[j]) < fgkDistancePrecision) { 
-	xy0[j] = pad->Coord(j);
+	xy0[j] = pad->coord(j);
 	found[j] = 1;
       }
     }
     if (found[0] && found[1]) break;
   }
 
-  Double_t min[2], max[2];
-  Int_t cath0 = 0, cath1 = 1;
-  if (cluster.Multiplicity(0) == 0) cath0 = 1;
-  else if (cluster.Multiplicity(1) == 0) cath1 = 0;
+  double min[2], max[2];
+  int cath0 = 0, cath1 = 1;
+  if (cluster.multiplicity(0) == 0) cath0 = 1;
+  else if (cluster.multiplicity(1) == 0) cath1 = 0;
 
 
-  Double_t leftDownX, leftDownY;
-  cluster.Area(cath0).LeftDownCorner(leftDownX, leftDownY);
-  Double_t rightUpX, rightUpY;
-  cluster.Area(cath0).RightUpCorner(rightUpX, rightUpY);
+  double leftDownX, leftDownY;
+  cluster.area(cath0).leftDownCorner(leftDownX, leftDownY);
+  double rightUpX, rightUpY;
+  cluster.area(cath0).rightUpCorner(rightUpX, rightUpY);
   min[0] = leftDownX;
   min[1] = leftDownY;
   max[0] = rightUpX;
   max[1] = rightUpY;;
   if (cath1 != cath0) {
-    cluster.Area(cath1).LeftDownCorner(leftDownX, leftDownY);
-    cluster.Area(cath1).RightUpCorner(rightUpX, rightUpY);
+    cluster.area(cath1).leftDownCorner(leftDownX, leftDownY);
+    cluster.area(cath1).rightUpCorner(rightUpX, rightUpY);
     min[0] = TMath::Max (min[0], leftDownX);
     min[1] = TMath::Max (min[1], leftDownY);
     max[0] = TMath::Min (max[0], rightUpX);
@@ -645,9 +617,9 @@ void AliMUONClusterFinderMLEM::BuildPixArrayOneCathode(AliMUONCluster& cluster)
 
   // Adjust limits
   //width[0] /= 2; width[1] /= 2; // just for check
-  Int_t nbins[2]={0,0};
-  for (Int_t i = 0; i < 2; ++i) {
-    Double_t dist = (min[i] - xy0[i]) / width[i] / 2;
+  int nbins[2]={0,0};
+  for (int i = 0; i < 2; ++i) {
+    double dist = (min[i] - xy0[i]) / width[i] / 2;
     if (TMath::Abs(dist) < 1.e-6) dist = -1.e-6;
     min[i] = xy0[i] + (TMath::Nint(dist-TMath::Sign(1.e-6,dist)) 
 		       + TMath::Sign(0.5,dist)) * width[i] * 2;
@@ -664,39 +636,39 @@ void AliMUONClusterFinderMLEM::BuildPixArrayOneCathode(AliMUONCluster& cluster)
   TAxis *yaxis = hist1->GetYaxis();
 
   // Fill histogram
-  for ( Int_t i = 0; i < mult; ++i) {
-    AliMUONPad* pad = cluster.Pad(i);
-    Int_t ix0 = xaxis->FindBin(pad->X());
-    Int_t iy0 = yaxis->FindBin(pad->Y());
-    PadOverHist(0, ix0, iy0, pad, hist1, hist2);
+  for ( int i = 0; i < mult; ++i) {
+    Pad* pad = cluster.pad(i);
+    int ix0 = xaxis->FindBin(pad->X());
+    int iy0 = yaxis->FindBin(pad->Y());
+    padOverHist(0, ix0, iy0, pad, hist1, hist2);
   }
 
   // Store pixels
-  for (Int_t i = 1; i <= nbins[0]; ++i) {
-    Double_t x = xaxis->GetBinCenter(i);
-    for (Int_t j = 1; j <= nbins[1]; ++j) {
+  for (int i = 1; i <= nbins[0]; ++i) {
+    double x = xaxis->GetBinCenter(i);
+    for (int j = 1; j <= nbins[1]; ++j) {
       if (hist2->GetBinContent(hist2->GetBin(i,j)) < 0.1) continue;
       //if (hist2->GetBinContent(hist2->GetBin(i,j)) < 1.1 && cluster.Multiplicity(0) && 
       //  cluster.Multiplicity(1)) continue;
       if (cath0 != cath1) {
 	// Two-sided cluster
-	Double_t cont = hist2->GetBinContent(hist2->GetBin(i,j));
+	double cont = hist2->GetBinContent(hist2->GetBin(i,j));
 	if (cont < 999.) continue;
-	if (cont-Int_t(cont/1000.)*1000. < 0.5) continue;
+	if (cont-int(cont/1000.)*1000. < 0.5) continue;
       }
-      Double_t y = yaxis->GetBinCenter(j);
-      Double_t charge = hist1->GetBinContent(hist1->GetBin(i,j));
-      AliMUONPad* pixPtr = new AliMUONPad(x, y, width[0], width[1], charge);
+      double y = yaxis->GetBinCenter(j);
+      double charge = hist1->GetBinContent(hist1->GetBin(i,j));
+      Pad* pixPtr = new Pad(x, y, width[0], width[1], charge);
       fPixArray->Add(pixPtr);
     }  
   }
   //*
   if (fPixArray->GetEntriesFast() == 1) {
     // Split pixel into 2
-    AliMUONPad* pixPtr = static_cast<AliMUONPad*> (fPixArray->UncheckedAt(0));
-    pixPtr->SetSize(0,width[0]/2.);
-    pixPtr->Shift(0,-width[0]/4.);
-    pixPtr = new AliMUONPad(pixPtr->X()+width[0], pixPtr->Y(), width[0]/2., width[1], pixPtr->Charge());
+    Pad* pixPtr = static_cast<Pad*> (fPixArray->UncheckedAt(0));
+    pixPtr->setSize(0,width[0]/2.);
+    pixPtr->shift(0,-width[0]/4.);
+    pixPtr = new Pad(pixPtr->x()+width[0], pixPtr->Y(), width[0]/2., width[1], pixPtr->charge());
     fPixArray->Add(pixPtr);
   }
   //*/
@@ -706,26 +678,26 @@ void AliMUONClusterFinderMLEM::BuildPixArrayOneCathode(AliMUONCluster& cluster)
 }
 
 //_____________________________________________________________________________
-void AliMUONClusterFinderMLEM::PadOverHist(Int_t idir, Int_t ix0, Int_t iy0, AliMUONPad *pad,
+void ClusterFinder_MLEM::padOverHist(int idir, int ix0, int iy0, Pad *pad,
 					   TH2D *hist1, TH2D *hist2)
 {
   /// "Span" pad over histogram in the direction idir
 
   TAxis *axis = idir == 0 ? hist1->GetXaxis() : hist1->GetYaxis();
-  Int_t nbins = axis->GetNbins(), cath = pad->Cathode();
-  Double_t bin = axis->GetBinWidth(1), amask = TMath::Power(1000.,cath*1.);
+  int nbins = axis->GetNbins(), cath = pad->Cathode();
+  double bin = axis->GetBinWidth(1), amask = TMath::Power(1000.,cath*1.);
 
-  Int_t nbinPad = (Int_t)(pad->Size(idir)/bin*2+fgkDistancePrecision) + 1; // number of bins covered by pad
+  int nbinPad = (int)(pad->Size(idir)/bin*2+fgkDistancePrecision) + 1; // number of bins covered by pad
 
-  for (Int_t i = 0; i < nbinPad; ++i) {
-    Int_t ixy = idir == 0 ? ix0 + i : iy0 + i;
+  for (int i = 0; i < nbinPad; ++i) {
+    int ixy = idir == 0 ? ix0 + i : iy0 + i;
     if (ixy > nbins) break;
-    Double_t lowEdge = axis->GetBinLowEdge(ixy);
-    if (lowEdge + fgkDistancePrecision > pad->Coord(idir) + pad->Size(idir)) break;
-    if (idir == 0) PadOverHist(1, ixy, iy0, pad, hist1, hist2); // span in the other direction
+    double lowEdge = axis->GetBinLowEdge(ixy);
+    if (lowEdge + mgkDistancePrecision > pad->Coord(idir) + pad->size(idir)) break;
+    if (idir == 0) padOverHist(1, ixy, iy0, pad, hist1, hist2); // span in the other direction
     else {
       // Fill histogram
-      Double_t cont = pad->Charge();
+      double cont = pad->charge();
       if (hist2->GetBinContent(hist2->GetBin(ix0, ixy)) > 0.1) 
 	cont = TMath::Min (hist1->GetBinContent(hist1->GetBin(ix0, ixy)), cont);
       hist1->SetBinContent(hist1->GetBin(ix0, ixy), cont);
@@ -734,15 +706,15 @@ void AliMUONClusterFinderMLEM::PadOverHist(Int_t idir, Int_t ix0, Int_t iy0, Ali
     }
   }
 
-  for (Int_t i = -1; i > -nbinPad; --i) {
-    Int_t ixy = idir == 0 ? ix0 + i : iy0 + i;
+  for (int i = -1; i > -nbinPad; --i) {
+    int ixy = idir == 0 ? ix0 + i : iy0 + i;
     if (ixy < 1) break;
-    Double_t upEdge = axis->GetBinUpEdge(ixy);
-    if (upEdge - fgkDistancePrecision < pad->Coord(idir) - pad->Size(idir)) break;
-    if (idir == 0) PadOverHist(1, ixy, iy0, pad, hist1, hist2); // span in the other direction
+    double upEdge = axis->GetBinUpEdge(ixy);
+    if (upEdge - fgkDistancePrecision < pad->coord(idir) - pad->size(idir)) break;
+    if (idir == 0) padOverHist(1, ixy, iy0, pad, hist1, hist2); // span in the other direction
     else {
       // Fill histogram
-      Double_t cont = pad->Charge();
+      double cont = pad->charge();
       if (hist2->GetBinContent(hist2->GetBin(ix0, ixy)) > 0.1) 
 	cont = TMath::Min (hist1->GetBinContent(hist1->GetBin(ix0, ixy)), cont);
       hist1->SetBinContent(hist1->GetBin(ix0, ixy), cont);
@@ -754,7 +726,7 @@ void AliMUONClusterFinderMLEM::PadOverHist(Int_t idir, Int_t ix0, Int_t iy0, Ali
 
 //_____________________________________________________________________________
 void
-AliMUONClusterFinderMLEM::Plot(const char* /*basename*/)
+ClusterFinder_MLEM::plot(const char* /*basename*/)
 {
   /// Make a plot and save it as png
   
@@ -772,28 +744,28 @@ AliMUONClusterFinderMLEM::Plot(const char* /*basename*/)
 
 //_____________________________________________________________________________
 void
-AliMUONClusterFinderMLEM::ComputeCoefficients(AliMUONCluster& cluster,
-                                              Double_t* coef,
-                                              Double_t* probi)
+ClusterFinder_MLEM::computeCoefficients(Cluster& cluster,
+                                              double* coef,
+                                              double* probi)
 {
   /// Compute coefficients needed for MLEM algorithm
   
-  Int_t npadTot = cluster.Multiplicity();
-  Int_t nPix = fPixArray->GetLast()+1;
+  int npadTot = cluster.multiplicity();
+  int nPix = fPixArray->GetLast()+1;
   
-  //memset(probi,0,nPix*sizeof(Double_t));
-  for (Int_t j = 0; j < npadTot*nPix; ++j) coef[j] = 0.;
-  for (Int_t j = 0; j < nPix; ++j) probi[j] = 0.;
+  //memset(probi,0,nPix*sizeof(double));
+  for (int j = 0; j < npadTot*nPix; ++j) coef[j] = 0.;
+  for (int j = 0; j < nPix; ++j) probi[j] = 0.;
 
-  Int_t mult = cluster.Multiplicity();
-  for ( Int_t j = 0; j < mult; ++j ) 
+  int mult = cluster.multiplicity();
+  for ( int j = 0; j < mult; ++j ) 
   {
-    AliMUONPad* pad = cluster.Pad(j);
-    Int_t indx = j*nPix;
+    Pad* pad = cluster.pad(j);
+    int indx = j*nPix;
   
-    for ( Int_t ipix = 0; ipix < nPix; ++ipix ) 
+    for ( int ipix = 0; ipix < nPix; ++ipix ) 
     {
-      Int_t indx1 = indx + ipix;
+      int indx1 = indx + ipix;
       //if (pad->Status() < 0) 
       if (pad->Status() != fgkZero) 
       {   
@@ -818,13 +790,13 @@ AliMUONClusterFinderMLEM::ComputeCoefficients(AliMUONCluster& cluster,
 }
 
 //_____________________________________________________________________________
-Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple)
+bool ClusterFinder_MLEM::MainLoop(AliMUONCluster& cluster, int iSimple)
 {
   /// Repeat MLEM algorithm until pixel size becomes sufficiently small
   
   //  AliCodeTimerAuto("",0)
   
-  Int_t nPix = fPixArray->GetLast()+1;
+  int nPix = fPixArray->GetLast()+1;
 
   AliDebug(2,Form("nPix=%d iSimple=%d, precluster=",nPix,iSimple));
   //StdoutToAliDebug(2,cluster.Print("full"););
@@ -836,21 +808,21 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
   
   AddVirtualPad(cluster); // add virtual pads if necessary
   
-  Int_t npadTot = cluster.Multiplicity();
-  Int_t npadOK = 0;
-  for (Int_t i = 0; i < npadTot; ++i) 
+  int npadTot = cluster.Multiplicity();
+  int npadOK = 0;
+  for (int i = 0; i < npadTot; ++i) 
   {
     //if (cluster.Pad(i)->Status() == 0) ++npadOK;
     if (cluster.Pad(i)->Status() == fgkZero) ++npadOK;
   }
 
-  Double_t* coef(0x0);
-  Double_t* probi(0x0);
-  Int_t lc(0); // loop counter
+  double* coef(0x0);
+  double* probi(0x0);
+  int lc(0); // loop counter
   
   //Plot("mlem.start");
   AliMUONPad* pixPtr = Pixel(0);
-  Double_t xylim[4] = {pixPtr->X(), -pixPtr->X(), pixPtr->Y(), -pixPtr->Y()};
+  double xylim[4] = {pixPtr->X(), -pixPtr->X(), pixPtr->Y(), -pixPtr->Y()};
 
   while (1) 
   {
@@ -862,13 +834,13 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
     AliDebug(2,Form("EVT%d PixArray=",fEventNumber));
     //StdoutToAliDebug(2,fPixArray->Print("full"));
         
-    coef = new Double_t [npadTot*nPix];
-    probi = new Double_t [nPix];
+    coef = new double [npadTot*nPix];
+    probi = new double [nPix];
 
     // Calculate coefficients and pixel visibilities
     ComputeCoefficients(cluster,coef,probi);
 
-    for (Int_t ipix = 0; ipix < nPix; ++ipix) 
+    for (int ipix = 0; ipix < nPix; ++ipix) 
     {
       if (probi[ipix] < 0.01) 
       {
@@ -884,25 +856,25 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
 
     // Find histogram limits for the 1'st pass only - for others computed below
     if (lc == 1) {
-      for ( Int_t ipix = 1; ipix < nPix; ++ipix ) 
+      for ( int ipix = 1; ipix < nPix; ++ipix ) 
 	{
 	  pixPtr = Pixel(ipix);
-	  for ( Int_t i = 0; i < 2; ++i ) 
+	  for ( int i = 0; i < 2; ++i ) 
 	    {
-	      Int_t indx = i * 2;
+	      int indx = i * 2;
 	      if (pixPtr->Coord(i) < xylim[indx]) xylim[indx] = pixPtr->Coord(i); 
 	      else if (-pixPtr->Coord(i) < xylim[indx+1]) xylim[indx+1] = -pixPtr->Coord(i); 
 	    }
 	}
     } else pixPtr = Pixel(0);
 
-    for (Int_t i = 0; i < 4; i++) 
+    for (int i = 0; i < 4; i++) 
     {
       xylim[i] -= pixPtr->Size(i/2); 
     }
     
-    Int_t nx = TMath::Nint ((-xylim[1]-xylim[0])/pixPtr->Size(0)/2);
-    Int_t ny = TMath::Nint ((-xylim[3]-xylim[2])/pixPtr->Size(1)/2);
+    int nx = TMath::Nint ((-xylim[1]-xylim[0])/pixPtr->Size(0)/2);
+    int ny = TMath::Nint ((-xylim[3]-xylim[2])/pixPtr->Size(1)/2);
 
     //StdoutToAliDebug(2,cout << "pixel used for nx,ny computation : "; pixPtr->Print(););
     AliDebug(2,Form("lc %d pixPtr size = %e,%e nx,ny=%d,%d xylim=%e,%e,%e,%e",
@@ -916,15 +888,15 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
     
     fHistMlem = new TH2D("mlem","mlem",nx,xylim[0],-xylim[1],ny,xylim[2],-xylim[3]);
 
-    for (Int_t ipix = 0; ipix < nPix; ++ipix) 
+    for (int ipix = 0; ipix < nPix; ++ipix) 
     {
       AliMUONPad* pixPtr2 = Pixel(ipix);
       fHistMlem->Fill(pixPtr2->Coord(0),pixPtr2->Coord(1),pixPtr2->Charge());
     }
 
     // Check if the total charge of pixels is too low
-    Double_t qTot = 0;
-    for ( Int_t i = 0; i < nPix; ++i) 
+    double qTot = 0;
+    for ( int i = 0; i < nPix; ++i) 
     {
       qTot += Pixel(i)->Charge();
     }
@@ -935,7 +907,7 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
       delete [] coef; 
       delete [] probi; 
       fPixArray->Delete(); 
-      for ( Int_t i = 0; i < npadTot; ++i) 
+      for ( int i = 0; i < npadTot; ++i) 
       {
         AliMUONPad* pad = cluster.Pad(i);
         //if ( pad->Status() == 0) pad->SetStatus(-1);
@@ -955,7 +927,7 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
     }
 
     // Calculate position of the center-of-gravity around the maximum pixel
-    Double_t xyCOG[2];
+    double xyCOG[2];
     FindCOG(xyCOG);
 
     if (TMath::Min(pixPtr->Size(0),pixPtr->Size(1)) < 0.07 && 
@@ -965,19 +937,19 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
     MaskPeaks(1); // mask local maxima
     fPixArray->Sort();
     MaskPeaks(0); // unmask local maxima
-    Double_t pixMin = 0.01*Pixel(0)->Charge();
+    double pixMin = 0.01*Pixel(0)->Charge();
     pixMin = TMath::Min(pixMin,100*fLowestPixelCharge);
 
     // Decrease pixel size and shift pixels to make them centered at 
     // the maximum one
-    Int_t indx = (pixPtr->Size(0)>pixPtr->Size(1)) ? 0 : 1;
-    Int_t ix(1);
-    Double_t width = 0;
-    Double_t shift[2] = { 0.0, 0.0 };
-    for (Int_t i = 0; i < 4; ++i) xylim[i] = 999;
-    Int_t nPix1 = nPix; 
+    int indx = (pixPtr->Size(0)>pixPtr->Size(1)) ? 0 : 1;
+    int ix(1);
+    double width = 0;
+    double shift[2] = { 0.0, 0.0 };
+    for (int i = 0; i < 4; ++i) xylim[i] = 999;
+    int nPix1 = nPix; 
     nPix = 0;
-    for (Int_t ipix = 0; ipix < nPix1; ++ipix) 
+    for (int ipix = 0; ipix < nPix1; ++ipix) 
     {
       AliMUONPad* pixPtr2 = Pixel(ipix);
       if ( nPix >= npadOK  // too many pixels already
@@ -988,7 +960,7 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
         RemovePixel(ipix);
         continue;
       }
-      for (Int_t i = 0; i < 2; ++i) 
+      for (int i = 0; i < 2; ++i) 
       {
         if (!i) 
         {
@@ -1000,10 +972,10 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
           if (ix) 
           {
             ix = 0;
-            for (Int_t j = 0; j < 2; ++j) 
+            for (int j = 0; j < 2; ++j) 
             {
               shift[j] = pixPtr2->Coord(j) - xyCOG[j];
-              shift[j] -= ((Int_t)(shift[j]/pixPtr2->Size(j)/2))*pixPtr2->Size(j)*2;
+              shift[j] -= ((int)(shift[j]/pixPtr2->Size(j)/2))*pixPtr2->Size(j)*2;
             }
           } // if (ix)
           pixPtr2->Shift(0, -shift[0]);
@@ -1019,12 +991,12 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
 	  ++nPix;
         } 
 	else continue; // skip adjustment of histo limits
-        for (Int_t j = 0; j < 4; ++j) 
+        for (int j = 0; j < 4; ++j) 
         {
           xylim[j] = TMath::Min (xylim[j], (j%2 ? -1 : 1)*pixPtr2->Coord(j/2));
         }
-      } // for (Int_t i=0; i<2;
-    } // for (Int_t ipix=0;
+      } // for (int i=0; i<2;
+    } // for (int ipix=0;
     
     fPixArray->Compress();
 
@@ -1042,8 +1014,8 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
       AliMUONPad* pixPtr2 = Pixel(0);
       // add pixels if the maximum is at the limit of pixel area:
       // start from Y-direction
-      Int_t j = 0;
-      for (Int_t i = 3; i > -1; --i) 
+      int j = 0;
+      for (int i = 3; i > -1; --i) 
       {
         if (nPix < npadOK && 
             TMath::Abs((i%2 ? -1 : 1)*xylim[i]-xyCOG[i/2]) < pixPtr2->Size(i/2)) 
@@ -1072,12 +1044,12 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
 
   // remove pixels with low signal or low visibility
   // Cuts are empirical !!!
-  Double_t thresh = TMath::Max (fHistMlem->GetMaximum()/100.,2.0*fLowestPixelCharge);
+  double thresh = TMath::Max (fHistMlem->GetMaximum()/100.,2.0*fLowestPixelCharge);
   thresh = TMath::Min (thresh,100.0*fLowestPixelCharge);
-  Double_t charge = 0;
+  double charge = 0;
 
   // Mark pixels which should be removed
-  for (Int_t i = 0; i < nPix; ++i) 
+  for (int i = 0; i < nPix; ++i) 
   {
     AliMUONPad* pixPtr2 = Pixel(i);
     charge = pixPtr2->Charge();
@@ -1088,8 +1060,8 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
   }
 
   // Move charge of removed pixels to their nearest neighbour (to keep total charge the same)
-  Int_t near = 0;
-  for (Int_t i = 0; i < nPix; ++i) 
+  int near = 0;
+  for (int i = 0; i < nPix; ++i) 
   {
     AliMUONPad* pixPtr2 = Pixel(i);
     charge = pixPtr2->Charge();
@@ -1107,16 +1079,16 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
   //Plot("mlem.beforesplit");
   
   // Update histogram
-  for (Int_t i = 0; i < nPix; ++i) 
+  for (int i = 0; i < nPix; ++i) 
   {
     AliMUONPad* pixPtr2 = Pixel(i);
-    Int_t ix = fHistMlem->GetXaxis()->FindBin(pixPtr2->Coord(0));
-    Int_t iy = fHistMlem->GetYaxis()->FindBin(pixPtr2->Coord(1));
+    int ix = fHistMlem->GetXaxis()->FindBin(pixPtr2->Coord(0));
+    int iy = fHistMlem->GetYaxis()->FindBin(pixPtr2->Coord(1));
     fHistMlem->SetBinContent(ix, iy, pixPtr2->Charge());
   }
 
   // Try to split into clusters
-  Bool_t ok = kTRUE;
+  bool ok = kTRUE;
   if (fHistMlem->GetSum() < 2.0*fLowestPixelCharge) 
   {
     ok = kFALSE;
@@ -1134,12 +1106,12 @@ Bool_t AliMUONClusterFinderMLEM::MainLoop(AliMUONCluster& cluster, Int_t iSimple
 }
 
 //_____________________________________________________________________________
-void AliMUONClusterFinderMLEM::MaskPeaks(Int_t mask)
+void ClusterFinder_MLEM::MaskPeaks(int mask)
 {
   /// Mask/unmask pixels corresponding to local maxima (add/subtract 10000 to their charge
   /// - to avoid loosing low charge pixels after sorting)
 
-  for (Int_t i = 0; i < fPixArray->GetEntriesFast(); ++i) {
+  for (int i = 0; i < fPixArray->GetEntriesFast(); ++i) {
     AliMUONPad* pix = Pixel(i);
     if (pix->Status() == fgkMustKeep) {
       if (mask == 1) pix->SetCharge(pix->Charge()+10000.);
@@ -1149,40 +1121,40 @@ void AliMUONClusterFinderMLEM::MaskPeaks(Int_t mask)
 }
 
 //_____________________________________________________________________________
-void AliMUONClusterFinderMLEM::Mlem(AliMUONCluster& cluster, 
-                                    const Double_t* coef, Double_t* probi, 
-                                    Int_t nIter)
+void ClusterFinder_MLEM::Mlem(AliMUONCluster& cluster, 
+                                    const double* coef, double* probi, 
+                                    int nIter)
 {
   /// Use MLEM to find pixel charges
   
-  Int_t nPix = fPixArray->GetEntriesFast();
+  int nPix = fPixArray->GetEntriesFast();
 
-  Int_t npad = cluster.Multiplicity();
+  int npad = cluster.Multiplicity();
 
-  Double_t* probi1 = new Double_t[nPix];
-  Double_t probMax = TMath::MaxElement(nPix,probi);
+  double* probi1 = new double[nPix];
+  double probMax = TMath::MaxElement(nPix,probi);
   
-  for (Int_t iter = 0; iter < nIter; ++iter) 
+  for (int iter = 0; iter < nIter; ++iter) 
   {
     // Do iterations
-    for (Int_t ipix = 0; ipix < nPix; ++ipix) 
+    for (int ipix = 0; ipix < nPix; ++ipix) 
     {
       Pixel(ipix)->SetChargeBackup(0);
       // Correct each pixel
       probi1[ipix] = 0;
       if (probi[ipix] < 0.01) continue; // skip "invisible" pixel
-      Double_t sum = 0;
+      double sum = 0;
       probi1[ipix] = probMax;
-      for (Int_t j = 0; j < npad; ++j) 
+      for (int j = 0; j < npad; ++j) 
       {
         AliMUONPad* pad = cluster.Pad(j);
         //if (pad->Status() < 0) continue; 
         if (pad->Status() != fgkZero) continue; 
-        Double_t sum1 = 0;
-        Int_t indx1 = j*nPix;
-        Int_t indx = indx1 + ipix;
+        double sum1 = 0;
+        int indx1 = j*nPix;
+        int indx = indx1 + ipix;
         // Calculate expectation
-        for (Int_t i = 0; i < nPix; ++i) 
+        for (int i = 0; i < nPix; ++i) 
         {
           sum1 += Pixel(i)->Charge()*coef[indx1+i];
 	  //cout << i << " " << Pixel(i)->Charge() << " " << coef[indx1+i] << endl;
@@ -1196,7 +1168,7 @@ void AliMUONClusterFinderMLEM::Mlem(AliMUONCluster& cluster,
         } 
 
         if (sum1 > 1.e-6) sum += pad->Charge()*coef[indx]/sum1;
-      } // for (Int_t j=0;
+      } // for (int j=0;
       AliMUONPad* pixPtr = Pixel(ipix);
       if (probi1[ipix] > 1.e-6) 
       {
@@ -1204,9 +1176,9 @@ void AliMUONClusterFinderMLEM::Mlem(AliMUONCluster& cluster,
         pixPtr->SetChargeBackup(pixPtr->Charge()*sum/probi1[ipix]);
       }
       //cout << " xxx " << ipix << " " << pixPtr->Charge() << " " << pixPtr->ChargeBackup() << " " << sum << " " << probi1[ipix] << endl;
-    } // for (Int_t ipix=0;
-    Double_t qTot = 0;
-    for (Int_t i = 0; i < nPix; ++i) {
+    } // for (int ipix=0;
+    double qTot = 0;
+    for (int i = 0; i < nPix; ++i) {
       AliMUONPad* pixPtr = Pixel(i);
       pixPtr->RevertCharge();
       qTot += pixPtr->Charge();
@@ -1216,27 +1188,27 @@ void AliMUONClusterFinderMLEM::Mlem(AliMUONCluster& cluster,
       delete [] probi1;
       return;
     }
-  } // for (Int_t iter=0;
+  } // for (int iter=0;
   delete [] probi1;
 }
 
 //_____________________________________________________________________________
-void AliMUONClusterFinderMLEM::FindCOG(Double_t *xyc)
+void ClusterFinder_MLEM::FindCOG(double *xyc)
 {
   /// Calculate position of the center-of-gravity around the maximum pixel
 
-  Int_t ixmax, iymax, ix, nsumx=0, nsumy=0, nsum=0;
-  Int_t i1 = -9, j1 = -9;
+  int ixmax, iymax, ix, nsumx=0, nsumy=0, nsum=0;
+  int i1 = -9, j1 = -9;
   fHistMlem->GetMaximumBin(ixmax,iymax,ix);
-  Int_t nx = fHistMlem->GetNbinsX();
-  Int_t ny = fHistMlem->GetNbinsY();
-  Double_t thresh = fHistMlem->GetMaximum()/10;
-  Double_t x, y, cont, xq=0, yq=0, qq=0;
+  int nx = fHistMlem->GetNbinsX();
+  int ny = fHistMlem->GetNbinsY();
+  double thresh = fHistMlem->GetMaximum()/10;
+  double x, y, cont, xq=0, yq=0, qq=0;
   
-  Int_t ie = TMath::Min(ny,iymax+1), je = TMath::Min(nx,ixmax+1);
-  for (Int_t i = TMath::Max(1,iymax-1); i <= ie; ++i) {
+  int ie = TMath::Min(ny,iymax+1), je = TMath::Min(nx,ixmax+1);
+  for (int i = TMath::Max(1,iymax-1); i <= ie; ++i) {
     y = fHistMlem->GetYaxis()->GetBinCenter(i);
-    for (Int_t j = TMath::Max(1,ixmax-1); j <= je; ++j) {
+    for (int j = TMath::Max(1,ixmax-1); j <= je; ++j) {
       cont = fHistMlem->GetBinContent(fHistMlem->GetBin(j,i));
       if (cont < thresh) continue;
       if (i != i1) {i1 = i; nsumy++;}
@@ -1249,14 +1221,14 @@ void AliMUONClusterFinderMLEM::FindCOG(Double_t *xyc)
     }
   }
   
-  Double_t cmax = 0;
-  Int_t i2 = 0, j2 = 0;
+  double cmax = 0;
+  int i2 = 0, j2 = 0;
   x = y = 0;
   if (nsumy == 1) {
     // one bin in Y - add one more (with the largest signal)
-    for (Int_t i = TMath::Max(1,iymax-1); i <= ie; ++i) {
+    for (int i = TMath::Max(1,iymax-1); i <= ie; ++i) {
       if (i == iymax) continue;
-      for (Int_t j = TMath::Max(1,ixmax-1); j <= je; ++j) {
+      for (int j = TMath::Max(1,ixmax-1); j <= je; ++j) {
         cont = fHistMlem->GetBinContent(fHistMlem->GetBin(j,i));
         if (cont > cmax) {
           cmax = cont;
@@ -1278,9 +1250,9 @@ void AliMUONClusterFinderMLEM::FindCOG(Double_t *xyc)
   if (nsumx == 1) {
     // one bin in X - add one more (with the largest signal)
     cmax = x = y = 0;
-    for (Int_t j = TMath::Max(1,ixmax-1); j <= je; ++j) {
+    for (int j = TMath::Max(1,ixmax-1); j <= je; ++j) {
       if (j == ixmax) continue;
-      for (Int_t i = TMath::Max(1,iymax-1); i <= ie; ++i) {
+      for (int i = TMath::Max(1,iymax-1); i <= ie; ++i) {
         cont = fHistMlem->GetBinContent(fHistMlem->GetBin(j,i));
         if (cont > cmax) {
           cmax = cont;
@@ -1304,17 +1276,17 @@ void AliMUONClusterFinderMLEM::FindCOG(Double_t *xyc)
 }
 
 //_____________________________________________________________________________
-Int_t AliMUONClusterFinderMLEM::FindNearest(const AliMUONPad *pixPtr0)
+int ClusterFinder_MLEM::FindNearest(const AliMUONPad *pixPtr0)
 {
 /// Find the pixel nearest to the given one
 /// (algorithm may be not very efficient)
 
-  Int_t nPix = fPixArray->GetEntriesFast(), imin = 0;
-  Double_t rmin = 99999, dx = 0, dy = 0, r = 0;
-  Double_t xc = pixPtr0->Coord(0), yc = pixPtr0->Coord(1);
+  int nPix = fPixArray->GetEntriesFast(), imin = 0;
+  double rmin = 99999, dx = 0, dy = 0, r = 0;
+  double xc = pixPtr0->Coord(0), yc = pixPtr0->Coord(1);
   AliMUONPad *pixPtr;
 
-  for (Int_t i = 0; i < nPix; ++i) {
+  for (int i = 0; i < nPix; ++i) {
     pixPtr = (AliMUONPad*) fPixArray->UncheckedAt(i);
     if (pixPtr == pixPtr0 || pixPtr->Charge() < fLowestPixelCharge) continue;
     dx = (xc - pixPtr->Coord(0)) / pixPtr->Size(0);
@@ -1327,7 +1299,7 @@ Int_t AliMUONClusterFinderMLEM::FindNearest(const AliMUONPad *pixPtr0)
 
 //_____________________________________________________________________________
 void
-AliMUONClusterFinderMLEM::Paint(Option_t*)
+ClusterFinder_MLEM::Paint(Option_t*)
 {
   /// Paint cluster and pixels
   
@@ -1339,9 +1311,9 @@ AliMUONClusterFinderMLEM::Paint(Option_t*)
   gVirtualX->SetFillColor(3);    
   gVirtualX->SetLineColor(3);
   
-  Double_t s(1.0);
+  double s(1.0);
   
-  for ( Int_t i = 0; i <= fPixArray->GetLast(); ++i)
+  for ( int i = 0; i <= fPixArray->GetLast(); ++i)
   {
     AliMUONPad* pixel = Pixel(i);
 
@@ -1350,7 +1322,7 @@ AliMUONClusterFinderMLEM::Paint(Option_t*)
                    pixel->Coord(0)+pixel->Size(0)*s,
                    pixel->Coord(1)+pixel->Size(1)*s);
 
-//    for ( Int_t sign = -1; sign < 2; sign +=2 )
+//    for ( int sign = -1; sign < 2; sign +=2 )
 //    {
 //      gPad->PaintLine(pixel->Coord(0) - pixel->Size(0),
 //                      pixel->Coord(1) + sign*pixel->Size(1),
@@ -1371,7 +1343,7 @@ AliMUONClusterFinderMLEM::Paint(Option_t*)
   gVirtualX->SetTextColor(1);
   gVirtualX->SetTextAlign(22);
   
-  for ( Int_t i = 0; i <= fPixArray->GetLast(); ++i)
+  for ( int i = 0; i <= fPixArray->GetLast(); ++i)
   {
     AliMUONPad* pixel = Pixel(i);
     gPad->PaintBox(pixel->Coord(0)-pixel->Size(0),
@@ -1380,12 +1352,12 @@ AliMUONClusterFinderMLEM::Paint(Option_t*)
                    pixel->Coord(1)+pixel->Size(1));    
     gVirtualX->SetTextSize(pixel->Size(0)*60);
 
-    gPad->PaintText(pixel->Coord(0),pixel->Coord(1),Form("%d",(Int_t)(pixel->Charge())));
+    gPad->PaintText(pixel->Coord(0),pixel->Coord(1),Form("%d",(int)(pixel->Charge())));
   }  
 }
 
 //_____________________________________________________________________________
-Int_t AliMUONClusterFinderMLEM::FindLocalMaxima(TObjArray *pixArray, Int_t *localMax, Double_t *maxVal)
+int ClusterFinder_MLEM::FindLocalMaxima(TObjArray *pixArray, int *localMax, double *maxVal)
 {
 /// Find local maxima in pixel space for large preclusters in order to
 /// try to split them into smaller pieces (to speed up the MLEM procedure)
@@ -1393,37 +1365,37 @@ Int_t AliMUONClusterFinderMLEM::FindLocalMaxima(TObjArray *pixArray, Int_t *loca
 
   AliDebug(1,Form("nPix=%d",pixArray->GetLast()+1));
 
-  Double_t xylim[4] = {999, 999, 999, 999};
+  double xylim[4] = {999, 999, 999, 999};
 
-  Int_t nPix = pixArray->GetEntriesFast();
+  int nPix = pixArray->GetEntriesFast();
   
   if ( nPix <= 0 ) return 0;
   
   AliMUONPad *pixPtr = 0;
-  for (Int_t ipix = 0; ipix < nPix; ++ipix) {
+  for (int ipix = 0; ipix < nPix; ++ipix) {
     pixPtr = (AliMUONPad*) pixArray->UncheckedAt(ipix);
-    for (Int_t i = 0; i < 4; ++i) 
+    for (int i = 0; i < 4; ++i) 
          xylim[i] = TMath::Min (xylim[i], (i%2 ? -1 : 1)*pixPtr->Coord(i/2));
   }
-  for (Int_t i = 0; i < 4; ++i) xylim[i] -= pixPtr->Size(i/2); 
+  for (int i = 0; i < 4; ++i) xylim[i] -= pixPtr->Size(i/2); 
 
-  Int_t nx = TMath::Nint ((-xylim[1]-xylim[0])/pixPtr->Size(0)/2);
-  Int_t ny = TMath::Nint ((-xylim[3]-xylim[2])/pixPtr->Size(1)/2);
+  int nx = TMath::Nint ((-xylim[1]-xylim[0])/pixPtr->Size(0)/2);
+  int ny = TMath::Nint ((-xylim[3]-xylim[2])/pixPtr->Size(1)/2);
   if (pixArray == fPixArray) fHistAnode = new TH2D("anode","anode",nx,xylim[0],-xylim[1],ny,xylim[2],-xylim[3]);
   else fHistAnode = new TH2D("anode1","anode1",nx,xylim[0],-xylim[1],ny,xylim[2],-xylim[3]);
-  for (Int_t ipix = 0; ipix < nPix; ++ipix) {
+  for (int ipix = 0; ipix < nPix; ++ipix) {
     pixPtr = (AliMUONPad*) pixArray->UncheckedAt(ipix);
     fHistAnode->Fill(pixPtr->Coord(0), pixPtr->Coord(1), pixPtr->Charge());
   }
 //  if (fDraw && pixArray == fPixArray) fDraw->DrawHist("c2", hist);
 
-  Int_t nMax = 0, indx, nxy = ny * nx;
-  Int_t *isLocalMax = new Int_t[nxy];
-  for (Int_t i = 0; i < nxy; ++i) isLocalMax[i] = 0; 
+  int nMax = 0, indx, nxy = ny * nx;
+  int *isLocalMax = new int[nxy];
+  for (int i = 0; i < nxy; ++i) isLocalMax[i] = 0; 
 
-  for (Int_t i = 1; i <= ny; ++i) {
+  for (int i = 1; i <= ny; ++i) {
     indx = (i-1) * nx;
-    for (Int_t j = 1; j <= nx; ++j) {
+    for (int j = 1; j <= nx; ++j) {
       if (fHistAnode->GetBinContent(fHistAnode->GetBin(j,i)) < fLowestPixelCharge) continue;
       //if (isLocalMax[indx+j-1] < 0) continue;
       if (isLocalMax[indx+j-1] != 0) continue;
@@ -1431,9 +1403,9 @@ Int_t AliMUONClusterFinderMLEM::FindLocalMaxima(TObjArray *pixArray, Int_t *loca
     }
   }
 
-  for (Int_t i = 1; i <= ny; ++i) {
+  for (int i = 1; i <= ny; ++i) {
     indx = (i-1) * nx;
-    for (Int_t j = 1; j <= nx; ++j) {
+    for (int j = 1; j <= nx; ++j) {
       if (isLocalMax[indx+j-1] > 0) { 
 	localMax[nMax] = indx + j - 1; 
 	maxVal[nMax++] = fHistAnode->GetBinContent(fHistAnode->GetBin(j,i));
@@ -1452,20 +1424,20 @@ Int_t AliMUONClusterFinderMLEM::FindLocalMaxima(TObjArray *pixArray, Int_t *loca
 }
 
 //_____________________________________________________________________________
-void AliMUONClusterFinderMLEM::FlagLocalMax(TH2D *hist, Int_t i, Int_t j, Int_t *isLocalMax)
+void ClusterFinder_MLEM::FlagLocalMax(TH2D *hist, int i, int j, int *isLocalMax)
 {
 /// Flag pixels (whether or not local maxima)
 
-  Int_t nx = hist->GetNbinsX();
-  Int_t ny = hist->GetNbinsY();
-  Int_t cont = TMath::Nint (hist->GetBinContent(hist->GetBin(j,i)));
-  Int_t cont1 = 0, indx = (i-1)*nx+j-1, indx1 = 0, indx2 = 0;
+  int nx = hist->GetNbinsX();
+  int ny = hist->GetNbinsY();
+  int cont = TMath::Nint (hist->GetBinContent(hist->GetBin(j,i)));
+  int cont1 = 0, indx = (i-1)*nx+j-1, indx1 = 0, indx2 = 0;
 
-  Int_t ie = i + 2, je = j + 2;
-  for (Int_t i1 = i-1; i1 < ie; ++i1) {
+  int ie = i + 2, je = j + 2;
+  for (int i1 = i-1; i1 < ie; ++i1) {
     if (i1 < 1 || i1 > ny) continue;
     indx1 = (i1 - 1) * nx;
-    for (Int_t j1 = j-1; j1 < je; ++j1) {
+    for (int j1 = j-1; j1 < je; ++j1) {
       if (j1 < 1 || j1 > nx) continue;
       if (i == i1 && j == j1) continue;
       indx2 = indx1 + j1 - 1;
@@ -1486,8 +1458,8 @@ void AliMUONClusterFinderMLEM::FlagLocalMax(TH2D *hist, Int_t i, Int_t j, Int_t 
 }
 
 //_____________________________________________________________________________
-void AliMUONClusterFinderMLEM::FindCluster(AliMUONCluster& cluster, 
-                                           const Int_t *localMax, Int_t iMax)
+void ClusterFinder_MLEM::FindCluster(AliMUONCluster& cluster, 
+                                           const int *localMax, int iMax)
 {
 /// Find pixel cluster around local maximum \a iMax and pick up pads
 /// overlapping with it
@@ -1497,34 +1469,34 @@ void AliMUONClusterFinderMLEM::FindCluster(AliMUONCluster& cluster,
   c->cd();
   hist->Draw("lego1Fb"); // debug
   c->Update();
-  Int_t tmp;
+  int tmp;
   cin >> tmp;
   */
-  Int_t nx = fHistAnode->GetNbinsX();
-  Int_t ny = fHistAnode->GetNbinsY();
-  Int_t ic = localMax[iMax] / nx + 1;
-  Int_t jc = localMax[iMax] % nx + 1;
-  Int_t nxy = ny * nx;
-  Bool_t *used = new Bool_t[nxy];
-  for (Int_t i = 0; i < nxy; ++i) used[i] = kFALSE; 
+  int nx = fHistAnode->GetNbinsX();
+  int ny = fHistAnode->GetNbinsY();
+  int ic = localMax[iMax] / nx + 1;
+  int jc = localMax[iMax] % nx + 1;
+  int nxy = ny * nx;
+  bool *used = new bool[nxy];
+  for (int i = 0; i < nxy; ++i) used[i] = kFALSE; 
 
   // Drop all pixels from the array - pick up only the ones from the cluster
   fPixArray->Delete();
 
-  Double_t wx = fHistAnode->GetXaxis()->GetBinWidth(1)/2; 
-  Double_t wy = fHistAnode->GetYaxis()->GetBinWidth(1)/2;  
-  Double_t yc = fHistAnode->GetYaxis()->GetBinCenter(ic);
-  Double_t xc = fHistAnode->GetXaxis()->GetBinCenter(jc);
-  Double_t cont = fHistAnode->GetBinContent( fHistAnode->GetBin(jc,ic));
+  double wx = fHistAnode->GetXaxis()->GetBinWidth(1)/2; 
+  double wy = fHistAnode->GetYaxis()->GetBinWidth(1)/2;  
+  double yc = fHistAnode->GetYaxis()->GetBinCenter(ic);
+  double xc = fHistAnode->GetXaxis()->GetBinCenter(jc);
+  double cont = fHistAnode->GetBinContent( fHistAnode->GetBin(jc,ic));
   fPixArray->Add(new AliMUONPad (xc, yc, wx, wy, cont));
   used[(ic-1)*nx+jc-1] = kTRUE;
   AddBinSimple(fHistAnode, ic, jc);
   //fSplitter->AddBin(hist, ic, jc, 1, used, (TObjArray*)0); // recursive call
 
-  Int_t nPix = fPixArray->GetEntriesFast();
-  Int_t npad = cluster.Multiplicity();
+  int nPix = fPixArray->GetEntriesFast();
+  int npad = cluster.Multiplicity();
   
-  for (Int_t i = 0; i < nPix; ++i) 
+  for (int i = 0; i < nPix; ++i) 
   {
     AliMUONPad* pixPtr = Pixel(i);
     pixPtr->SetSize(0,wx);
@@ -1532,16 +1504,16 @@ void AliMUONClusterFinderMLEM::FindCluster(AliMUONCluster& cluster,
   }
 
   // Pick up pads which overlap with found pixels
-  for (Int_t i = 0; i < npad; ++i) 
+  for (int i = 0; i < npad; ++i) 
   {
     //cluster.Pad(i)->SetStatus(-1);
     cluster.Pad(i)->SetStatus(fgkOver); // just the dirty trick
   }
   
-  for (Int_t i = 0; i < nPix; ++i) 
+  for (int i = 0; i < nPix; ++i) 
   {
     AliMUONPad* pixPtr = Pixel(i);
-    for (Int_t j = 0; j < npad; ++j) 
+    for (int j = 0; j < npad; ++j) 
     {
       AliMUONPad* pad = cluster.Pad(j);
       //if (pad->Status() == 0) continue;
@@ -1560,18 +1532,18 @@ void AliMUONClusterFinderMLEM::FindCluster(AliMUONCluster& cluster,
 
 //_____________________________________________________________________________
 void 
-AliMUONClusterFinderMLEM::AddBinSimple(TH2D *hist, Int_t ic, Int_t jc)
+ClusterFinder_MLEM::AddBinSimple(TH2D *hist, int ic, int jc)
 {
   /// Add adjacent bins (+-1 in X and Y) to the cluster
   
-  Int_t nx = hist->GetNbinsX();
-  Int_t ny = hist->GetNbinsY();
-  Double_t cont1, cont = hist->GetBinContent(hist->GetBin(jc,ic));
+  int nx = hist->GetNbinsX();
+  int ny = hist->GetNbinsY();
+  double cont1, cont = hist->GetBinContent(hist->GetBin(jc,ic));
   AliMUONPad *pixPtr = 0;
   
-  Int_t ie = TMath::Min(ic+1,ny), je = TMath::Min(jc+1,nx);
-  for (Int_t i = TMath::Max(ic-1,1); i <= ie; ++i) {
-    for (Int_t j = TMath::Max(jc-1,1); j <= je; ++j) {
+  int ie = TMath::Min(ic+1,ny), je = TMath::Min(jc+1,nx);
+  for (int i = TMath::Max(ic-1,1); i <= ie; ++i) {
+    for (int j = TMath::Max(jc-1,1); j <= je; ++j) {
       cont1 = hist->GetBinContent(hist->GetBin(j,i));
       if (cont1 > cont) continue;
       if (cont1 < fLowestPixelCharge) continue;
@@ -1583,8 +1555,8 @@ AliMUONClusterFinderMLEM::AddBinSimple(TH2D *hist, Int_t ic, Int_t jc)
 }
 
 //_____________________________________________________________________________
-AliMUONClusterFinderMLEM&  
-AliMUONClusterFinderMLEM::operator=(const AliMUONClusterFinderMLEM& rhs)
+ClusterFinder_MLEM&  
+ClusterFinder_MLEM::operator=(const ClusterFinder_MLEM& rhs)
 {
 /// Protected assignement operator
 
@@ -1596,13 +1568,13 @@ AliMUONClusterFinderMLEM::operator=(const AliMUONClusterFinderMLEM& rhs)
 }    
 
 //_____________________________________________________________________________
-void AliMUONClusterFinderMLEM::AddVirtualPad(AliMUONCluster& cluster)
+void ClusterFinder_MLEM::AddVirtualPad(AliMUONCluster& cluster)
 {
   /// Add virtual pad (with small charge) to improve fit for clusters
   /// with number of pads == 2 per direction
   
   // Find out non-bending and bending planes
-  Int_t nonb[2] = {1, 0}; // non-bending and bending cathodes
+  int nonb[2] = {1, 0}; // non-bending and bending cathodes
 
   TVector2 dim0 = cluster.MinPadDimensions(0, 0, kTRUE);
   TVector2 dim1 = cluster.MinPadDimensions(1, 0, kTRUE);
@@ -1611,14 +1583,14 @@ void AliMUONClusterFinderMLEM::AddVirtualPad(AliMUONCluster& cluster)
     nonb[1] = 1;
   } 
 
-  Bool_t same = kFALSE;
+  bool same = kFALSE;
   if (TMath::Abs(dim0.Y()-dim1.Y()) < fgkDistancePrecision) same = kTRUE; // the same pad size on both planes 
 
   Long_t cn;
-  Bool_t check[2] = {kFALSE, kFALSE};
-  Int_t nxy[2];
+  bool check[2] = {kFALSE, kFALSE};
+  int nxy[2];
   nxy[0] = nxy[1] = 0;
-  for (Int_t inb = 0; inb < 2; ++inb) {
+  for (int inb = 0; inb < 2; ++inb) {
     cn = cluster.NofPads(nonb[inb], 0, kTRUE);
     if (inb == 0 && AliMp::PairFirst(cn) == 2) check[inb] = kTRUE; // check non-bending plane
     else if (inb == 1 && AliMp::PairSecond(cn) == 2) check[inb] = kTRUE; // check bending plane
@@ -1635,17 +1607,17 @@ void AliMUONClusterFinderMLEM::AddVirtualPad(AliMUONCluster& cluster)
   }
   if (!check[0] && !check[1]) return;
 
-  for (Int_t inb = 0; inb < 2; ++inb) {
+  for (int inb = 0; inb < 2; ++inb) {
     if (!check[inb]) continue;
 
     // Find pads with maximum and next to maximum charges 
-    Int_t maxPads[2] = {-1, -1};
-    Double_t amax[2] = {0};
-    Int_t mult = cluster.Multiplicity();
-    for (Int_t j = 0; j < mult; ++j) {
+    int maxPads[2] = {-1, -1};
+    double amax[2] = {0};
+    int mult = cluster.Multiplicity();
+    for (int j = 0; j < mult; ++j) {
       AliMUONPad *pad = cluster.Pad(j);
       if (pad->Cathode() != nonb[inb]) continue;
-      for (Int_t j2 = 0; j2 < 2; ++j2) {
+      for (int j2 = 0; j2 < 2; ++j2) {
 	if (pad->Charge() > amax[j2]) {
 	  if (j2 == 0) { amax[1] = amax[0]; maxPads[1] = maxPads[0]; }
 	  amax[j2] = pad->Charge();
@@ -1656,8 +1628,8 @@ void AliMUONClusterFinderMLEM::AddVirtualPad(AliMUONCluster& cluster)
     }
 
     // Find min and max dimensions of the cluster
-    Double_t limits[2] = {9999, -9999};
-    for (Int_t j = 0; j < mult; ++j) {
+    double limits[2] = {9999, -9999};
+    for (int j = 0; j < mult; ++j) {
       AliMUONPad *pad = cluster.Pad(j);
       if (pad->Cathode() != nonb[inb]) continue;
       if (pad->Coord(inb) < limits[0]) limits[0] = pad->Coord(inb);
@@ -1665,9 +1637,9 @@ void AliMUONClusterFinderMLEM::AddVirtualPad(AliMUONCluster& cluster)
     }
 
     // Loop over max and next to max pads
-    Bool_t add = kFALSE;
-    Int_t idirAdd = 0;
-    for (Int_t j = 0; j < 2; ++j) {
+    bool add = kFALSE;
+    int idirAdd = 0;
+    for (int j = 0; j < 2; ++j) {
       if (j == 1) {
 	if (maxPads[j] < 0) continue;
 	if (!add) break; 
@@ -1675,7 +1647,7 @@ void AliMUONClusterFinderMLEM::AddVirtualPad(AliMUONCluster& cluster)
       }
       // Check if pad at the cluster limit
       AliMUONPad *pad = cluster.Pad(maxPads[j]);
-      Int_t idir = 0;
+      int idir = 0;
       if (TMath::Abs(pad->Coord(inb)-limits[0]) < fgkDistancePrecision) idir = -1;
       else if (TMath::Abs(pad->Coord(inb)-limits[1]) < fgkDistancePrecision) idir = 1;
       else {
@@ -1710,19 +1682,19 @@ void AliMUONClusterFinderMLEM::AddVirtualPad(AliMUONCluster& cluster)
 }
 
 //_____________________________________________________________________________
-void AliMUONClusterFinderMLEM::PadsInXandY(AliMUONCluster& cluster,
-                                           Int_t &nInX, Int_t &nInY) const
+void ClusterFinder_MLEM::PadsInXandY(AliMUONCluster& cluster,
+                                           int &nInX, int &nInY) const
 {
   /// Find number of pads in X and Y-directions (excluding virtual ones and
   /// overflows)
 
-  //Int_t statusToTest = 1;
-  Int_t statusToTest = fgkUseForFit;
+  //int statusToTest = 1;
+  int statusToTest = fgkUseForFit;
   
   //if ( nInX < 0 ) statusToTest = 0;
   if ( nInX < 0 ) statusToTest = fgkZero;
        
-  Bool_t mustMatch(kTRUE);
+  bool mustMatch(kTRUE);
 
   Long_t cn = cluster.NofPads(statusToTest,mustMatch);
   
@@ -1731,7 +1703,7 @@ void AliMUONClusterFinderMLEM::PadsInXandY(AliMUONCluster& cluster,
 }
 
 //_____________________________________________________________________________
-void AliMUONClusterFinderMLEM::RemovePixel(Int_t i)
+void ClusterFinder_MLEM::RemovePixel(int i)
 {
   /// Remove pixel at index i
   AliMUONPad* pixPtr = Pixel(i);
@@ -1740,19 +1712,19 @@ void AliMUONClusterFinderMLEM::RemovePixel(Int_t i)
 }
 
 //_____________________________________________________________________________
-void AliMUONClusterFinderMLEM::Simple(AliMUONCluster& cluster)
+void ClusterFinder_MLEM::Simple(AliMUONCluster& cluster)
 {
 /// Process simple cluster (small number of pads) without EM-procedure
 
-  Int_t nForFit = 1, clustFit[1] = {0};
-  Double_t parOk[3] = {0.}; 
+  int nForFit = 1, clustFit[1] = {0};
+  double parOk[3] = {0.}; 
   TObjArray *clusters[1]; 
   clusters[0] = fPixArray;
 
   AliDebug(1,Form("nPix=%d",fPixArray->GetLast()+1));
 
-  Int_t mult = cluster.Multiplicity();
-  for (Int_t i = 0; i < mult; ++i) 
+  int mult = cluster.Multiplicity();
+  for (int i = 0; i < mult; ++i) 
   {
     AliMUONPad* pad = cluster.Pad(i);
     /*
@@ -1772,7 +1744,7 @@ void AliMUONClusterFinderMLEM::Simple(AliMUONCluster& cluster)
 
 //_____________________________________________________________________________
 AliMUONPad* 
-AliMUONClusterFinderMLEM::Pixel(Int_t i) const
+ClusterFinder_MLEM::Pixel(int i) const
 {
   /// Returns pixel at index i
   return static_cast<AliMUONPad*>(fPixArray->UncheckedAt(i));
@@ -1780,7 +1752,7 @@ AliMUONClusterFinderMLEM::Pixel(Int_t i) const
 
 //_____________________________________________________________________________
 void 
-AliMUONClusterFinderMLEM::Print(Option_t* what) const
+ClusterFinder_MLEM::Print(Option_t* what) const
 {
   /// printout
   TString swhat(what);
@@ -1793,7 +1765,7 @@ AliMUONClusterFinderMLEM::Print(Option_t* what) const
 
 //_____________________________________________________________________________
 void 
-AliMUONClusterFinderMLEM::SetChargeHints(Double_t lowestPadCharge, Double_t lowestClusterCharge)
+ClusterFinder_MLEM::SetChargeHints(double lowestPadCharge, double lowestClusterCharge)
 {
   /// Set some thresholds we use later on in the algorithm
   fLowestPadCharge=lowestPadCharge;
