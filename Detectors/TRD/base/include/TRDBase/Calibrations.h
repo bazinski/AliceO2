@@ -66,34 +66,42 @@ class Calibrations
   //
   int const getTimeStamp() { return mTimeStamp; }
   void setTimeStamp(long timestamp) { mTimeStamp = timestamp; }
-  void setCCDB(int calibrationobjecttype);
-  void setCCDBForSimulation() { setCCDB(kSimulation); };
-  void setCCDBForReconstruction() { setCCDB(kReconstruction); };
-  void setCCDBForCalibration() { setCCDB(kCalibration); };
+  void setCCDB(int calibrationobjecttype, long timestamp);
+  void setCCDBForSimulation(long timestamp) { setCCDB(kSimulation, timestamp); };
+  void setCCDBForReconstruction(long timestamp) { setCCDB(kReconstruction, timestamp); };
+  void setCCDBForCalibration(long timestamp) { setCCDB(kCalibration, timestamp); };
   //// cant send auto to setCCDB, as a temporary measure, until I can figure something else out. There are 3 formats of getting CCDB parameters defined by the enum at the top.
   //
   //  float getGainMeanRMS();
   //  float getT0MeanRMS();
-  double getVDrift(long timestamp, int roc, int col, int row) const;
-  double getT0(long timestamp, int roc, int col, int row) const;
-  double getExB(long timestamp, int roc, int col, int row) const;
-  double getGainFactor(long timestamp, int roc, int col, int row) const;
+  double getVDrift(int roc, int col, int row) const;
+  double getT0(int roc, int col, int row) const;
+  double getExB(int roc, int col, int row) const;
+  double getGainFactor(int roc, int col, int row) const;
 
  protected:
-  int mTimeStamp; //run number of related to the current calibration.
+  long mTimeStamp; //run number of related to the current calibration.
   // here we have pointers to all the incoming calibrations, not all of them will be valid
   // this will be dictated by the DPL and what it provides. (if I understand things correctly)
   // pointers to relevant incoming classes will sit here and thereby provide the correct api
   // abstracting all the tedious details from users. Most importantly we can change things with
   // out them knowing.
-  std::shared_ptr<ChamberCalibrations> mChamberCalibrations;
+/* std::shared_ptr<ChamberCalibrations> mChamberCalibrations;
   std::shared_ptr<LocalVDrift> mLocalVDrift;
   std::shared_ptr<LocalT0> mLocalT0;
   std::shared_ptr<LocalGainFactor> mLocalGainFactor;
   std::shared_ptr<PadNoise> mPadNoise;
   std::shared_ptr<ChamberStatus> mChamberStatus;
   std::shared_ptr<PadStatus> mPadStatus;
-  std::shared_ptr<ChamberNoise> mChamberNoise;
+  std::shared_ptr<ChamberNoise> mChamberNoise; */
+  ChamberCalibrations* mChamberCalibrations;
+  LocalVDrift* mLocalVDrift;
+  LocalT0* mLocalT0;
+  LocalGainFactor* mLocalGainFactor;
+  PadNoise* mPadNoise;
+  ChamberStatus* mChamberStatus;
+  PadStatus* mPadStatus;
+  ChamberNoise* mChamberNoise;
   //this will probably get extended (26/09/2019), the list of pointers above.
   //std::shared_ptr<TrapConfig> mTrapConfig;
   //std::shared_ptr<PRFWidth> mPRDWidth
