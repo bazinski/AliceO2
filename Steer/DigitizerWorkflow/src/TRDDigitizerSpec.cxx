@@ -83,17 +83,17 @@ class TRDDPLDigitizerTask
       return;
     }
     LOG(INFO) << "Doing TRD digitization";
-  
-  Calibrations simcal;
-  simcal.setCCDBForSimulation(297595);
-  mDigitizer.setCalibrations(&simcal);
 
-  // read collision context from input
-  auto context = pc.inputs().get<o2::steer::RunContext*>("collisioncontext");
-  auto& irecords = context->getEventRecords();
+    Calibrations simcal;
+    simcal.setCCDBForSimulation(297595);
+    mDigitizer.setCalibrations(&simcal);
 
-  for (auto& record : irecords) {
-    LOG(INFO) << "TRD TIME RECEIVED " << record.timeNS;
+    // read collision context from input
+    auto context = pc.inputs().get<o2::steer::RunContext*>("collisioncontext");
+    auto& irecords = context->getEventRecords();
+
+    for (auto& record : irecords) {
+      LOG(INFO) << "TRD TIME RECEIVED " << record.timeNS;
     }
 
     auto& eventParts = context->getEventParts();

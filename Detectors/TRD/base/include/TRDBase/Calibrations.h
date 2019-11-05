@@ -86,7 +86,7 @@ class Calibrations
   // pointers to relevant incoming classes will sit here and thereby provide the correct api
   // abstracting all the tedious details from users. Most importantly we can change things with
   // out them knowing.
-/* std::shared_ptr<ChamberCalibrations> mChamberCalibrations;
+  /* std::shared_ptr<ChamberCalibrations> mChamberCalibrations;
   std::shared_ptr<LocalVDrift> mLocalVDrift;
   std::shared_ptr<LocalT0> mLocalT0;
   std::shared_ptr<LocalGainFactor> mLocalGainFactor;

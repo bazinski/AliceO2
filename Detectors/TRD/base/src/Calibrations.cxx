@@ -44,7 +44,7 @@ void Calibrations::setCCDB(int calibrationobjecttype, long timestamp)
 {
   int donothingfornow = 1;
   auto& ccdbmgr = o2::ccdb::BasicCCDBManager::instance();
-  ccdbmgr.setTimestamp(timestamp);// set which time stamp of data we want this is called per timeframe, and removes the need to call it when querying a value.
+  ccdbmgr.setTimestamp(timestamp); // set which time stamp of data we want this is called per timeframe, and removes the need to call it when querying a value.
   switch (calibrationobjecttype) {
     case 1: //simulation
       mChamberCalibrations = ccdbmgr.get<o2::trd::ChamberCalibrations>("TRD_test/ChamberCalibrations");
