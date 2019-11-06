@@ -105,3 +105,4 @@ double Calibrations::getPadGainFactor(int det, int col, int row) const
     return (double)mLocalGainFactor->getValue(det, col, row);
   else
     return -1;
+}
