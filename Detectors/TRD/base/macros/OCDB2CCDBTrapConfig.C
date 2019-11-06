@@ -6,25 +6,23 @@
 //
 //    * run         - name of an ascii file containing run numbers
 //    * outFilename       - name of the root file where the TRD OCDB information tree to be stored
-//    * firstRun, lastRun - lowest and highest run numbers (from the ascii file) to be dumped
-//                          if these numbers are not specified (-1) all run numbers in the input ascii file will
-//                          be used. If the run list file is not specified then all runs in this interval
-//                          will be queried
 //    * storageURI        - path of the OCDB database (if it is on alien, be sure to have a valid/active token)
 // NOTES :
 // This requires a custom version of AliTRDTrapConfig.h  all private and protected must be changed to public
 //
 // for running with both O2 and aliroot ...
-//   export OCDB_PATH=/cvmfs/alice-ocdb.cern.ch   to use cvmfs instead of the slower pulling from alien.
+//     export OCDB_PATH=/cvmfs/alice-ocdb.cern.ch   to use cvmfs instead of the slower pulling from alien.
 //
 //    .include $ALIROOT/include
-//
+//    
 //    build aliroot as :
 //    aliBuild build AliRoot --defaults=o2
 //    i have aliBuild build AliRoot --defaults=o2 -z O2 --debug
 //    you then call :
 //    alienv enter VO_ALICE@O2::latest-O2-o2,VO_ALICE@AliRoot::latest-O2-o2
 //    according to my configs, modify as required of course.
+//    AliRoot needs to be rebuilt with private and protected removed from AliTRDTrapConfig, one can not 
+//    extract the required information from the internals. I did not want to add additional functions.
 //
 
 #include <iostream>
