@@ -85,7 +85,7 @@ double Calibrations::getT0(int det, int col, int row) const
   else
     return -1;
 }
-double Calibrations::getExB(int det, int col, int row) const
+double Calibrations::getExB(int det) const
 {
   if (mChamberCalibrations)
     return (double)mChamberCalibrations->getExB(det);
@@ -99,3 +99,9 @@ double Calibrations::getGainFactor(int det, int col, int row) const
   else
     return -1;
 }
+double Calibrations::getPadGainFactor(int det, int col, int row) const
+{
+  if (mLocalGainFactor)
+    return (double)mLocalGainFactor->getValue(det, col, row);
+  else
+    return -1;

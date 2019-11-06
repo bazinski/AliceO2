@@ -76,8 +76,9 @@ class Calibrations
   //  float getT0MeanRMS();
   double getVDrift(int roc, int col, int row) const;
   double getT0(int roc, int col, int row) const;
-  double getExB(int roc, int col, int row) const;
+  double getExB(int roc) const;
   double getGainFactor(int roc, int col, int row) const;
+  double getPadGainFactor(int roc, int col, int row) const;
 
  protected:
   long mTimeStamp; //run number of related to the current calibration.
