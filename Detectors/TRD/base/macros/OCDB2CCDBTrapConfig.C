@@ -14,14 +14,14 @@
 //     export OCDB_PATH=/cvmfs/alice-ocdb.cern.ch   to use cvmfs instead of the slower pulling from alien.
 //
 //    .include $ALIROOT/include
-//    
+//
 //    build aliroot as :
 //    aliBuild build AliRoot --defaults=o2
 //    i have aliBuild build AliRoot --defaults=o2 -z O2 --debug
 //    you then call :
 //    alienv enter VO_ALICE@O2::latest-O2-o2,VO_ALICE@AliRoot::latest-O2-o2
 //    according to my configs, modify as required of course.
-//    AliRoot needs to be rebuilt with private and protected removed from AliTRDTrapConfig, one can not 
+//    AliRoot needs to be rebuilt with private and protected removed from AliTRDTrapConfig, one can not
 //    extract the required information from the internals. I did not want to add additional functions.
 //
 
