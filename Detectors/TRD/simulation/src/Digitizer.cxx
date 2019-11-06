@@ -25,12 +25,17 @@ using namespace o2::trd;
 
 Digitizer::Digitizer()
 {
+  // Check if you need more initialization
   o2::base::GeometryManager::loadGeometry();
   mGeo = new TRDGeometry();
-  mGeo->createClusterMatrixArray();          // Requiered for chamberInGeometry()
-  mPRF = new PadResponse();                  // Pad response function initialization
-  mSimParam = TRDSimParam::Instance();       // Instance for simulation parameters
-  mCommonParam = TRDCommonParam::Instance(); // Instance for common parameters
+  mGeo->createClusterMatrixArray(); // Requiered for chamberInGeometry()
+
+  mPRF = new PadResponse();
+
+  // get the Instance of simulation and common parameters
+  mSimParam = TRDSimParam::Instance();
+  mCommonParam = TRDCommonParam::Instance();
+  // mCalib = TRDCalibDB::Instace(); // PLEASE FIX ME when CCDB is ready
   if (!mSimParam) {
     LOG(FATAL) << "TRD Simulation Parameters not available";
   }
@@ -41,9 +46,9 @@ Digitizer::Digitizer()
       LOG(FATAL) << "TRD Common Parameters does not have magnetic field available";
     }
   }
-  if (!mCalib) {
-    LOG(FATAL) << "TRD mCalib database not available";
-  }
+  // if (!mCalib) { // PLEASE FIX ME when CCDB is ready
+  //   LOG(FATAL) << "TRD mCalib database not available";
+  // }
   mSDigits = false;
 }
 
@@ -124,12 +129,29 @@ bool Digitizer::convertHits(const int det, const std::vector<HitType>& hits, Sig
   double padSignal[kNpad];
   double signalOld[kNpad];
 
+  // Get the detector wise mCalib objects
+  // const TRDCalDet* calVdriftDet = mCalib->GetVdriftDet();    PLEASE FIX ME when CCDB is ready
+  // const TRDCalDet* calT0Det = mCalib->GetT0Det();            PLEASE FIX ME when CCDB is ready
+  // const TRDCalDet* calExBDet = mCalib->GetExBDet();          PLEASE FIX ME when CCDB is ready
+
+  // FIX ME: Default values until I have implemented the mCalib objects
+  //
+  // See Table 8 (Nuclear Inst. and Methods in Physics Research, A 881 (2018) 88-127)
+  // Defaults values  from OCDB (AliRoot DrawTrending macro - Thanks to Y. Pachmayer)
+  // For 5 TeV pp - 27 runs from LHC15n
+  //
+  float calVdriftDetValue = 1.48; // cm/microsecond         // calVdriftDet->GetValue(det); PLEASE FIX ME when CCDB is ready
+  float calT0DetValue = -1.38;    // microseconds           // calT0Det->GetValue(det);     PLEASE FIX ME when CCDB is ready
+  double calExBDetValue = 0.16;   // T * V/cm (check units) // calExBDet->GetValue(det);    PLEASE FIX ME when CCDB is ready
+
+  // TRDCalROC* calVdriftROC = mCalib->GetVdriftROC(det); PLEASE FIX ME when CCDB is ready
+  // TRDCalROC* calT0ROC = mCalib->GetT0ROC(det);         PLEASE FIX ME when CCDB is ready
+
   if (mSimParam->TRFOn()) {
     timeBinTRFend = ((int)(mSimParam->GetTRFhi() * mCommonParam->GetSamplingFrequency())) - 1;
   }
 
-  const double calExBDetValue = mCalib->getExB(det); // T * V/cm (check units)
-  const int nTimeTotal = kTimeBins;                  // PLEASE FIX ME when CCDB is ready
+  const int nTimeTotal = kTimeBins; // PLEASE FIX ME when CCDB is ready
   const float samplingRate = mCommonParam->GetSamplingFrequency();
   const float elAttachProp = mSimParam->GetElAttachProp() / 100;
 
@@ -192,13 +214,13 @@ bool Digitizer::convertHits(const int det, const std::vector<HitType>& hits, Sig
       continue;
     }
 
+    // FIX ME: Commented out what is still not yet implemented
     double absDriftLength = abs(driftLength); // Normalized drift length
     if (mCommonParam->ExBOn()) {
       absDriftLength /= TMath::Sqrt(1 / (1 + calExBDetValue * calExBDetValue));
     }
-
-    float driftVelocity = mCalib->getVDrift(det, colE, rowE); // The drift velocity
-    float t0 = mCalib->getT0(det, colE, rowE);                // The T0 velocity
+    // double driftVelocity = calVdriftDetValue * calVdriftROC->GetValue(colE, rowE); PLEASE FIX ME when CCDB is ready
+    double driftVelocity = 2.13; // Defaults values  from OCDB (AliRoot DrawTrending macro) for 5 TeV pp - 27 runs from LHC15n
 
     // Loop over all created electrons
     const int nElectrons = abs(qTotal);
@@ -235,8 +257,11 @@ bool Digitizer::convertHits(const int det, const std::vector<HitType>& hits, Sig
         continue;
       }
       const double colOffset = padPlane->getPadColOffset(colE, locCd + offsetTilt);
-      driftVelocity = mCalib->getVDrift(det, colE, rowE); // The drift velocity for the updated col and row
-      t0 = mCalib->getT0(det, colE, rowE);                // The T0 velocity for the updated col and row
+      // Retrieve drift velocity becuase col and row may have changed
+      // driftVelocity = calVdriftDetValue* calVdriftROC->GetValue(colE, rowE);  PLEASE FIX ME when CCDB is ready
+      driftVelocity = 2.13; // Defaults values  from OCDB (AliRoot DrawTrending macro) for 5 TeV pp - 27 runs from LHC15n
+      // float t0 = calT0DetValue + calT0ROC->getValue(colE, rowE);      PLEASE FIX ME when CCDB is ready
+      const float t0 = -1.38 + 0; // Defaults values  from OCDB (AliRoot DrawTrending macro) for 5 TeV pp - 27 runs from LHC15n
       // Convert the position to drift time [mus], using either constant drift velocity or
       // time structure of drift cells (non-isochronity, GARFIELD calculation).
       // Also add absolute time of hits to take pile-up events into account properly
@@ -254,9 +279,11 @@ bool Digitizer::convertHits(const int det, const std::vector<HitType>& hits, Sig
         // Use constant drift velocity
         driftTime = abs(locTd) / driftVelocity + hit.GetTime();
       }
+
       // Apply the gas gain including fluctuations
       const double ggRndm = gRandom->Rndm();
       const double signal = -(mSimParam->GetGasGain()) * TMath::Log(ggRndm);
+
       // Apply the pad response
       if (mSimParam->PRFOn()) {
         // The distance of the electron to the center of the pad in units of pad width
@@ -272,6 +299,7 @@ bool Digitizer::convertHits(const int det, const std::vector<HitType>& hits, Sig
         padSignal[1] = signal;
         padSignal[2] = 0;
       }
+
       // The time bin (always positive), with t0 distortion
       double timeBinIdeal = driftTime * samplingRate + t0;
       // Protection
@@ -281,10 +309,12 @@ bool Digitizer::convertHits(const int det, const std::vector<HitType>& hits, Sig
       int timeBinTruncated = ((int)timeBinIdeal);
       // The distance of the position to the middle of the timebin
       double timeOffset = ((float)timeBinTruncated + 0.5 - timeBinIdeal) / samplingRate;
+
       // Sample the time response inside the drift region + additional time bins before and after.
       // The sampling is done always in the middle of the time bin
       const int firstTimeBin = TMath::Max(timeBinTruncated, 0);
       const int lastTimeBin = TMath::Min(timeBinTruncated + timeBinTRFend, nTimeTotal);
+
       // loop over pads first then over timebins for better cache friendliness
       // and less access to adcMapCont
       for (int iPad = 0; iPad < kNpad; iPad++) {
@@ -295,11 +325,14 @@ bool Digitizer::convertHits(const int det, const std::vector<HitType>& hits, Sig
         if (colPos >= nColMax) {
           break;
         }
+
         const int key = Digit::calculateKey(det, rowE, colPos);
         if (key < KEY_MIN || key > KEY_MAX) {
           LOG(FATAL) << "Wrong TRD key " << key << " for (det,row,col) = (" << det << ", " << rowE << ", " << colPos << ")";
         }
-        auto& currentSignal = adcMapCont[key]; // Get the old signal
+        // Add the signals
+        // Get the old signal
+        auto& currentSignal = adcMapCont[key];
         isDigit = true;
         currentSignal[kTB] = labelIndex; // store the label index in this extra timebin to pass it to the digit structure
         for (int iTimeBin = firstTimeBin; iTimeBin < lastTimeBin; ++iTimeBin) {
