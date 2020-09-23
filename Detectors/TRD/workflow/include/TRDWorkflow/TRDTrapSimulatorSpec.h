@@ -92,6 +92,7 @@ class TRDDPLTrapSimulatorTask : public o2::framework::Task
   TrackletHCHeader mTrackletHCHeader; // the current half chamber header, that will be written if a first tracklet is found for this halfchamber.
   TrapConfig* getTrapConfig();
   void loadTrapConfig();
+  void loadDefaultTrapConfig();
   void setOnlineGainTables();
 };
 

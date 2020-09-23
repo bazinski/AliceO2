@@ -25,6 +25,7 @@
 #include <fstream>
 
 #include "TChain.h"
+#include "TFile.h"
 
 #include "Framework/ConfigParamRegistry.h"
 #include "Framework/ControlService.h"
@@ -89,7 +90,17 @@ TrapConfig* TRDDPLTrapSimulatorTask::getTrapConfig()
   } // end of else from if mTrapConfig
 }
 
-
+void TRDDPLTrapSimulatorTask::loadDefaultTrapConfig()
+{
+  //this loads a trap config from a root file for those times when the ccdb is not around and you want to keep working.
+  TFile* f;
+  f = new TFile("DefaultTrapConfig.root");
+  mTrapConfig = (o2::trd::TrapConfig*)f->Get("ccdb_object");
+  if (mTrapConfig == nullptr) {
+    LOG(fatal) << "failed to load from ccdb, and attempted to load from disk, you seem to be really out of luck.";
+  }
+  // else we have loaded the trap config successfully.
+}
 void TRDDPLTrapSimulatorTask::loadTrapConfig()
 {
   // try to load the specified configuration from the CCDB
@@ -105,6 +116,7 @@ void TRDDPLTrapSimulatorTask::loadTrapConfig()
     //failed to find or open or connect or something to get the trapconfig from the ccdb.
     //first check the directory listing.
     LOG(warn) << " failed to get trapconfig from ccdb with name :  " << mTrapConfigName;
+    loadDefaultTrapConfig();
   } else {
     //TODO figure out how to get the debug level from logger and only do this for debug option to --severity debug (or what ever the command actualy is)
     if (mEnableTrapConfigDump) {
@@ -162,6 +174,7 @@ void TRDDPLTrapSimulatorTask::setOnlineGainTables()
 
 void TRDDPLTrapSimulatorTask::init(o2::framework::InitContext& ic)
 {
+  std::cout << "entering init" << std::endl;
   mFeeParam = FeeParam::instance();
   mPrintTrackletOptions = ic.options().get<int>("trd-printtracklets");
   mDrawTrackletOptions = ic.options().get<int>("trd-drawtracklets");
@@ -266,28 +279,43 @@ void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
   // the digits are going to be sorted, we therefore need a copy of the vector rather than an object created
   // directly on the input data, the output vector however is created directly inside the message
   // memory thus avoiding copy by snapshot
+
+  /*********
+   * iNPUTS
+   ********/
+
   auto inputDigits = pc.inputs().get<gsl::span<o2::trd::Digit>>("digitinput");
   std::vector<o2::trd::Digit> msgDigits(inputDigits.begin(), inputDigits.end());
   //  auto digits pc.outputs().make<std::vector<o2::trd::Digit>>(Output{"TRD", "TRKDIGITS", 0, Lifetime::Timeframe}, msgDigits.begin(), msgDigits.end());
   auto digitMCLabels = pc.inputs().get<o2::dataformats::ConstMCTruthContainer<o2::MCCompLabel>>("labelinput");
-
-  //  auto rawDataOut = pc.outputs().make<char>(Output{"TRD", "RAWDATA", 0, Lifetime::Timeframe}, 1000); //TODO number is just a place holder until we start using it.
-  o2::dataformats::MCTruthContainer<o2::MCCompLabel> trackletMCLabels;
-
   // the returned object is read-only as it refers directly to the underlying raw input data
   // need to make a copy because the object might be changed in fixTriggerRecords
   auto inputTriggerRecords = pc.inputs().get<gsl::span<o2::trd::TriggerRecord>>("triggerrecords");
+
+  /* *****
+   * setup data objects
+   * *****/
+
   // trigger records to index the 64bit tracklets.yy
   std::vector<o2::trd::TriggerRecord> triggerRecords(inputTriggerRecords.begin(), inputTriggerRecords.end());
+  std::vector<o2::trd::TriggerRecord> trackletTriggerRecords = triggerRecords; // copy over the whole thing but we only really want the bunch crossing info.
+  std::vector<o2::trd::TriggerRecord> rawTriggerRecords = triggerRecords;      // as we have the option of having tracklets and/or raw data, we need both triggerrecords.
+                                                                               // of course we dont *actually* need it we could simply walk through all the raw data header to header.
+  //  auto rawDataOut = pc.outputs().make<char>(Output{"TRD", "RAWDATA", 0, Lifetime::Timeframe}, 1000); //TODO number is just a place holder until we start using it.
+  o2::dataformats::MCTruthContainer<o2::MCCompLabel> trackletMCLabels;
+  //index of digits, TODO refactor to a digitindex class.
+  std::vector<unsigned int> msgDigitsIndex;
+  //set up structures to hold the returning tracklets.
+  std::vector<Tracklet64> trapTracklets; //vector to store the retrieved tracklets from an trapsim object
+  std::vector<Tracklet64> trapTrackletsAccum;
+  std::vector<uint32_t> rawdata;
   // trigger records to index the "raw" data
-
   uint64_t currentTriggerRecord = 0;
-
   for (auto& trig : triggerRecords) {
     if (mDumpTriggerRecords) {
-      LOG(info) << "Trigger Record ; " << trig.getFirstEntry() << " --> " << trig.getNumberOfObjects();
+      LOG(info) << "Trigger Record : " << trig.getFirstEntry() << " --> " << trig.getNumberOfObjects();
     } else {
-      LOG(debug) << "Trigger Record ; " << trig.getFirstEntry() << " --> " << trig.getNumberOfObjects();
+      LOG(debug) << "Trigger Record : " << trig.getFirstEntry() << " --> " << trig.getNumberOfObjects();
     }
   }
   // fix incoming trigger records if requested.
@@ -295,53 +323,30 @@ void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
     fixTriggerRecords(triggerRecords);
   }
 
-  std::vector<o2::trd::TriggerRecord> trackletTriggerRecords = triggerRecords; // copy over the whole thing but we only really want the bunch crossing info.
-  std::vector<o2::trd::TriggerRecord> rawTriggerRecords = triggerRecords;      // as we have the option of having tracklets and/or raw data, we need both triggerrecords.
-                                                                               // of course we dont *actually* need it we could simply walk through all the raw data header to header.
+  /* *******
+   * reserve sizes 
+   * *******/
   mLinkRecords.reserve(1077 * triggerRecords.size());                          // worse case scenario is all links for all events. TODO get 1077 from somewhere.
-
   //TODO these must be created directly in the output as done at the top of this run method
-  std::vector<unsigned int> msgDigitsIndex;
   msgDigitsIndex.reserve(msgDigits.size());
-
   LOG(debug) << "Read in msgDigits with size of : " << msgDigits.size() << " labels contain : " << digitMCLabels.getNElements() << " with and index size of  : " << digitMCLabels.getIndexedSize() << " and triggerrecord count of :" << triggerRecords.size();
-
   if (digitMCLabels.getIndexedSize() != msgDigits.size()) {
     LOG(warn) << "Digits and Labels coming into TrapSimulator are of differing sizes, labels will be jibberish. " << digitMCLabels.getIndexedSize() << "!=" << msgDigits.size();
   }
-  //set up structures to hold the returning tracklets.
-  std::vector<Tracklet64> trapTracklets; //vector to store the retrieved tracklets from an trapsim object
-  std::vector<Tracklet64> trapTrackletsAccum;
-  std::vector<uint32_t> rawdata;
-
   trapTracklets.reserve(30);
   trapTrackletsAccum.reserve(msgDigits.size() / 3);
   msgDigitsIndex.reserve(msgDigits.size());
   // worse case scenario is header and single tracklet word, hence 2, for higher tracklet count the factors reduces relative to tracklet count. Remember 3 digits per tracklet.
   rawdata.reserve(msgDigits.size() * 2);
 
-  int count = 0;
-  //make msgDigitsIndex a simple vector of ascending numbers mapping trivially into the msgDigits vector.
-  for (int i = 0; i < msgDigits.size(); i++) {
-    msgDigitsIndex.push_back(i);
-  }
-  LOG(debug) << "msgdigitsindex is " << msgDigitsIndex.size();
+  //Build the digits index.
+  std::generate(msgDigitsIndex.begin(), msgDigitsIndex.end(), [n = 0]() mutable { return n++; });
 
-  auto sortstart = std::chrono::high_resolution_clock::now();
   //sort the digits array TODO refactor this intoa vector index sort and possibly generalise past merely digits.
+  auto sortstart = std::chrono::high_resolution_clock::now();
   for (auto& trig : triggerRecords) {
-    LOG(debug) << " sorting from index: " << trig.getFirstEntry() << " till " << trig.getNumberOfObjects() + trig.getFirstEntry();
-    LOG(debug) << "pre sort";
-    for (int i = msgDigitsIndex[trig.getFirstEntry()]; i < trig.getNumberOfObjects() + trig.getFirstEntry(); i++) {
-      LOG(debug) << "i:" << msgDigitsIndex[i];
-    }
     std::stable_sort(std::begin(msgDigitsIndex) + trig.getFirstEntry(), std::begin(msgDigitsIndex) + trig.getNumberOfObjects() + trig.getFirstEntry(),
                      [&msgDigits](auto&& PH1, auto&& PH2) { return digitindexcompare(PH1, PH2, msgDigits); });
-    LOG(debug) << "post sort";
-    for (int i = msgDigitsIndex[trig.getFirstEntry()]; i < trig.getNumberOfObjects() + trig.getFirstEntry(); i++) {
-      LOG(debug) << "i:" << i << " = " << msgDigitsIndex[i];
-    }
-    LOG(debug) << "*****************************************************************";
   }
 
   mSortingTime = std::chrono::high_resolution_clock::now() - sortstart;
@@ -371,8 +376,9 @@ void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
                << " with ORI# : " << mFeeParam->getORI(digit.getDetector(), mFeeParam->getROBfromPad(digit.getRow(), digit.getPad()))
                << " within SM ori#:" << mFeeParam->getORIinSM(digit.getDetector(), mFeeParam->getROBfromPad(digit.getRow(), digit.getPad()));
   }
+
   //accounting variables for various things.
-  //TODO make them class members, i dont want to fiddle right now though.
+  //TODO make them class members
   int olddetector = -1;
   int oldrow = -1;
   int oldpad = -1;
@@ -445,9 +451,7 @@ void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
       unsigned long numberofusedtraps = 0;
       for (int trapcounter = 0; trapcounter < 8; trapcounter++) {
         unsigned int isinit = mTrapSimulator[trapcounter].checkInitialized();
-        LOG(debug) << "Start of trap  : " << trapcounter;
         if (mTrapSimulator[trapcounter].isDataSet()) { //firedtraps
-          LOG(debug3) << "DataSet on : " << trapcounter;
           //this one has been filled with data for the now previous pad row.
           auto trapsimtimerstart = std::chrono::high_resolution_clock::now();
           mTrapUsedCounter[trapcounter]++;
