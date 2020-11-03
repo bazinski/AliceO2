@@ -13,7 +13,7 @@
 #pragma link off all functions;
 
 #pragma link C++ class StepTHn + ;
-#pragma link C++ class StepTHnT < TArrayF> + ;
-#pragma link C++ class StepTHnT < TArrayD> + ;
+#pragma link C++ class StepTHnT < TArrayF > +;
+#pragma link C++ class StepTHnT < TArrayD > +;
 #pragma link C++ typedef StepTHnF;
 #pragma link C++ typedef StepTHnD;
