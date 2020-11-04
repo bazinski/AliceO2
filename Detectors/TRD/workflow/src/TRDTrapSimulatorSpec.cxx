@@ -98,14 +98,14 @@ bool msgDigitSortComparator(o2::trd::Digit const& a, o2::trd::Digit const& b)
     }
     if (rowa > rowb) {
       return 0;
-  }
-  if (pada < padb) {
-    return 0;
-  }
-  if (pada > padb) {
-    return 1;
-  }
-  return 0; //at this point rowa=rowb, and pada=padb i.e. should never get here, TODO make this an error condition?
+    }
+    if (pada < padb) {
+      return 0;
+    }
+    if (pada > padb) {
+      return 1;
+    }
+    return 0; //at this point rowa=rowb, and pada=padb i.e. should never get here, TODO make this an error condition?
   }
 }
 
