@@ -333,7 +333,8 @@ void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
     LOG(debug) << "pre sort";
     for (int i = msgDigitsIndex[trig.getFirstEntry()]; i < trig.getNumberOfObjects() + trig.getFirstEntry(); i++)
       LOG(debug) << "i:" << msgDigitsIndex[i];
-    std::stable_sort(std::begin(msgDigitsIndex) + trig.getFirstEntry(), std::begin(msgDigitsIndex) + trig.getNumberOfObjects() + trig.getFirstEntry(), std::bind(digitindexcompare, _1, _2, msgDigits));
+    std::stable_sort(std::begin(msgDigitsIndex) + trig.getFirstEntry(), std::begin(msgDigitsIndex) + trig.getNumberOfObjects() + trig.getFirstEntry(),
+                     [msgDigits](auto && PH1, auto && PH2) { return digitindexcompare(PH1, PH2, msgDigits); } );
     LOG(debug) << "post sort";
     for (int i = msgDigitsIndex[trig.getFirstEntry()]; i < trig.getNumberOfObjects() + trig.getFirstEntry(); i++)
       LOG(debug) << "i:" << i << " = " << msgDigitsIndex[i];
