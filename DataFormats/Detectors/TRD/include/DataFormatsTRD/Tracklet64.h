@@ -58,7 +58,7 @@ class Tracklet64
   }
 
   ~Tracklet64() = default;
-  Tracklet64& operator=(const Tracklet64 &rhs) = default;
+  Tracklet64& operator=(const Tracklet64& rhs) = default;
 
   //TODO convert to the actual number  regarding compliments.
   // ----- Getters for contents of tracklet word -----
