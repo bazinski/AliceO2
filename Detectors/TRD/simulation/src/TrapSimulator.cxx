@@ -1789,17 +1789,17 @@ void TrapSimulator::calcFitreg()
                                                                              //     LOG(info) << __FILE__ << ":" << __LINE__ << " :: added hit to fit re ";
       }
     }
-    }
+  }
 
-    LOG(info) << "***** Fit Registers begin";
-    for (int iAdc = 0; iAdc < NADCMCM; iAdc++) {
-      if (mFitReg[iAdc].mNhits != 0) {
-        LOG(info) << "fitreg[" << iAdc << "]: nHits = " << mFitReg[iAdc].mNhits << "]: sumX = " << mFitReg[iAdc].mSumX << ", sumY = " << mFitReg[iAdc].mSumY << ", sumX2 = " << mFitReg[iAdc].mSumX2 << ", sumY2 = " << mFitReg[iAdc].mSumY2 << ", sumXY = " << mFitReg[iAdc].mSumXY;
-      }
+  LOG(info) << "***** Fit Registers begin";
+  for (int iAdc = 0; iAdc < NADCMCM; iAdc++) {
+    if (mFitReg[iAdc].mNhits != 0) {
+      LOG(info) << "fitreg[" << iAdc << "]: nHits = " << mFitReg[iAdc].mNhits << "]: sumX = " << mFitReg[iAdc].mSumX << ", sumY = " << mFitReg[iAdc].mSumY << ", sumX2 = " << mFitReg[iAdc].mSumX2 << ", sumY2 = " << mFitReg[iAdc].mSumY2 << ", sumXY = " << mFitReg[iAdc].mSumXY;
     }
-    LOG(info) << "***** Fit Registers end";
-    //print(PRINTRAW);
-    LOG(info) << "LEAVING : " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " :: " << getDetector() << ":" << getRobPos() << ":" << getMcmPos() << " and mNHits : " << mNHits;
+  }
+  LOG(info) << "***** Fit Registers end";
+  //print(PRINTRAW);
+  LOG(info) << "LEAVING : " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " :: " << getDetector() << ":" << getRobPos() << ":" << getMcmPos() << " and mNHits : " << mNHits;
 }
 
 void TrapSimulator::trackletSelection()
