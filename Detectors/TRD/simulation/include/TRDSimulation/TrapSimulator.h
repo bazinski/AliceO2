@@ -291,9 +291,9 @@ class TrapSimulator
     }
     void Print()
     {
-      LOG(info) << "FitReg : " << std::endl;
-      LOG(info) << "\t Q 0:1:2 : " << mQ0 << ":" << mQ1 << ":" << mQ2 << std::endl;
-      LOG(info) << "\t SumX:SumY:SumX2:SumY2:SumXY : " << mSumX << ":" << mSumY << ":" << mSumX2 << ":" << mSumY2 << ":" << mSumXY << std::endl;
+      LOG(info) << "FitReg : ";
+      LOG(info) << "\t Q 0:1:2 : " << mQ0 << ":" << mQ1 << ":" << mQ2;
+      LOG(info) << "\t SumX:SumY:SumX2:SumY2:SumXY : " << mSumX << ":" << mSumY << ":" << mSumX2 << ":" << mSumY2 << ":" << mSumXY;
     }
   };
   std::array<FitReg, constants::NADCMCM> mFitReg{};
