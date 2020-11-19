@@ -2670,7 +2670,8 @@ bool TrapSimulator::readPackedConfig(TrapConfig* cfg, int hc, unsigned int* data
           }
           LOG(debug) << "addr=0x" << hex << caddr << "(" << cfg->getRegName(cfg->getRegByAddress(caddr)) << ") data=0x" << hex << dat;
           if (!cfg->poke(caddr, dat, det, rob, mcm)) {
-            LOG(debug) << "(single-write): non-existing address 0x" << std::hex << caddr << " containing 0x" << std::hex << header; }
+            LOG(debug) << "(single-write): non-existing address 0x" << std::hex << caddr << " containing 0x" << std::hex << header;
+          }
           if (idx > size) {
             LOG(debug) << "(single-write): no more data, missing end marker";
             return -err;
