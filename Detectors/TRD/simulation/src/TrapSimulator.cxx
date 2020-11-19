@@ -1791,22 +1791,22 @@ void TrapSimulator::calcFitreg()
     }
   }
 
-  LOG(info) << "***** Fit Registers begin";
+  LOG(debug) << "***** Fit Registers begin";
   for (int iAdc = 0; iAdc < NADCMCM; iAdc++) {
     if (mFitReg[iAdc].mNhits != 0) {
-      LOG(info) << "fitreg[" << iAdc << "]: nHits = " << mFitReg[iAdc].mNhits << "]: sumX = " << mFitReg[iAdc].mSumX << ", sumY = " << mFitReg[iAdc].mSumY << ", sumX2 = " << mFitReg[iAdc].mSumX2 << ", sumY2 = " << mFitReg[iAdc].mSumY2 << ", sumXY = " << mFitReg[iAdc].mSumXY;
+      LOG(debug) << "fitreg[" << iAdc << "]: nHits = " << mFitReg[iAdc].mNhits << "]: sumX = " << mFitReg[iAdc].mSumX << ", sumY = " << mFitReg[iAdc].mSumY << ", sumX2 = " << mFitReg[iAdc].mSumX2 << ", sumY2 = " << mFitReg[iAdc].mSumY2 << ", sumXY = " << mFitReg[iAdc].mSumXY;
     }
   }
-  LOG(info) << "***** Fit Registers end";
+  LOG(debug) << "***** Fit Registers end";
   //print(PRINTRAW);
-  LOG(info) << "LEAVING : " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " :: " << getDetector() << ":" << getRobPos() << ":" << getMcmPos() << " and mNHits : " << mNHits;
+  LOG(debug) << "LEAVING : " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " :: " << getDetector() << ":" << getRobPos() << ":" << getMcmPos() << " and mNHits : " << mNHits;
 }
 
 void TrapSimulator::trackletSelection()
 {
   // Select up to 3 tracklet candidates from the fit registers
   // and assign them to the CPUs.
-  LOG(info) << "ENTERING : " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " :: " << getDetector() << ":" << getRobPos() << ":" << getMcmPos();
+  LOG(debug) << "ENTERING : " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " :: " << getDetector() << ":" << getRobPos() << ":" << getMcmPos();
   unsigned short adcIdx, i, j, ntracks, tmp;
   std::array<unsigned short, 18> trackletCandch{};   // store the adcch[0] and number of hits[1] for all tracklet candidates
   std::array<unsigned short, 18> trackletCandhits{}; // store the adcch[0] and number of hits[1] for all tracklet candidates
@@ -1821,9 +1821,9 @@ void TrapSimulator::trackletSelection()
       ntracks++;
     };
   }
-  LOG(info) << "Number of track candidates:" << ntracks;
+  LOG(debug) << "Number of track candidates:" << ntracks;
   for (i = 0; i < ntracks; i++)
-    LOG(info) << "TRACKS: " << i << " " << trackletCandch[i] << " " << trackletCandhits[i];
+    LOG(debug) << "TRACKS: " << i << " " << trackletCandch[i] << " " << trackletCandhits[i];
 
   if (ntracks > 3) {
     // primitive sorting according to the number of hits
@@ -1865,7 +1865,7 @@ void TrapSimulator::trackletSelection()
   for (i = ntracks; i < 4; i++) { // CPUs without tracklets
     mFitPtr[i] = 31;              // pointer to the left channel with tracklet for CPU[i] = 31 (invalid)
   }
-  LOG(info) << __func__ << " found " << ntracks << " tracklet candidates";
+  LOG(debug) << __func__ << " found " << ntracks << " tracklet candidates";
   //  for (i = 0; i < 4; i++)
   //   LOG(info) << "fitPtr[" << i << "]: " << mFitPtr[i];
 
@@ -1901,14 +1901,14 @@ void TrapSimulator::trackletSelection()
     //   for (i = 0; i < 4; i++)
     //     LOG(info) << "fitPtr[" << i << "]: " << mFitPtr[i];
   }
-  LOG(info) << "LEAVING : " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " :: " << getDetector() << ":" << getRobPos() << ":" << getMcmPos() << " with ntracks:" << ntracks;
+  LOG(debug) << "LEAVING : " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " :: " << getDetector() << ":" << getRobPos() << ":" << getMcmPos() << " with ntracks:" << ntracks;
 }
 
 void TrapSimulator::fitTracklet()
 {
   // Perform the actual tracklet fit based on the fit sums
   // which have been filled in the fit registers.
-  LOG(info) << "ENTERING : " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " :: " << getDetector() << ":" << getRobPos() << ":" << getMcmPos() << " and  Tracklet array size is : " << mTrackletArray64.size();
+  LOG(debug) << "ENTERING : " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " :: " << getDetector() << ":" << getRobPos() << ":" << getMcmPos() << " and  Tracklet array size is : " << mTrackletArray64.size();
   // parameters in fitred.asm (fit program)
   int rndAdd = 0;
   int decPlaces = 5; // must be larger than 1 or change the following code
@@ -1924,11 +1924,11 @@ void TrapSimulator::fitTracklet()
   int yoffs = (((((mRobPos & 0x1) << 2) + (mMcmPos & 0x3)) * 18) << 8) -
               ((18 * 4 * 2 - 18 * 2 - 1) << 7);
   // TODO we dont need the stuff calculated in fitred.asm because we are now all relative to the mcm ?? check this statement
-  LOG(info) << "padrow:" << padrow << " yoffs:" << yoffs << " and rndAdd:" << rndAdd;
+  LOG(debug) << "padrow:" << padrow << " yoffs:" << yoffs << " and rndAdd:" << rndAdd;
 
   // add corrections for mis-alignment
   if (FeeParam::instance()->getUseMisalignCorr()) {
-    LOG(info) << "using mis-alignment correction";
+    LOG(debug) << "using mis-alignment correction";
     yoffs += (int)mTrapConfig->getDmemUnsigned(mgkDmemAddrYcorr, mDetector, mRobPos, mMcmPos);
   }
 
@@ -1936,7 +1936,7 @@ void TrapSimulator::fitTracklet()
   int layer = mDetector % 6;
   unsigned int scaleY = 1; //(unsigned int)((0.635 + 0.03 * layer) / (256.0 * 160.0e-4) * shift);
   unsigned int scaleD = 1; //(unsigned int)((0.635 + 0.03 * layer) / (256.0 * 140.0e-4) * shift);
-  LOG(info) << "scaleY : " << scaleY << "  scaleD=" << scaleD << " shift:" << std::hex << shift << std::dec;
+  LOG(debug) << "scaleY : " << scaleY << "  scaleD=" << scaleD << " shift:" << std::hex << shift << std::dec;
   int deflCorr = (int)mTrapConfig->getDmemUnsigned(mgkDmemAddrDeflCorr, mDetector, mRobPos, mMcmPos);
   int ndrift = (int)mTrapConfig->getDmemUnsigned(mgkDmemAddrNdrift, mDetector, mRobPos, mMcmPos);
 
@@ -1990,11 +1990,11 @@ void TrapSimulator::fitTracklet()
       sumY = fit0->mSumY + fit1->mSumY + 256 * fit1->mNhits;
       sumXY = fit0->mSumXY + fit1->mSumXY + 256 * fit1->mSumX;
       sumY2 = fit0->mSumY2 + fit1->mSumY2 + 512 * fit1->mSumY + 256 * 256 * fit1->mNhits;
-      LOG(info) << "sumY2 = " << sumY2 << " ";
+      LOG(debug) << "sumY2 = " << sumY2 << " ";
       ;
 
       slope = nHits * sumXY - sumX * sumY;
-      LOG(info) << "slope = " << slope;
+      LOG(debug) << "slope = " << slope;
 
       //offset  = sumX2*sumY  - sumX*sumXY - t0 * sumX*sumY + t0 * nHits*sumXY;
       position = sumX2 * sumY - sumX * sumXY;
@@ -2007,42 +2007,42 @@ void TrapSimulator::fitTracklet()
       slope = -slope;
       temp = mult * position;
       position = temp >> 32; // take the upper 32 bits
-      LOG(info) << "slope = " << slope;
+      LOG(debug) << "slope = " << slope;
       //slope = slope;//this is here as a reference for what was done in run2 //* ndrift) >> ndriftDp) + deflCorr;
       auto oldpos = position;
-      LOG(info) << "position = position - (mFitPtr[cpu] << (8 + decPlaces));";
+      LOG(debug) << "position = position - (mFitPtr[cpu] << (8 + decPlaces));";
       position = position - (mFitPtr[cpu] << (8 + decPlaces));
-      LOG(info) << "position = " << position << " - " << mFitPtr[cpu] << " << (8+" << decPlaces << ")";
+      LOG(debug) << "position = " << position << " - " << mFitPtr[cpu] << " << (8+" << decPlaces << ")";
 
-      LOG(info) << "position = " << position << " : " << oldpos;
-      LOG(info) << "slope before scale of " << scaleD << " is = " << slope;
+      LOG(debug) << "position = " << position << " : " << oldpos;
+      LOG(debug) << "slope before scale of " << scaleD << " is = " << slope;
       temp = slope;
       temp = temp * scaleD;
       slope = (temp >> 32);
-      LOG(info) << "slope after scale and shift is = " << slope;
-      LOG(info) << "slope = " << slope;
-      LOG(info) << "position before scale and shift = " << position;
+      LOG(debug) << "slope after scale and shift is = " << slope;
+      LOG(debug) << "slope = " << slope;
+      LOG(debug) << "position before scale and shift = " << position;
       temp = position;
       temp = temp * scaleY;
       position = (temp >> 32);
-      LOG(info) << "position after scale and shift is = " << position;
+      LOG(debug) << "position after scale and shift is = " << position;
 
       // rounding, like in the TRAP
       slope = (slope + rndAdd) >> decPlaces;
       position = (position + rndAdd) >> decPlaces;
-      LOG(info) << "position = " << position;
-      LOG(info) << "slope = " << slope;
+      LOG(debug) << "position = " << position;
+      LOG(debug) << "slope = " << slope;
 
-      LOG(info) << "Det: " << setw(3) << mDetector << ", ROB: " << mRobPos << ", MCM: " << setw(2) << mMcmPos << setw(-1) << ": deflection: " << slope << ", min: " << (int)mTrapConfig->getDmemUnsigned(mgkDmemAddrDeflCutStart + 2 * mFitPtr[cpu], mDetector, mRobPos, mMcmPos) << " max : " << (int)mTrapConfig->getDmemUnsigned(mgkDmemAddrDeflCutStart + 1 + 2 * mFitPtr[cpu], mDetector, mRobPos, mMcmPos);
+      LOG(debug) << "Det: " << setw(3) << mDetector << ", ROB: " << mRobPos << ", MCM: " << setw(2) << mMcmPos << setw(-1) << ": deflection: " << slope << ", min: " << (int)mTrapConfig->getDmemUnsigned(mgkDmemAddrDeflCutStart + 2 * mFitPtr[cpu], mDetector, mRobPos, mMcmPos) << " max : " << (int)mTrapConfig->getDmemUnsigned(mgkDmemAddrDeflCutStart + 1 + 2 * mFitPtr[cpu], mDetector, mRobPos, mMcmPos);
 
-      LOG(info) << "Fit sums: x = " << sumX << ", X = " << sumX2 << ", y = " << sumY << ", Y = " << sumY2 << ", Z = " << sumXY << ", q0 = " << q0 << ", q1 = " << q1;
+      LOG(debug) << "Fit sums: x = " << sumX << ", X = " << sumX2 << ", y = " << sumY << ", Y = " << sumY2 << ", Z = " << sumXY << ", q0 = " << q0 << ", q1 = " << q1;
 
       fitSlope = (float)(nHits * sumXY - sumX * sumY) / (nHits * sumX2 - sumX * sumX);
 
       fitOffset = (float)(sumX2 * sumY - sumX * sumXY) / (nHits * sumX2 - sumX * sumX);
 
-      LOG(info) << "FIT                  : a:" << fitSlope << " b:" << fitOffset;
-      LOG(info) << "FIT for trackletword : a:" << slope << " b:" << position;
+      LOG(debug) << "FIT                  : a:" << fitSlope << " b:" << fitOffset;
+      LOG(debug) << "FIT for trackletword : a:" << slope << " b:" << position;
 
       float sx = (float)sumX;
       float sx2 = (float)sumX2;
@@ -2065,7 +2065,7 @@ void TrapSimulator::fitTracklet()
         mMCMT[cpu] = 0x10001000; //??? FeeParam::getTrackletEndmarker();
       } else {
         if (slope > 127 || slope < -127) { // wrapping in TRAP!
-          LOG(info) << "Overflow in slope: " << slope << ", tracklet discarded!";
+          LOG(debug) << "Overflow in slope: " << slope << ", tracklet discarded!";
           mMCMT[cpu] = 0x10001000;
           continue;
         }
@@ -2076,7 +2076,7 @@ void TrapSimulator::fitTracklet()
         int layer = mDetector % 6;
         unsigned int scaleY = (unsigned int)((0.635 + 0.03 * layer) / (256.0 * 160.0e-4) * shift);
         unsigned int scaleD = (unsigned int)((0.635 + 0.03 * layer) / (256.0 * 140.0e-4) * shift);
-        LOG(info) << "scaleY : " << scaleY << "  scaleD=" << scaleD << " shift:" << std::hex << shift << std::dec;
+        LOG(debug) << "scaleY : " << scaleY << "  scaleD=" << scaleD << " shift:" << std::hex << shift << std::dec;
         int deflCorr = (int)mTrapConfig->getDmemUnsigned(mgkDmemAddrDeflCorr, mDetector, mRobPos, mMcmPos);
         int ndrift = (int)mTrapConfig->getDmemUnsigned(mgkDmemAddrNdrift, mDetector, mRobPos, mMcmPos);
 
@@ -2150,10 +2150,10 @@ void TrapSimulator::fitTracklet()
         }
         bool printoutadcs = false;
         //TODO these info statemetns are left in to info the labels later.
-        LOG(info) << "adc bitpatterh is " << std::hex << adchitbp << std::dec;
+        LOG(debug) << "adc bitpatterh is " << std::hex << adchitbp << std::dec;
         for (int i = 0; i < 21; i++) {
           if (adchitbp & (1 << i)) {
-            LOG(info) << "adding labels for adc " << i << "adc bitpatterh is " << std::hex << adchitbp << std::dec << " there are : " << mADCLabels[i].size() << " labels";
+            LOG(debug) << "adding labels for adc " << i << "adc bitpatterh is " << std::hex << adchitbp << std::dec << " there are : " << mADCLabels[i].size() << " labels";
 
             localTrackletLabels.insert(localTrackletLabels.end(), mADCLabels[i].begin(), mADCLabels[i].end()); // append the hit labels to this tracklets temp labels store.
             if (mADCLabels[i].size() == 0) {
@@ -2168,7 +2168,7 @@ void TrapSimulator::fitTracklet()
         //if(printoutadcs) print(PRINTRAW|PRINTFILTERED);
         //labels come in via adc, now loop over ADC and see which contribute to the hits.
 
-        LOG(info) << "TrapSim Trackletarray size is : " << mTrackletArray64.size() << "  :: adding a track at " << mMCMT[cpu] << ":" << mDetector * 2 + mRobPos % 2 << ":" << mRobPos << ":" << mMcmPos << " LABELS size: " << localTrackletLabels.size();
+        LOG(debug) << "TrapSim Trackletarray size is : " << mTrackletArray64.size() << "  :: adding a track at " << mMCMT[cpu] << ":" << mDetector * 2 + mRobPos % 2 << ":" << mRobPos << ":" << mMcmPos << " LABELS size: " << localTrackletLabels.size();
         uint32_t format = 0;
         uint32_t hcid = mDetector * 2 + mRobPos % 2;
         uint32_t padrow = ((mRobPos >> 1) << 2) | (mMcmPos >> 2);
@@ -2179,9 +2179,9 @@ void TrapSimulator::fitTracklet()
         if (mdebugStream)
           mTrackletDetails.emplace_back(position, slope, q0, q1, q2, nHits, fitError);
         //mTrackletArray[newtrackposition].setLabel(mcLabel);
-        LOG(info) << "adding elements to mTrackletLabels of size " << mTrackletLabels.getIndexedSize() << "::" << mTrackletLabels.getNElements() << " labels for additional labels vector of :" << localTrackletLabels.size() << " labels";
+        LOG(debug) << "adding elements to mTrackletLabels of size " << mTrackletLabels.getIndexedSize() << "::" << mTrackletLabels.getNElements() << " labels for additional labels vector of :" << localTrackletLabels.size() << " labels";
         mTrackletLabels.addElements(mTrackletLabels.getIndexedSize(), localTrackletLabels);
-        LOG(info) << "elements in mTrackletLabels is size " << mTrackletLabels.getIndexedSize() << "::" << mTrackletLabels.getNElements() << " labels for additional labels vector of :" << localTrackletLabels.size() << " labels";
+        LOG(debug) << "elements in mTrackletLabels is size " << mTrackletLabels.getIndexedSize() << "::" << mTrackletLabels.getNElements() << " labels for additional labels vector of :" << localTrackletLabels.size() << " labels";
         // store cluster information (if requested)
         if (mgStoreClusters && mdebugStream) {
           std::vector<float> res(getNumberOfTimeBins());
@@ -2254,11 +2254,7 @@ void TrapSimulator::fitTracklet()
                 if (mHits[iHit].mTimebin >= mTrapConfig->getTrapReg(TrapConfig::kTPQS1, mDetector, mRobPos, mMcmPos) &&
                     mHits[iHit].mTimebin < mTrapConfig->getTrapReg(TrapConfig::kTPQE1, mDetector, mRobPos, mMcmPos)) {
                   nHits[1]++;
-                }
-                if (mHits[iHit].mTimebin >= 3 && //TODO this needs to come from trapconfig, its not there yet.
-                    mHits[iHit].mTimebin < 5) {
-                  nHits[2]++;
-                }
+                } if (mHits[iHit].mTimebin >= 3 && //TODO this needs to come from trapconfig, its not there yet.  mHits[iHit].mTimebin < 5) { nHits[2]++; }
                 //TODO nHits2 ???? to correspond to Q2 ???
                 //
                 LOG(debug) << "setting bit pattern for chanel : " << mHits[iHit].mChannel << " of hit  : " << iHit << std::hex << " bitp before : " << adchitbp << std::dec;
@@ -2286,7 +2282,7 @@ void TrapSimulator::fitTracklet()
               //if(printoutadcs) print(PRINTRAW|PRINTFILTERED);
               //labels come in via adc, now loop over ADC and see which contribute to the hits.
 
-              LOG(info) << "TrapSim Trackletarray size is : " << mTrackletArray64.size() << "  :: adding a track at " << mMCMT[cpu] << ":" << mDetector * 2 + mRobPos % 2 << ":" << mRobPos << ":" << mMcmPos << " LABELS size: " << localTrackletLabels.size();
+              LOG(debug) << "TrapSim Trackletarray size is : " << mTrackletArray64.size() << "  :: adding a track at " << mMCMT[cpu] << ":" << mDetector * 2 + mRobPos % 2 << ":" << mRobPos << ":" << mMcmPos << " LABELS size: " << localTrackletLabels.size();
               uint32_t format = 0;
               uint32_t hcid = mDetector * 2 + mRobPos % 2;
               uint32_t padrow = ((mRobPos >> 1) << 2) | (mMcmPos >> 2);
@@ -2297,9 +2293,9 @@ void TrapSimulator::fitTracklet()
               if (mdebugStream)
                 mTrackletDetails.emplace_back(position, slope, q0, q1, q2, nHits, fitError);
               //mTrackletArray[newtrackposition].setLabel(mcLabel);
-              LOG(info) << "adding elements to mTrackletLabels of size " << mTrackletLabels.getIndexedSize() << "::" << mTrackletLabels.getNElements() << " labels for additional labels vector of :" << localTrackletLabels.size() << " labels";
+              LOG(debug) << "adding elements to mTrackletLabels of size " << mTrackletLabels.getIndexedSize() << "::" << mTrackletLabels.getNElements() << " labels for additional labels vector of :" << localTrackletLabels.size() << " labels";
               mTrackletLabels.addElements(mTrackletLabels.getIndexedSize(), localTrackletLabels);
-              LOG(info) << "elements in mTrackletLabels is size " << mTrackletLabels.getIndexedSize() << "::" << mTrackletLabels.getNElements() << " labels for additional labels vector of :" << localTrackletLabels.size() << " labels";
+              LOG(debug) << "elements in mTrackletLabels is size " << mTrackletLabels.getIndexedSize() << "::" << mTrackletLabels.getNElements() << " labels for additional labels vector of :" << localTrackletLabels.size() << " labels";
               // store cluster information (if requested)
               if (mgStoreClusters && mdebugStream) {
                 std::vector<float> res(getNumberOfTimeBins());
@@ -2326,14 +2322,14 @@ void TrapSimulator::fitTracklet()
               }
 
               if (fitError < 0) {
-                LOG(warn) << "fit slope: " << fitSlope << ", offset: " << fitOffset << ", error: " << TMath::Sqrt(TMath::Abs(fitError) / getNHits());
+                LOG(debug) << "fit slope: " << fitSlope << ", offset: " << fitOffset << ", error: " << TMath::Sqrt(TMath::Abs(fitError) / getNHits());
 
-                LOG(info) << "Strange fit error: " << fitError << " from Sx: " << sumX << ", Sy: " << sumY << ", Sxy: " << sumXY << ", Sx2: " << sumX2 << ", Sy2: " << sumY2 << ", nHitssize: " << nHits.size();
+                LOG(debug) << "Strange fit error: " << fitError << " from Sx: " << sumX << ", Sy: " << sumY << ", Sxy: " << sumXY << ", Sx2: " << sumX2 << ", Sy2: " << sumY2 << ", nHitssize: " << nHits.size();
               }
             }
           }
         }
-        LOG(info) << "LEAVING : " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " :: " << getDetector() << ":" << getRobPos() << ":" << getMcmPos() << " and  Tracklet array size is : " << mTrackletArray64.size();
+        LOG(debug) << "LEAVING : " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " :: " << getDetector() << ":" << getRobPos() << ":" << getMcmPos() << " and  Tracklet array size is : " << mTrackletArray64.size();
       }
     }
   }
@@ -2348,7 +2344,7 @@ void TrapSimulator::tracklet()
   if (!mInitialized) {
     return;
   }
-  LOG(info) << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
+  LOG(debug) << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
   mTrackletArray64.clear();
   calcFitreg();
   if (mNHits == 0) {
@@ -2357,8 +2353,8 @@ void TrapSimulator::tracklet()
   trackletSelection();
   fitTracklet();
   print(15);
-  LOG(info) << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
-  LOG(info) << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
+  LOG(debug) << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
+  LOG(debug) << "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^";
 }
 
 void TrapSimulator::getTracklet64s(std::vector<Tracklet64>& TrackletStore)
@@ -2629,7 +2625,7 @@ bool TrapSimulator::readPackedConfig(TrapConfig* cfg, int hc, unsigned int* data
   // To be used to retrieve the TRAP configuration from the
   // configuration as sent in the raw data.
 
-  LOG(info) << "Reading packed configuration";
+  LOG(debug) << "Reading packed configuration";
 
   int det = hc / 2;
 
@@ -2645,7 +2641,7 @@ bool TrapSimulator::readPackedConfig(TrapConfig* cfg, int hc, unsigned int* data
     int rob = (*data >> 28) & 0x7;
     int mcm = (*data >> 24) & 0xf;
 
-    LOG(info) << "Config of det. " << det << " MCM " << rob << ":" << mcm << " (0x" << std::hex << *data << ")";
+    LOG(debug) << "Config of det. " << det << " MCM " << rob << ":" << mcm << " (0x" << std::hex << *data << ")";
     data++;
 
     while (idx < size && *data != 0x00000000) {
@@ -2654,7 +2650,7 @@ bool TrapSimulator::readPackedConfig(TrapConfig* cfg, int hc, unsigned int* data
       data++;
       idx++;
 
-      LOG(info) << "read: 0x" << hex << header;
+      LOG(debug) << "read: 0x" << hex << header;
 
       if (header & 0x01) // single data
       {
@@ -2666,22 +2662,21 @@ bool TrapSimulator::readPackedConfig(TrapConfig* cfg, int hc, unsigned int* data
           if (header & 0x02) // check if > 16 bits
           {
             dataHi = *data;
-            LOG(info) << "read: 0x" << hex << dataHi;
+            LOG(debug) << "read: 0x" << hex << dataHi;
             data++;
             idx++;
             err += ((dataHi ^ (dat | 1)) & 0xFFFF) != 0;
             dat = (dataHi & 0xFFFF0000) | dat;
           }
-          LOG(info) << "addr=0x" << hex << caddr << "(" << cfg->getRegName(cfg->getRegByAddress(caddr)) << ") data=0x" << hex << dat;
+          LOG(debug) << "addr=0x" << hex << caddr << "(" << cfg->getRegName(cfg->getRegByAddress(caddr)) << ") data=0x" << hex << dat;
           if (!cfg->poke(caddr, dat, det, rob, mcm)) {
-            LOG(info) << "(single-write): non-existing address 0x" << std::hex << caddr << " containing 0x" << std::hex << header;
-          }
+            LOG(debug) << "(single-write): non-existing address 0x" << std::hex << caddr << " containing 0x" << std::hex << header; }
           if (idx > size) {
-            LOG(info) << "(single-write): no more data, missing end marker";
+            LOG(debug) << "(single-write): no more data, missing end marker";
             return -err;
           }
         } else {
-          LOG(info) << "(single-write): address 0x" << setw(4) << std::hex << caddr << " => old endmarker?" << std::dec;
+          LOG(debug) << "(single-write): address 0x" << setw(4) << std::hex << caddr << " => old endmarker?" << std::dec;
           return err;
         }
       }
@@ -2711,22 +2706,22 @@ bool TrapSimulator::readPackedConfig(TrapConfig* cfg, int hc, unsigned int* data
               bitcnt -= bwidth;
               if (bitcnt < 0) {
                 header = *data;
-                LOG(info) << "read 0x" << setw(8) << std::hex << header << std::dec;
+                LOG(debug) << "read 0x" << setw(8) << std::hex << header << std::dec;
                 data++;
                 idx++;
                 err += (header & 1);
                 header = header >> 1;
                 bitcnt = 31 - bwidth;
               }
-              LOG(info) << "addr=0x" << setw(4) << std::hex << caddr << "(" << cfg->getRegName(cfg->getRegByAddress(caddr)) << ") data=0x" << setw(8) << std::hex << (header & msk);
+              LOG(debug) << "addr=0x" << setw(4) << std::hex << caddr << "(" << cfg->getRegName(cfg->getRegByAddress(caddr)) << ") data=0x" << setw(8) << std::hex << (header & msk);
               if (!cfg->poke(caddr, header & msk, det, rob, mcm)) {
-                LOG(info) << "(single-write): non-existing address 0x" << setw(4) << std::hex << caddr << " containing 0x" << setw(8) << std::hex << header << std::dec;
+                LOG(debug) << "(single-write): non-existing address 0x" << setw(4) << std::hex << caddr << " containing 0x" << setw(8) << std::hex << header << std::dec;
               }
 
               caddr += step;
               header = header >> bwidth;
               if (idx >= size) {
-                LOG(info) << "(block-write): no end marker! " << idx << " words read";
+                LOG(debug) << "(block-write): no end marker! " << idx << " words read";
                 return -err;
               }
             }
@@ -2735,20 +2730,20 @@ bool TrapSimulator::readPackedConfig(TrapConfig* cfg, int hc, unsigned int* data
           case 31: {
             while (nwords > 0) {
               header = *data;
-              LOG(info) << "read 0x" << setw(8) << std::hex << header;
+              LOG(debug) << "read 0x" << setw(8) << std::hex << header;
               data++;
               idx++;
               nwords--;
               err += (header & 1);
 
-              LOG(info) << "addr=0x" << hex << setw(4) << caddr << " (" << cfg->getRegName(cfg->getRegByAddress(caddr)) << ")  data=0x" << hex << setw(8) << (header >> 1);
+              LOG(debug) << "addr=0x" << hex << setw(4) << caddr << " (" << cfg->getRegName(cfg->getRegByAddress(caddr)) << ")  data=0x" << hex << setw(8) << (header >> 1);
               if (!cfg->poke(caddr, header >> 1, det, rob, mcm)) {
-                LOG(info) << "(single-write): non-existing address 0x" << setw(4) << std::hex << " containing 0x" << setw(8) << std::hex << header << std::dec;
+                LOG(debug) << "(single-write): non-existing address 0x" << setw(4) << std::hex << " containing 0x" << setw(8) << std::hex << header << std::dec;
               }
 
               caddr += step;
               if (idx >= size) {
-                LOG(info) << "no end marker! " << idx << " words read";
+                LOG(debug) << "no end marker! " << idx << " words read";
                 return -err;
               }
             }
@@ -2760,6 +2755,6 @@ bool TrapSimulator::readPackedConfig(TrapConfig* cfg, int hc, unsigned int* data
       }   // end block case
     }
   } // end while
-  LOG(info) << "no end marker! " << idx << " words read";
+  LOG(debug) << "no end marker! " << idx << " words read";
   return -err; // only if the max length of the block reached!
 }
