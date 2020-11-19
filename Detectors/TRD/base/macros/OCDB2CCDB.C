@@ -78,7 +78,6 @@
 #include "TRDBase/CalOnlineGainTables.h"
 #include "TRDBase/FeeParam.h"
 #include "TRDSimulation/TrapConfig.h"
-#include "TRDBase/TrapConfig.h"
 #include "DataFormatsTRD/Constants.h"
 #endif
 

@@ -13,7 +13,6 @@
 
 #include <iosfwd>
 #include "Rtypes.h"
-#include "TObject.h"
 #include "CommonDataFormat/InteractionRecord.h"
 #include "CommonDataFormat/RangeReference.h"
 #include "DataFormatsTRD/RawData.h"

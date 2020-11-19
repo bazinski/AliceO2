@@ -47,7 +47,7 @@ class PadCalibrations
   void reset(int roc, int col, int row, std::vector<T>& data);
   void init();
  protected:
-  std::array<PadParameters<T>, 540> mreadOutChamber;
+  std::array<PadParameters<T>, constants::MAXCHAMBER> mreadOutChamber;
 };
 
 template <class T>

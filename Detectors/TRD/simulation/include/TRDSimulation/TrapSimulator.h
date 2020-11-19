@@ -25,13 +25,10 @@
 
 #include "TRDBase/FeeParam.h"
 #include "TRDBase/Digit.h"
-//#include "TRDBase/Tracklet.h"
 #include "TRDSimulation/Digitizer.h"
-//#include "TRDSimulation/TrapConfigHandler.h" //TODO I think i can dump this.
 #include "TRDSimulation/TrapConfig.h"
 #include "TRDBase/MCLabel.h"
 #include "SimulationDataFormat/MCTruthContainer.h"
-//#include "DataFormatsTRD/RawData.h"
 #include "DataFormatsTRD/Tracklet64.h"
 #include "DataFormatsTRD/RawData.h"
 #include "DataFormatsTRD/Constants.h"
