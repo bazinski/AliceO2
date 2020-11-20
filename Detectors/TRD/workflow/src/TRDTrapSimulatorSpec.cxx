@@ -313,7 +313,7 @@ void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
   /* *******
    * reserve sizes 
    * *******/
-  mLinkRecords.reserve(1077 * triggerRecords.size());                          // worse case scenario is all links for all events. TODO get 1077 from somewhere.
+  mLinkRecords.reserve(1077 * triggerRecords.size()); // worse case scenario is all links for all events. TODO get 1077 from somewhere.
   //TODO these must be created directly in the output as done at the top of this run method
   msgDigitsIndex.reserve(msgDigits.size());
   LOG(debug) << "Read in msgDigits with size of : " << msgDigits.size() << " labels contain : " << digitMCLabels.getNElements() << " with and index size of  : " << digitMCLabels.getIndexedSize() << " and triggerrecord count of :" << triggerRecords.size();
