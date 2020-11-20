@@ -185,7 +185,6 @@ void TRDDPLTrapSimulatorTask::init(o2::framework::InitContext& ic)
   mOnlineGainTableName = ic.options().get<std::string>("trd-onlinegaintable");
   mRunNumber = ic.options().get<int>("trd-runnum");
   mEnableTrapConfigDump = ic.options().get<bool>("trd-dumptrapconfig");
-  mDumpTriggerRecords = ic.options().get<bool>("trd-dumptriggerrecords");
   //Connect to CCDB for all things needing access to ccdb.
   auto& ccdbmgr = o2::ccdb::BasicCCDBManager::instance();
   mCalib = std::make_unique<Calibrations>();
