@@ -2254,7 +2254,10 @@ void TrapSimulator::fitTracklet()
                 if (mHits[iHit].mTimebin >= mTrapConfig->getTrapReg(TrapConfig::kTPQS1, mDetector, mRobPos, mMcmPos) &&
                     mHits[iHit].mTimebin < mTrapConfig->getTrapReg(TrapConfig::kTPQE1, mDetector, mRobPos, mMcmPos)) {
                   nHits[1]++;
-                } if (mHits[iHit].mTimebin >= 3 && //TODO this needs to come from trapconfig, its not there yet.  mHits[iHit].mTimebin < 5) { nHits[2]++; }
+                } 
+                if (mHits[iHit].mTimebin >= 3 && mHits[iHit].mTimebin < 5){
+                    nHits[2]++; 
+                }
                 //TODO nHits2 ???? to correspond to Q2 ???
                 //
                 LOG(debug) << "setting bit pattern for chanel : " << mHits[iHit].mChannel << " of hit  : " << iHit << std::hex << " bitp before : " << adchitbp << std::dec;
