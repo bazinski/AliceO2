@@ -87,7 +87,7 @@ class TrapSimulator
     }
     mTrackletLabels.clear(); // clear the stored labels.
     mTrackletArray64.clear();
-    for (auto& trackletdetail : mTrackletDetails){
+    for (auto& trackletdetail : mTrackletDetails) {
       trackletdetail.clear();
     }
   };
