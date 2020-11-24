@@ -68,7 +68,6 @@ TrapSimulator::TrapSimulator()
 {
   //
   // TrapSimulator default constructor
-  // By default, nothing is initialized.
   // It is necessary to issue init before use.
 
   mFitPtr[0] = 0;
