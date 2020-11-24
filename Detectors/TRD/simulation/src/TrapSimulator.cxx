@@ -746,10 +746,9 @@ void TrapSimulator::draw(int choice, int index)
   if ((choice & PLOTTRACKLETS) != 0) {
     TLine* trklLines = new TLine[4];
     LOG(info) << "Tracklet start for index : " << index;
-    if (mTrackletArray64.size() > 0){
+    if (mTrackletArray64.size() > 0) {
       LOG(info) << "Tracklet : for " << mTrackletArray64[0].getDetector() << "::" << mTrackletArray64[0].getROB() << " : " << mTrackletArray64[0].getMCM();
-    }
-    else {
+    } else {
       LOG(info) << "Tracklet : for trackletarray size of zero ";
     }
     for (int iTrkl = 0; iTrkl < mTrackletArray64.size(); iTrkl++) {
@@ -1823,7 +1822,7 @@ void TrapSimulator::trackletSelection()
     };
   }
   LOG(debug) << "Number of track candidates:" << ntracks;
-  for (i = 0; i < ntracks; i++){
+  for (i = 0; i < ntracks; i++) {
     LOG(debug) << "TRACKS: " << i << " " << trackletCandch[i] << " " << trackletCandhits[i];
   }
   if (ntracks > 3) {
@@ -2177,7 +2176,7 @@ void TrapSimulator::fitTracklet()
         //defined above uint32_t position = ;
         //uint32_t s
         mTrackletArray64.emplace_back(format, hcid, padrow, col, position, slope, q0, q1, q2);
-        if (mdebugStream){
+        if (mdebugStream) {
           mTrackletDetails.emplace_back(position, slope, q0, q1, q2, nHits, fitError);
         }
         //mTrackletArray[newtrackposition].setLabel(mcLabel);
@@ -2295,7 +2294,7 @@ void TrapSimulator::fitTracklet()
               //uint32_t position = rawoffset;
               //uint32_t s
               mTrackletArray64.emplace_back(format, hcid, padrow, col, position, slope, q0, q1, q2);
-              if (mdebugStream){
+              if (mdebugStream) {
                 mTrackletDetails.emplace_back(position, slope, q0, q1, q2, nHits, fitError);
               }
               //mTrackletArray[newtrackposition].setLabel(mcLabel);
