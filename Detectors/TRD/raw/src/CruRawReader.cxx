@@ -112,7 +112,7 @@ uint32_t CruRawReader::processHBFs()
               //ergo mCRUPayLoad holds the whole links payload, so parse it.
               // tracklet first then digit ??
               // tracklets end with tracklet end marker(0x10001000 0x10001000), digits end with digit endmarker (0x0 0x0)
-              if (linkstart != linkend) { // if we still have data to read its digits
+              if (linkstart != linkend) { // if link is not empty
                 LOG(info) << "Now to parse for Tracklets with a buffer length of " << mHalfCRUPayLoadRead;
                 int trackletwordsread = mTrackletsParser.Parse(&mCRUPayLoad); // this will read up to the tracnklet end marker.
                 linkstart += trackletwordsread;
@@ -126,8 +126,13 @@ uint32_t CruRawReader::processHBFs()
               LOG(info) << "mState not CRUStateHalfCRUHeader mState:" << mState;
             }
           } //for loop over link index.
+          // we have read in all the digits and tracklets for this event.
+          //digits and tracklets are sitting inside the parsing classes.
+          //extract the vectors and copy them to tracklets and digits here, building the indexing(triggerrecords)
+          //mEventTracklets.insert(std::end(mEventsTracklets),std::begin(mTrackletsParser.getTracklets()),std::end(mTrackletsParser.getTracklets()));
+          mEventDigits.insert(std::end(mEventDigits),std::begin(mDigitsParser.getDigits()),std::end(mDigitsParser.getDigits()));
+          LOG(info) << "Event digits after eventi # : " << mEventDigits.size() << " having added : " << mDigitsParser.getDigits().size();
           //break; // end of CRU
-          LOG(info) << "II";
         } else {
           LOG(info) << "Processed part of a half cru, did not finish loop around again for next rdh mState:" << mState;
         }
