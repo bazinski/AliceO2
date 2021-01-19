@@ -38,6 +38,7 @@ class CruCompressorTask : public Task
  private:
   CruRawReader mReader; // this will do the parsing.
   // TrackletBlobWriter.
+  bool mVerbose{false};
 };
 
 } // namespace trd

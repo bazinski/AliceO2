@@ -64,13 +64,12 @@ WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
      
      trd-crucompressor-0 --> A:TRD/RAWDATA/768;B:TRD/RAWDATA/1024
      trd-crucompressor-1 --> C:TRD/RAWDATA/1280;D:TRD/RAWDATA/1536
-     The number after the RAWDATA is the FeeID.
+     The number after the RAWDATA is the FeeID in decimal
   */
 
   std::stringstream ssconfig(config);
   std::string iconfig;
   int idevice = 0;
-  LOG(info) << " now for while loop of workflow setup";
   LOG(info) << " config string is : " << config;
   LOG(info) << "for now ignoring the multiple processors, something going wrong";
   while (getline(ssconfig, iconfig, ',')) { // for now we will keep the possibilty to have a device per half cru/feeid i.e. 6 per flp

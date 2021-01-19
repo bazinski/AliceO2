@@ -31,7 +31,7 @@ namespace trd
 
 void CruCompressorTask::init(InitContext& ic)
 {
-  LOG(INFO) << "Cru2Tracklet Task init";
+  LOG(INFO) << "FLP Compressore Task init";
 
   auto finishFunction = [this]() {
     mReader.checkSummary();
@@ -42,7 +42,7 @@ void CruCompressorTask::init(InitContext& ic)
 
 void CruCompressorTask::run(ProcessingContext& pc)
 {
-  LOG(info) << "TRD Translator Task run method";
+  LOG(info) << "TRD Compression Task run method";
 
   /* set encoder output buffer */
   char bufferOut[o2::trd::constants::CRUBUFFERMAX];
@@ -68,6 +68,7 @@ void CruCompressorTask::run(ProcessingContext& pc)
       auto payloadInSize = headerIn->payloadSize;
       mReader.setDataBuffer(payloadIn);
       mReader.setDataBufferSize(payloadInSize);
+//      mReader.setVerbosity(mVerbose);
       /* run */
       mReader.run();
       auto payloadOutSize = 1; //mReader.getEncoderByteCounter();

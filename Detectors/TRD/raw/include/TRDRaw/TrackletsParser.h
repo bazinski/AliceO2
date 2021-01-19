@@ -39,13 +39,14 @@ class TrackletsParser
     setData(data);
     return Parse();
   };
-
+  void setVerbose(bool verbose){mVerbose=verbose;}
   int getDataWordsParsed() { return mDataWordsParsed; }
   int getTrackletsFound() { return mTrackletsFound; }
   enum TrackletParserState { StateTrackletHCHeader, // always the start of a half chamber.
                              StateTrackletMCMHeader,
                              StateTrackletMCMData,
                              StatePadding };
+  std::vector<Tracklet64>& getTracklets(){return mTracklets;}
 
  private:
   std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX>* mData;
@@ -54,6 +55,7 @@ class TrackletsParser
   int mDataWordsParsed; // count of data wordsin data that have been parsed in current call to parse.
   int mTrackletsFound;  // tracklets found in the data block, mostly used for debugging.
   int mWordsRead;
+  bool mVerbose{false};
   TrackletHCHeader* mTrackletHCHeader;
   TrackletMCMHeader* mTrackletMCMHeader;
   TrackletMCMData* mTrackletMCMData;

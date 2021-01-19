@@ -61,7 +61,7 @@ class CruRawReader
       LOG(info) << "do while loop count " << dowhilecount++;
       //      LOG(info) << " data readin : " << mDataReadIn;
       LOG(info) << " mDataBuffer :" << (void*)mDataBuffer;
-      int datareadfromhbf = processHBFs();
+      int datareadfromhbf = processHBFs(totaldataread,mVerbose);
       LOG(info) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! end with " << datareadfromhbf;
       totaldataread += datareadfromhbf; //     LOG(info) << "mDataReadIn :" << mDataReadIn << " mDataBufferSize:" << mDataBufferSize;
       LOG(info) << " Total data read so far is : " << totaldataread;
@@ -75,7 +75,7 @@ class CruRawReader
 
   void setDataBuffer(const char* val) { mDataBuffer = val; };
   void setDataBufferSize(long val) { mDataBufferSize = val; };
-
+  void setVerbose(bool verbose) { mVerbose=verbose;}
   inline uint32_t getDecoderByteCounter() const { return reinterpret_cast<const char*>(mDataPointer) - mDataBuffer; };
 
   // benchmarks
@@ -83,13 +83,11 @@ class CruRawReader
   double mIntegratedTime = 0.;
 
  protected:
-  uint32_t processHBFs();
+  uint32_t processHBFs(int datasizealreadyread=0,bool verbose=false);
   bool buildCRUPayLoad();
   int DataBufferFormatIs(); ///figure out what format of buffer we have.
   bool processHalfCRU();
   bool processCRULink();
-
-  /** decoder private functions and data members **/
 
   inline void rewind()
   {
@@ -98,8 +96,7 @@ class CruRawReader
   };
 
   int mJumpRDH = 0;
-
-  std::ifstream mDecoderFile;
+  bool mVerbose{false};
   const char* mDataBuffer = nullptr;
   static const uint32_t mMaxCRUBufferSize = o2::trd::constants::CRUBUFFERMAX;
   std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX> mCRUPayLoad; //this holds a single cruhalfchamber buffer to pass to parsing.
@@ -117,8 +114,7 @@ class CruRawReader
   const uint32_t* mDataPointer = nullptr; // pointer to the current position in the rdh
   const uint32_t* mDataPointerMax = nullptr;
   const uint32_t* mDataEndPointer = nullptr;
-  const uint32_t* mDataPointerNext = nullptr;
-  uint8_t mDataNextWord = 1;
+  const uint32_t* mDataPointerNext = nullptr; uint8_t mDataNextWord = 1;
   uint8_t mDataNextWordStep = 2;
 
   const o2::header::RDHAny* mDataRDH;
@@ -149,7 +145,9 @@ class CruRawReader
 
   TrackletsParser mTrackletsParser;
   DigitsParser mDigitsParser;
-
+  o2::header::RDHAny* mOpenRDH;
+  o2::header::RDHAny* mCloseRDH;
+  
   uint32_t mEventCounter;
   uint32_t mFatalCounter;
   uint32_t mErrorCounter;

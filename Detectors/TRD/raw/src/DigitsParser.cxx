@@ -67,7 +67,7 @@ int DigitsParser::Parse(bool verbose)
     swapByteOrder(mDigitHCHeader->word1);
     if (mVerbose)
       LOG(info) << mDigitHCHeader->bunchcrossing << " was bunchcrossing and " << mDigitHCHeader->supermodule << " " << mDigitHCHeader->layer;
-    printDigitHCHeader(*mDigitHCHeader);
+//    printDigitHCHeader(*mDigitHCHeader);
     mState = StateDigitMCMHeader;
     mBufferLocation += 2;
   }
@@ -140,13 +140,13 @@ int DigitsParser::Parse(bool verbose)
           mBufferLocation++;
           mState = StateDigitMCMData;
           digitwordcount++;
-          LOG(info) << "adc values : " << mDigitMCMData->x << "::" << mDigitMCMData->y << "::" << mDigitMCMData->z;
+          if(mVerbose)LOG(info) << "adc values : " << mDigitMCMData->x << "::" << mDigitMCMData->y << "::" << mDigitMCMData->z;
           mADCValues[digittimebinoffset] = mDigitMCMData->x;
           mADCValues[digittimebinoffset++] = mDigitMCMData->y;
           mADCValues[digittimebinoffset++] = mDigitMCMData->z;
-          LOG(info) << "digit word count is : " << digitwordcount;
+          if(mVerbose)LOG(info) << "digit word count is : " << digitwordcount;
           if (digitwordcount % 10 == 0) {
-            LOG(info) << "change of adc";
+            if(mVerbose)LOG(info) << "change of adc";
             //write out adc value to vector
             //zero digittimebinoffset
             mDigits.emplace_back(Digit(mDetector,mROB,mMCM, mADCValues, 1)); // outgoing parsed digits
