@@ -55,7 +55,7 @@ class CruRawReader
   void checkSummary();
   void resetCounters();
   void setBlob(); //set class to produce blobs and not vectors. (compress vs pass through)`
-  void setDataBuffer(const char* val) { mDataBuffer = val; };
+  void setDataBuffer(char* val) { mDataBuffer = val; };
   void setDataBufferSize(long val) { mDataBufferSize = val; };
   void setVerbose(bool verbose) { mVerbose=verbose;}
   inline uint32_t getDecoderByteCounter() const { return reinterpret_cast<const char*>(mDataPointer) - mDataBuffer; };
@@ -63,6 +63,10 @@ class CruRawReader
   // benchmarks
   double mIntegratedBytes = 0.;
   double mIntegratedTime = 0.;
+
+
+  std::vector<Tracklet64>& getTracklets(){return mEventTracklets;};
+  std::vector<Digit>& getDigits(){return mEventDigits; };
 
  protected:
   uint32_t processHBFs(int datasizealreadyread=0,bool verbose=false);

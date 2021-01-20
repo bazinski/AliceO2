@@ -20,6 +20,7 @@
 #include "Framework/DeviceSpec.h"
 #include "Framework/DataSpecUtils.h"
 #include "DataFormatsTRD/Constants.h"
+#include "DataFormatsTRD/CompressedHeader.h"
 #include <fairmq/FairMQDevice.h>
 
 using namespace o2::framework;
@@ -40,13 +41,56 @@ void CruCompressorTask::init(InitContext& ic)
   ic.services().get<CallbackService>().set(CallbackService::Id::Stop, finishFunction);
 }
 
-int CruCompressorTask::buildBlobOutput()
+uint64_t CruCompressorTask::buildBlobOutput()
 {
     //mReader holds the vectors of tracklets and digits.
     // tracklets are 64 bit
     // digits are DigitMCMHeader and DigitMCMData
-    TrackletRawHeader trackletheader;
-    trackletheader.size = mReader.getTracklets.size()*8; // to get to bytes.
+    
+    uint64_t currentpos=0;
+    uint64_t trailer = 0xeeeeeeeeeeeeeeeeLL;
+    CompressedRawHeader *trackletheader=(CompressedRawHeader*)&mOutBuffer[0];
+    trackletheader->format = 1;
+    trackletheader->eventtime=99;
+    currentpos=1;
+    trackletheader->size = mReader.getTracklets().size()*8; // to get to bytes.
+    for(auto tracklet : mReader.getTracklets()){
+        //convert tracklet to 64 bit and add to blob
+        mOutBuffer[currentpos++]=tracklet.getTrackletWord();
+    }
+    CompressedRawTrailer *tracklettrailer=(CompressedRawTrailer*)&mOutBuffer[currentpos];
+    tracklettrailer->word=trailer;
+    currentpos++;
+    CompressedRawHeader *digitheader=(CompressedRawHeader*)&mOutBuffer[currentpos];
+    currentpos++;
+    digitheader->format = 2;
+    digitheader->eventtime=99;
+ 
+    for(auto digit : mReader.getDigits()){
+        uint64_t *word;
+        word= &mOutBuffer[currentpos];
+        DigitMCMHeader mcmheader;
+        mcmheader.eventcount=1;
+        mcmheader.mcm=digit.getMCM();
+        mcmheader.rob=digit.getROB();
+        mcmheader.yearflag=1;
+        //unpack the digit.
+        mcmheader.word=(*word)>>32;
+        currentpos++;
+       
+    }
+    CompressedRawTrailer *digittrailer=(CompressedRawTrailer*)&mOutBuffer[currentpos];
+    digittrailer->word=trailer;
+    currentpos++;
+    //as far as I can tell this is almost always going to be blank.
+    CompressedRawHeader *configheader=(CompressedRawHeader*)&mOutBuffer[currentpos];
+    currentpos++;
+    configheader->size=2;
+    configheader->format=3;
+    configheader->eventtime=99;
+    CompressedRawTrailer *configtrailer=(CompressedRawTrailer*)&mOutBuffer[currentpos];
+    configtrailer->word=trailer;
+return currentpos;
 }
 
 void CruCompressorTask::run(ProcessingContext& pc)
@@ -78,9 +122,9 @@ void CruCompressorTask::run(ProcessingContext& pc)
       /* run */
       mReader.run();
       
-      auto payloadOutSize = mReader.buildBlobOutput(bufferOut);
+      auto payloadOutSize = mReader.buildBlobOutput();
       auto payloadMessage = device->NewMessage(payloadOutSize);
-      std::memcpy(payloadMessage->GetData(), bufferOut, payloadOutSize);
+      std::memcpy(payloadMessage->GetData(), (char*)bufferOut, payloadOutSize*8);
 
       /* output */
       auto headerOut = *headerIn;
