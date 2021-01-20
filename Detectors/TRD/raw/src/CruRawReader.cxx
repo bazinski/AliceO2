@@ -65,10 +65,12 @@ uint32_t CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
         mDataPointer = mDataEndPointer; //dump the rest
       } else {
         if (processHalfCRU()) {
-  //        if(mVerbose)LOG(info) << "Processing half cru return true";
+            //TODO this should be done external to the getStop loop as getStop loop (line 46) will end up with a singular event buffer.
+            //It will clean this code up *alot*
           // process a halfcru
           // or continue with the remainder of an rdh o2 payload if we got to the end of cru
           // or continue with a new rdh payload if we are not finished with the last cru payload.
+          // TODO the above 2 lines are not possible.
           std::array<uint32_t, 1024>::iterator currentlinkstart = mCRUPayLoad.begin();
           std::array<uint32_t, 1024>::iterator linkstart, linkend;
           uint32_t currentlinkindex = 0;
@@ -148,7 +150,6 @@ uint32_t CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
   } else
     mDataPointer = (const uint32_t*)((char*)rdh);
 //  LOGF(info, " at exiting processHBF after advancing to next rdh mDataPointer is %p  ?= %p data read in total is now : %d  0x%08x", (void*)mDataPointer, (void*)mDataEndPointer, totaldataread+datasizealreadyread, datasizealreadyread+ totaldataread);
-//  o2::raw::RDHUtils::printRDH(rdh);
 
  // if(mVerbose)LOG(info) << "--- END PROCESS HBF";
 
@@ -158,14 +159,6 @@ uint32_t CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
   /* otherwise return */
 
   return totaldataread; //mDataEndPointer - mDataPointer;
-}
-
-int CruRawReader::DataBufferFormatIs()
-{
-  LOG(info) << "DataFormat is ??";
-  //for now compare the next words and see if its a TrackletMCMHeader or a DigitsMCMHeader, then assume the whole link is the same.
-  //each link start to stop rdh should be a single event, digits and tracklets can no be mixed in an event TODO check that statement
-  return DigitsDataFormat; //TrackletsDataFormat;
 }
 
 bool CruRawReader::buildCRUPayLoad()
@@ -314,6 +307,27 @@ void CruRawReader::checkSummary()
             << " | " << mFatalCounter << " decode fatals "
             << " | " << mErrorCounter << " decode errors ";
 }
+
+bool CruRawReader::run()
+{
+    LOG(info) << "And away we go, run method of Translator";
+    uint32_t dowhilecount = 0;
+    uint64_t totaldataread = 0;
+    do {
+        LOG(info) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! start";
+        LOG(info) << "do while loop count " << dowhilecount++;
+        //      LOG(info) << " data readin : " << mDataReadIn;
+        LOG(info) << " mDataBuffer :" << (void*)mDataBuffer;
+        int datareadfromhbf = processHBFs(totaldataread,mVerbose);
+        LOG(info) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! end with " << datareadfromhbf;
+        totaldataread += datareadfromhbf; //     LOG(info) << "mDataReadIn :" << mDataReadIn << " mDataBufferSize:" << mDataBufferSize;
+        LOG(info) << " Total data read so far is : " << totaldataread;
+    } while (mDataReadIn < mDataBufferSize);
+
+    return false;
+};
+
+void checkSummary();
 
 } // namespace trd
 } // namespace o2

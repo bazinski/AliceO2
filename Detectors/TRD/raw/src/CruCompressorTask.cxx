@@ -40,12 +40,18 @@ void CruCompressorTask::init(InitContext& ic)
   ic.services().get<CallbackService>().set(CallbackService::Id::Stop, finishFunction);
 }
 
+int CruCompressorTask::buildBlobOutput()
+{
+    //mReader holds the vectors of tracklets and digits.
+    // tracklets are 64 bit
+    // digits are DigitMCMHeader and DigitMCMData
+    TrackletRawHeader trackletheader;
+    trackletheader.size = mReader.getTracklets.size()*8; // to get to bytes.
+}
+
 void CruCompressorTask::run(ProcessingContext& pc)
 {
   LOG(info) << "TRD Compression Task run method";
-
-  /* set encoder output buffer */
-  char bufferOut[o2::trd::constants::CRUBUFFERMAX];
 
   auto device = pc.services().get<o2::framework::RawDeviceService>().device();
   auto outputRoutes = pc.services().get<o2::framework::RawDeviceService>().spec().outputs;
@@ -71,7 +77,8 @@ void CruCompressorTask::run(ProcessingContext& pc)
 //      mReader.setVerbosity(mVerbose);
       /* run */
       mReader.run();
-      auto payloadOutSize = 1; //mReader.getEncoderByteCounter();
+      
+      auto payloadOutSize = mReader.buildBlobOutput(bufferOut);
       auto payloadMessage = device->NewMessage(payloadOutSize);
       std::memcpy(payloadMessage->GetData(), bufferOut, payloadOutSize);
 

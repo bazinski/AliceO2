@@ -39,6 +39,8 @@ class EpnDataReaderTask : public Task
  private:
   CruRawReader mReader;                  // this will do the parsing, of raw data passed directly through the flp(no compression)
   CompressedRawReader mCompressedReader; //this will handle the incoming compressed data from the flp
+                                         // in both cases we pull the data from the vectors build message and pass on.
+                                         // they will internally produce a vector of digits and a vector tracklets and associated indexing.
 };
 
 } // namespace trd

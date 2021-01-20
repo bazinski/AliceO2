@@ -34,10 +34,11 @@ class CruCompressorTask : public Task
   ~CruCompressorTask() override = default;
   void init(InitContext& ic) final;
   void run(ProcessingContext& pc) final;
+  uint64_t buildBlobOutput();
 
  private:
   CruRawReader mReader; // this will do the parsing.
-  // TrackletBlobWriter.
+  std::array<char,o2::trd::constants::CRUBUFFERMAX> mOutBuffer;
   bool mVerbose{false};
 };
 

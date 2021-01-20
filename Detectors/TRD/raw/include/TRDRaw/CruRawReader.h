@@ -50,34 +50,16 @@ class CruRawReader
   CruRawReader() = default;
   ~CruRawReader() = default;
 
-  inline bool run()
-  {
-    LOG(info) << "And away we go, run method of Translator";
-    rewind();
-    uint32_t dowhilecount = 0;
-    uint64_t totaldataread = 0;
-    do {
-      LOG(info) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! start";
-      LOG(info) << "do while loop count " << dowhilecount++;
-      //      LOG(info) << " data readin : " << mDataReadIn;
-      LOG(info) << " mDataBuffer :" << (void*)mDataBuffer;
-      int datareadfromhbf = processHBFs(totaldataread,mVerbose);
-      LOG(info) << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! end with " << datareadfromhbf;
-      totaldataread += datareadfromhbf; //     LOG(info) << "mDataReadIn :" << mDataReadIn << " mDataBufferSize:" << mDataBufferSize;
-      LOG(info) << " Total data read so far is : " << totaldataread;
-    } while (mDataReadIn < mDataBufferSize);
-
-    return false;
-  };
+  bool run();
 
   void checkSummary();
   void resetCounters();
-
+  void setBlob(); //set class to produce blobs and not vectors. (compress vs pass through)`
   void setDataBuffer(const char* val) { mDataBuffer = val; };
   void setDataBufferSize(long val) { mDataBufferSize = val; };
   void setVerbose(bool verbose) { mVerbose=verbose;}
   inline uint32_t getDecoderByteCounter() const { return reinterpret_cast<const char*>(mDataPointer) - mDataBuffer; };
-
+  bool buildBlobOutput(char* outputbuffer); // should probably go into a writer object.
   // benchmarks
   double mIntegratedBytes = 0.;
   double mIntegratedTime = 0.;
@@ -85,19 +67,18 @@ class CruRawReader
  protected:
   uint32_t processHBFs(int datasizealreadyread=0,bool verbose=false);
   bool buildCRUPayLoad();
-  int DataBufferFormatIs(); ///figure out what format of buffer we have.
   bool processHalfCRU();
   bool processCRULink();
 
-  inline void rewind()
-  {
-    LOG(debug) << "!!!rewinding";
-    mDataPointer = reinterpret_cast<const uint32_t*>(mDataBuffer);
-  };
+//  inline void rewind()
+//  {
+//j    LOG(debug) << "!!!rewinding";
+//j    mDataPointer = reinterpret_cast<const uint32_t*>(mDataBuffer);
+//  };
 
   int mJumpRDH = 0;
   bool mVerbose{false};
-  const char* mDataBuffer = nullptr;
+  char * mDataBuffer=nullptr;
   static const uint32_t mMaxCRUBufferSize = o2::trd::constants::CRUBUFFERMAX;
   std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX> mCRUPayLoad; //this holds a single cruhalfchamber buffer to pass to parsing.
   uint32_t mHalfCRUPayLoadRead{0};                                    // the words current read in for the currnt cru payload.
