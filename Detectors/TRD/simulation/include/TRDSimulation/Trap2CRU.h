@@ -23,6 +23,7 @@
 #include "DataFormatsTRD/LinkRecord.h"
 #include "DataFormatsTRD/RawData.h"
 #include "DataFormatsTRD/Tracklet64.h"
+#include "TRDBase/Digit.h"
 //#include "DetectorsRaw/HBFUtils.h"
 #include "DetectorsRaw/RawFileWriter.h"
 
@@ -47,8 +48,9 @@ class Trap2CRU
                                                   //
  public:
   Trap2CRU() = default;
-  Trap2CRU(const std::string& outputDir, const std::string& inputFilename);
-  void readTrapData(const std::string& otuputDir, const std::string& inputFilename, int superPageSizeInB);
+  Trap2CRU(const std::string& outputDir, const std::string& inputDigitsFilename, const std::string& inputTrackletsFilename);
+  //Trap2CRU(const std::string& outputDir, const std::string& inputFilename, const std::string& inputDigitsFilename, const std::string& inputTrackletsFilename);
+  void readTrapData();
   void convertTrapData(o2::trd::TriggerRecord const& TrigRecord);
   // default for now will be file per half cru as per the files Guido did for us.
   // TODO come back and give users a choice.
@@ -60,9 +62,11 @@ class Trap2CRU
   void setVerbosity(int verbosity) { mVerbosity = verbosity; }
   void buildCRUPayLoad();
   int sortByORI();
+  void sortDataToLinks();
   o2::raw::RawFileWriter& getWriter() { return mWriter; }
   uint32_t buildCRUHeader(HalfCRUHeader& header, uint32_t bc, uint32_t halfcru, int startlinkrecord);
   void linkSizePadding(uint32_t linksize, uint32_t& crudatasize, uint32_t& padding);
+  void openInputFiles();
 
  private:
   int mfileGranularity; /// per link or per half cru for each file
@@ -70,9 +74,13 @@ class Trap2CRU
   uint16_t mCruID;
   uint64_t mFeeID;
   uint32_t mEndPointID;
-  std::string mInputFilename;
-  std::string mOutputFilename;
+  std::string mInputFileName;
+  std::string mOutputFileName;
   int mVerbosity = 0;
+  std::string mOutputDir;
+  uint32_t mSuperPageSizeInB;
+  std::string mInputDigitsFileName;
+  std::string mInputTrackletsFileName;
   HalfCRUHeader mHalfCRUHeader;
   TrackletMCMHeader mTrackletMCMHeader;
   TrackletMCMData mTrackletMCMData;
@@ -81,15 +89,25 @@ class Trap2CRU
   uint32_t mRawDataPos = 0;
   TFile* mTrapRawFile;
   TTree* mTrapRawTree; // incoming data tree
+  TFile* mDigitsFile;
+  TTree* mDigitsTree;
+  TFile* mTrackletsFile;
+  TTree* mTrackletsTree;
   // locations to store the incoming data branches
   std::vector<o2::trd::LinkRecord> mLinkRecords, *mLinkRecordsPtr = &mLinkRecords;
-  std::vector<o2::trd::TriggerRecord> mTriggerRecords, *mTriggerRecordsPtr = &mTriggerRecords;
+  std::vector<o2::trd::TriggerRecord> mRawTriggerRecords, *mRawTriggerRecordsPtr = &mRawTriggerRecords;
+  std::vector<Digit> mDigits, *mDigitsPtr=&mDigits;
+  std::vector<uint32_t> mDigitsIndex;
+  std::vector<o2::trd::TriggerRecord> mDigitTriggerRecords, *mDigitTriggerRecordsPtr = &mDigitTriggerRecords;
+  std::vector<Tracklet64> mTracklets, *mTrackletsPtr=&mTracklets;
+  std::vector<uint32_t> mTrackletsIndex;
+  std::vector<o2::trd::TriggerRecord> mTrackletTriggerRecords, *mTrackletTriggerRecordsPtr = &mTrackletTriggerRecords;
   std::vector<uint32_t> mTrapRawData, *mTrapRawDataPtr = &mTrapRawData;
 
   const o2::raw::HBFUtils& mSampler = o2::raw::HBFUtils::Instance();
   o2::raw::RawFileWriter mWriter{"TRD"};
 
-  ClassDefNV(Trap2CRU, 1);
+  ClassDefNV(Trap2CRU, 2);
 };
 
 } // end namespace trd
