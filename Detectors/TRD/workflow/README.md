@@ -3,13 +3,13 @@
 /doxy -->
 
 
-# DPL workflows for run3
+# DPL workflows for TRD
 
 ## Workflow and executables
 
-*  `o2-trd-trapsim` : trap chip simulation
+* `o2-trd-trapsim` : trap chip simulation
 
-*  `o2-trd-tracklet-transformer` : calibrate the tracklets 
+* `o2-trd-tracklet-transformer` : calibrate the tracklets 
 
 * `o2-trd-global-tracking` : build tracks @
 
@@ -17,10 +17,9 @@
 
 * `o2-trd-crucompressor` : Reads data in on the flp and re formulates it and sends it on to the stfsender.
 
-* `'o2-trd-epnreader` : Reads data in on the epn and formats it into messages and send it down the pipeline
+* `o2-trd-epnreader` : Reads data in on the epn and formats it into messages and send it down the pipeline
 
 
-Can be extended to reconstruction from the raw data by disabling the digits reader and piping it to the output of the STF reader:
 
 ```bash
 # To decode digits from the raw (simulated) STF and send feed to to the workflow for further clusterization and reconstruction:
@@ -51,9 +50,9 @@ o2-raw-file-reader-workflow --loop 5 --delay 3 --conf ITSraw.cfg | o2-itsmft-stf
 * Tracklet Reader [o2::trd::TRDTrackletReaderSpec](include/TRDWorkflow/TRDTrackletReaderSpec.h)
 * Digit Writer [o2::trd::TRDDigitWriterSpec](include/TRDWorkflow/TRDDigitWriterSpec.h)
 * Trap Simulator [o2::trd::TRDTrapSimulatorSpec](include/TRDWorkflow/TRDTrapSimulatorSpec.h)
-* TRDDigitizerSpec.h                 
-* TRDCalibratedTrackletWriterSpec.h  
-* TRDGlobalTrackingSpec.h  
+* Digitizer [o2::trd::TRDDigitizerSpec](include/TRDWorkflow/TRDDigitizerSpec.h)
+* Calibrated Tracklet Writer [o2::trd::TRDCalibratedTrackletWriterSpec](include/TRDWorkflow/TRDCalibratedTrackletWriterSpec.h) 
+* Global Tracking [o2::trd::TRDGlobalTrackingSpec](include/TRDWorkflow/TRDGlobalTrackingSpec.h ) 
 * TRDTrackingWorkflow.h    
 * TRDTrackletTransformerSpec.h  
 * TRDTrackWriterSpec.h     
