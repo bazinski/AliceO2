@@ -513,9 +513,9 @@ void FeeParam::createORILookUpTable()
 
 int FeeParam::getORI(int detector, int readoutboard)
 {
-  int supermodule = detector / 30;
-  LOG(debug3) << "getORI : " << detector << " :: " << readoutboard << getORIinSM(detector, readoutboard) + 60 * detector;
-  return getORIinSM(detector, readoutboard) + 2 * detector; // 2 ORI per detector
+  int supermodule = detector / o2::trd::constants::NCHAMBERPERSEC;
+  LOG(debug3) << "getORI : " << detector << " :: " << readoutboard << getORIinSM(detector, readoutboard) + o2::trd::constants::NCHAMBERPERSEC*2  * detector;
+  return getORIinSM(detector, readoutboard) + o2::trd::constants::NCHAMBER*2 * detector; // 60 ORI per supermodule
 }
 
 int FeeParam::getORIinSM(int detector, int readoutboard)
@@ -525,7 +525,7 @@ int FeeParam::getORIinSM(int detector, int readoutboard)
   int trdstack = Geometry::getStack(detector);
   int trdlayer = Geometry::getLayer(detector);
   int side = getROBSide(readoutboard);
-  //see TDP for explanation of mapping TODO should probably come from CCDB for the instances where the mapping of ori fibers is misconfigured (accidental fibre swaps).
+  //see TDP for explanation of mapping TODO should probably come from CCDB
   if (trdstack < 2 || (trdstack == 2 && side == 0)) // A Side
   {
     ori = trdstack * 12 + (5 - trdlayer + side * 5) + trdlayer / 6 + side; // <- that is correct for A side at least for now, probably not for very long LUT as that will come form CCDB ni anycase.

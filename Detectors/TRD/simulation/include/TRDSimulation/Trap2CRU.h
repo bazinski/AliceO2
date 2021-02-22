@@ -64,7 +64,7 @@ class Trap2CRU
   int sortByORI();
   void sortDataToLinks();
   o2::raw::RawFileWriter& getWriter() { return mWriter; }
-  uint32_t buildCRUHeader(HalfCRUHeader& header, uint32_t bc, uint32_t halfcru, int startlinkrecord);
+  uint32_t buildHalfCRUHeader(HalfCRUHeader& header, const uint32_t bc, const uint32_t halfcru);
   void linkSizePadding(uint32_t linksize, uint32_t& crudatasize, uint32_t& padding);
   void openInputFiles();
 
@@ -87,15 +87,11 @@ class Trap2CRU
 
   std::vector<char> mRawData; // store for building data event for a single half cru
   uint32_t mRawDataPos = 0;
-  TFile* mTrapRawFile;
-  TTree* mTrapRawTree; // incoming data tree
   TFile* mDigitsFile;
   TTree* mDigitsTree;
   TFile* mTrackletsFile;
   TTree* mTrackletsTree;
   // locations to store the incoming data branches
-  std::vector<o2::trd::LinkRecord> mLinkRecords, *mLinkRecordsPtr = &mLinkRecords;
-  std::vector<o2::trd::TriggerRecord> mRawTriggerRecords, *mRawTriggerRecordsPtr = &mRawTriggerRecords;
   std::vector<Digit> mDigits, *mDigitsPtr=&mDigits;
   std::vector<uint32_t> mDigitsIndex;
   std::vector<o2::trd::TriggerRecord> mDigitTriggerRecords, *mDigitTriggerRecordsPtr = &mDigitTriggerRecords;

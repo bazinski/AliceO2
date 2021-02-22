@@ -61,15 +61,6 @@ Trap2CRU::Trap2CRU(const std::string& outputDir, const std::string& inputdigitsf
 
 void Trap2CRU::openInputFiles()
 {
-  mTrapRawFile = TFile::Open(mInputFileName.data());
-  if(mTrapRawFile != nullptr){
-      LOG(info) << "Trap Raw file open " << mInputFileName;
-      mTrapRawTree = (TTree*)mTrapRawFile->Get("o2sim");
-
-      mTrapRawTree->SetBranchAddress("TrapLinkRecord", &mLinkRecordsPtr);      // branch with the link records
-      mTrapRawTree->SetBranchAddress("RawTriggerRecord", &mRawTriggerRecordsPtr); // branch with the trigger records
-      mTrapRawTree->SetBranchAddress("TrapRaw", &mTrapRawDataPtr);             // branch with the actual incoming data.
-  }
   mDigitsFile = TFile::Open(mInputDigitsFileName.data());
   if(mDigitsFile!=nullptr){
     mDigitsTree  = (TTree*)mDigitsFile->Get("o2sim");
@@ -94,7 +85,7 @@ void Trap2CRU::openInputFiles()
 
 
 
-bool trackletsindexcompare(unsigned int A, unsigned int B, const std::vector<o2::trd::Tracklet64>& originalTracklets)
+bool trackletsindexcompare(const unsigned int A, const unsigned int B, const std::vector<o2::trd::Tracklet64>& originalTracklets)
 {
   // sort into ORI:mcm
   // giving us a stream of data of link:mcm which is the structure of the raw data in the cru
@@ -109,12 +100,6 @@ bool trackletsindexcompare(unsigned int A, unsigned int B, const std::vector<o2:
   if (oria > orib) {
     return 0;
   }
-  if (a->getDetector() < b->getDetector()) {
-    return 1;
-  }
-  if (a->getDetector() > b->getDetector()) {
-    return 0;
-  }
   if (a->getMCM() < b->getMCM()) {
     return 0;
   }
@@ -124,7 +109,7 @@ bool trackletsindexcompare(unsigned int A, unsigned int B, const std::vector<o2:
   return 0;
 }
 
-bool digitindexcompare(unsigned int A, unsigned int B, const std::vector<o2::trd::Digit>& originalDigits)
+bool digitindexcompare(const unsigned int A, const unsigned int B, const std::vector<o2::trd::Digit>& originalDigits)
 {
   // sort into ORI:mcm
   // giving us a stream of data of link:mcm which is the structure of the raw data in the cru
@@ -227,11 +212,13 @@ void Trap2CRU::readTrapData()
             uint32_t eventend = trackelttrigger.getFirstEntry() + tracklettrigger.getNumberOfObjects();
             for (auto digitstrigger : mDigitsTriggerRecords) { 
                 //TODO come back and avoid the double looping.
-                //start at last trigger and only loop till matching trigger, should be only 1.
                 //get the event limits from TriggerRecord;
                 uint32_t eventstart = digitstrigger.getFirstEntry();
                 uint32_t eventend = digitstrigger.getFirstEntry() + digitstrigger.getNumberOfObjects();
-                convertTrapData(tracklettrigger,digitstrigger);
+                if(digitstrigger.BunchCrossing  == tracklettrigger.BunchCrossing){
+                    convertTrapData(tracklettrigger,digitstrigger);
+                }
+                //TODO check if the triggerrecrods are *always* in sync?
             }
         }
 }
@@ -282,7 +269,19 @@ void Trap2CRU::linkSizePadding(uint32_t linksize, uint32_t& crudatasize, uint32_
     LOG(debug) << "linkSizePadding : CRUDATASIZE : " << crudatasize;
 }
 
-uint32_t Trap2CRU::buildCRUHeader(HalfCRUHeader& header, uint32_t bc, uint32_t halfcru, int startlinkrecord)
+
+
+uint32_t Trap2CRU::countTrackletsizeForLink()
+{
+
+}
+
+uint32_t Trap2CRU::countDigitsizeForLink()
+{
+
+}
+
+uint32_t Trap2CRU::buildHalfCRUHeader(HalfCRUHeader& header, const uint32_t bc, const uint32_t halfcru)
 {
     int bunchcrossing = bc;
     int stopbits = 0x01; // do we care about this and eventtype in simulations?
@@ -293,23 +292,27 @@ uint32_t Trap2CRU::buildCRUHeader(HalfCRUHeader& header, uint32_t bc, uint32_t h
     uint32_t crudatasize = 0;           //link size in units of 256 bits.
     int endpoint = halfcru % 2 ? 1 : 0; 
     uint32_t padding = 0;
-    //setHalfCRUHeader(halfcruheader, rdhversion, bunchcrossing, stopbits, endpoint, eventtype); //TODO come back and pull this from somewhere.
     setHalfCRUHeader(header, crurdhversion, bunchcrossing, stopbits, endpoint, eventtype, feeid, cruid); //TODO come back and pull this from somewhere.
-    //  memset(&tmpLinkInfo[0],0,sizeof(tmpLinkInfo[0])*tmpLinkInfo.size());
 
     // halfcruheader from the relevant mLinkRecords.
-    int linkrecord = startlinkrecord;
     int totallinkdatasize = 0; //in units of 256bits
     for (int link = 0; link < NLinksPerHalfCRU; link++) {
         int linkid = link + halfcru * NLinksPerHalfCRU; // TODO this might have to change to a lut I dont think the mapping is linear.
         int errors = 0;
         int linksize = 0; // linkSizePadding will convert it to 1 for the no data case.
-        if (mLinkRecords[linkrecord].getLinkId() == linkid) {
-            linksize = mLinkRecords[linkrecord].getNumberOfObjects();
-            // this can be done differently by keeping a pointer to halfcruheader and setting it after reading it all in and going back per link to set the size.
-            LOG(debug3) << "setting CRU HEADER for halfcru : " << halfcru << "and link : " << link << " contents" << header << ":" << link << ":" << linksize << ":" << errors;
-            linkrecord++; // increment locally for walking through linkrecords.
-        }
+        //count tracklets
+        //
+        // # cru -- AorC 
+        // 18 supermodules each with A or c side
+        // 36 cru for 0A 0C 1A 1C 2A 2C ... 18C
+        // each cru has 2 end points each wih 15 links
+        
+        cru%2 = 0=a side 1=c side
+        then upper or lower given 15-29 or 0-14 inclusive
+        int linktrackletsize = countTrackletsizeForLink();
+        //count digits
+        int linkdigitsize = countDigitsizeForLink();
+        int linkdatasize=linktrackletsize+linkdigitsize;
         linkSizePadding(linksize, crudatasize, padding);
         setHalfCRUHeaderLinkData(header, link, crudatasize, errors); // write one padding block for empty links.
         totallinkdatasize += crudatasize;
@@ -330,7 +333,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTrigRecord,
     int currentlinkrecord = 0;
     char* traprawdataptr = (char*)&mTrapRawData[0];
 
-    for (int halfcru = 0; halfcru < NumberOfHalfCRU; halfcru++) {
+    for (int halfcru = 0; halfcru < o2::constants::NHalfCRU; halfcru++) {
         int supermodule = halfcru / 4;
         int endpoint = halfcru / 2;
         int side = halfcru % 2 ? 1 : 0;
@@ -338,14 +341,16 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTrigRecord,
         mCruID = halfcru / 2;
         mLinkID = TRDLinkID;
         mEndPointID = halfcru % 2 ? 1 : 0;
-
+        //15 links per half cru or cru end point.
+        int oristart=halfcru*15;
+        int oriend=(halfcru+1)*15;
         memset(&mRawData[0], 0, sizeof(mRawData[0]) * mRawData.size()); //   zero the rawdata storage
         int numberofdetectors = o2::trd::constants::MAXCHAMBER;
         HalfCRUHeader halfcruheader;
         //now write the cruheader at the head of all the data for this halfcru.
         LOG(debug) << "cru before building cruheader for halfcru index : " << halfcru << " with contents \n"
             << halfcruheader;
-        uint32_t totalhalfcrudatasize = buildCRUHeader(halfcruheader, trackletTriggerRecord.getBCData().bc, halfcru, currentlinkrecord);
+        uint32_t totalhalfcrudatasize = buildHalfCRUHeader(halfcruheader, trackletTriggerRecord.getBCData().bc, halfcru);
 
         std::vector<char> rawdatavector(totalhalfcrudatasize * 32 + sizeof(halfcruheader)); // sum of link sizes + padding in units of bytes and some space for the header (512 bytes).
         char* rawdataptr = rawdatavector.data();
@@ -364,6 +369,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTrigRecord,
         for (int halfcrulink = 0; halfcrulink < NLinksPerHalfCRU; halfcrulink++) {
             //links run from 0 to 14, so linkid offset is halfcru*15;
             int linkid = halfcrulink + halfcru * NLinksPerHalfCRU;
+            int ori=oristart+halfcrulink;
             LOG(debug) << "Currently checking for data on linkid : " << linkid << " from halfcru=" << halfcru << " and halfcrulink:" << halfcrulink << " ?? " << linkid << "==" << mLinkRecords[currentlinkrecord].getLinkId();
             int errors = 0;           // put no errors in for now.
             int size = 0;             // in 32 bit words
@@ -373,7 +379,6 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTrigRecord,
             uint32_t crudatasize = 0; // in 256 bit words.
             if (mLinkRecords[currentlinkrecord].getLinkId() == linkid) {
                 //this link has data in the stream.
-                LOG(debug) << "+++ We have data on linkid = " << linkid << " halfcrulink : " << halfcrulink;
                 linkdatasize = mLinkRecords[currentlinkrecord].getNumberOfObjects();
                 datastart = mLinkRecords[currentlinkrecord].getFirstEntry();
                 dataend = datastart + size;
@@ -381,7 +386,6 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTrigRecord,
                 currentlinkrecord++;
             } else {
                 assert(mLinkRecords[currentlinkrecord].getLinkId() < linkid);
-                LOG(debug) << "---We do not have data on linkid = " << linkid << " halfcrulink : " << halfcrulink;
                 //blank data for this link
                 // put in a 1 256 bit word of data for the link and padd with 0xeeee x 8
                 linkdatasize = 0;
@@ -391,32 +395,25 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTrigRecord,
             //
             linkSizePadding(linkdatasize, crudatasize, paddingsize); //TODO this can come out as we have already called it, but previously we have lost the #padding words, solve to remove.
 
-            LOG(debug) << "WRITING " << crudatasize << " 256 bit data words to output stream";
-            LOG(debug) << "setting CRU HEADER for " << halfcruheader << ":" << halfcrulink << ":" << crudatasize << ":" << errors;
             // now pad ....
-            LOG(debug) << " now to pump data into the stream with : " << linkdatasize << " crudatasize:" << crudatasize << " paddingsize: " << paddingsize << " and rem:" << linkdatasize % 8;
             char* olddataptr = rawdataptr; // store the old pointer so we can do some sanity checks for how far we advance.
             //linkdatasize is the #of 32 bit words coming from the incoming tree.
             //paddingsize is the number of padding words to add 0xeeee
             uint32_t bytestocopy = linkdatasize * (sizeof(uint32_t));
-            LOG(debug) << "copying " << bytestocopy << " bytes of link tracklet data at pos:" << std::hex << static_cast<void*>(rawdataptr);
             memcpy(rawdataptr, traprawdataptr, bytestocopy);
             //increment pointer
             rawdataptr += bytestocopy;
             traprawdataptr += bytestocopy;
             //now for padding
             uint16_t padbytes = paddingsize * sizeof(uint32_t);
-            LOG(debug) << "writing " << padbytes << " bytes of padding data  at pos:" << std::hex << static_cast<void*>(rawdataptr);
             memset(rawdataptr, 0xee, padbytes);
             //increment pointer.
             rawdataptr += padbytes;
             if (padbytes + bytestocopy != crudatasize * 32) {
                 LOG(debug) << "something wrong with data size writing padbytes:" << padbytes << " bytestocopy : " << bytestocopy << " crudatasize:" << crudatasize;
             }
-            LOG(debug3) << std::hex << " rawdataptr:" << static_cast<void*>(rawdataptr) << " traprawdataptr " << static_cast<void*>(traprawdataptr);
             //sanity check for now:
             if (((char*)rawdataptr - (char*)olddataptr) != crudatasize * 32) { // cru words are 8 uint32 and comparison is in bytes.
-                LOG(debug) << "according to pointer arithmatic we have added " << rawdataptr - olddataptr << "bytes from " << static_cast<void*>(rawdataptr) << "-" << static_cast<void*>(olddataptr) << " when we should have added  " << crudatasize * 8 * 4 << " because crudatasize=" << crudatasize;
             }
             if (crudatasize != o2::trd::getlinkdatasize(halfcruheader, halfcrulink)) {
                 // we have written the wrong amount of data ....
@@ -424,7 +421,6 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTrigRecord,
             }
             LOG(debug) << "copied " << crudatasize * 32 << "bytes to halfcrurawdata which now has  size of " << rawdatavector.size() << " for " << link << ":" << endpoint;
         }
-        LOG(debug) << "writing to " << std::hex << mFeeID << std::dec << " : " << mCruID << " : " << mLinkID << " : " << mEndPointID;
         mWriter.addData(mFeeID, mCruID, mLinkID, mEndPointID, trackletTriggerRecord.getBCData(), rawdatavector);
         if (DebugDataWriting) {
             std::ofstream out2("crutestdumprawdatavector");

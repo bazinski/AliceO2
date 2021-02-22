@@ -27,6 +27,7 @@ constexpr int NLAYER = 6;          // the number of layers
 constexpr int NCHAMBERPERSEC = 30; // the number of chambers per sector
 constexpr int MAXCHAMBER = 540;    // the maximum number of installed chambers
 constexpr int NCHAMBER = 521;      // the number of chambers actually installed
+constexpr int NHALFCRU = 72;       // the number of half cru (link bundles)
 
 constexpr int NCOLUMN = 144; // the number of pad columns for each chamber
 constexpr int NROWC0 = 12;   // the number of pad rows for chambers of type C0 (installed stack 0,1,3 and 4)
