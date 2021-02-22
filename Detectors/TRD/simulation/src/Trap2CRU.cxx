@@ -208,16 +208,32 @@ void Trap2CRU::readTrapData()
     sortDataToLinks();
     LOG(info) << "digit and tracklets sorted ";
     LOG(info) << "lets look at tracklet tree for now";
+    if(mDigitsTree->GetEntries() != 1) LOG(fatal) << "more than one entry in digits tree" ;
+    if(mTrackletsTree->GetEntries() != 1) LOG(fatal) << "more than one entry in tracklets tree" ;
+
+    for (int entry = 0; entry < mDigitsTree->GetEntries(); entry++) {
+        mDigitsTree->GetEntry(entry);
+        uint32_t linkcount = 0;
+    }
     for (int entry = 0; entry < mTrackletsTree->GetEntries(); entry++) {
         mTrackletsTree->GetEntry(entry);
-        uint32_t linkcount = 0;
-        for (auto trigger : mTrackletTriggerRecords) {
-            //get the event limits from TriggerRecord;
-            uint32_t eventstart = trigger.getFirstEntry();
-            uint32_t eventend = trigger.getFirstEntry() + trigger.getNumberOfObjects();
-            convertTrapData(trigger);
-        }
     }
+    // everything is passed as the first entry in the tree. Ensure it *really* is only a single entry tree
+    // and then work with the resulting vectors from the branches.
+        uint32_t linkcount = 0;
+        for (auto tracklettrigger : mTrackletTriggerRecords) {
+            //get the event limits from TriggerRecord;
+            uint32_t eventstart = tracklettrigger.getFirstEntry();
+            uint32_t eventend = trackelttrigger.getFirstEntry() + tracklettrigger.getNumberOfObjects();
+            for (auto digitstrigger : mDigitsTriggerRecords) { 
+                //TODO come back and avoid the double looping.
+                //start at last trigger and only loop till matching trigger, should be only 1.
+                //get the event limits from TriggerRecord;
+                uint32_t eventstart = digitstrigger.getFirstEntry();
+                uint32_t eventend = digitstrigger.getFirstEntry() + digitstrigger.getNumberOfObjects();
+                convertTrapData(tracklettrigger,digitstrigger);
+            }
+        }
 }
 
 int Trap2CRU::sortByORI()
