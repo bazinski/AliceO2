@@ -51,7 +51,7 @@ class Trap2CRU
   Trap2CRU(const std::string& outputDir, const std::string& inputDigitsFilename, const std::string& inputTrackletsFilename);
   //Trap2CRU(const std::string& outputDir, const std::string& inputFilename, const std::string& inputDigitsFilename, const std::string& inputTrackletsFilename);
   void readTrapData();
-  void convertTrapData(o2::trd::TriggerRecord const& TrigRecord);
+  void convertTrapData(o2::trd::TriggerRecord const& trackletTrigRecord, o2::trd::TriggerRecord const& digitTriggerRecord);
   // default for now will be file per half cru as per the files Guido did for us.
   // TODO come back and give users a choice.
   //       void setFilePerLink(){mfileGranularity = mgkFilesPerLink;};

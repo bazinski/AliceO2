@@ -173,9 +173,6 @@ void Trap2CRU::sortDataToLinks()
 
 }
 
-
-
-
 void Trap2CRU::readTrapData()
 {
     //set things up, read the file and then deligate to convertTrapdata to do the conversion.
@@ -218,7 +215,6 @@ void Trap2CRU::readTrapData()
             //get the event limits from TriggerRecord;
             uint32_t eventstart = trigger.getFirstEntry();
             uint32_t eventend = trigger.getFirstEntry() + trigger.getNumberOfObjects();
-            LOG(debug) << "Event starts at:" << eventstart << " and ends at :" << eventend;
             convertTrapData(trigger);
         }
     }
@@ -305,7 +301,7 @@ uint32_t Trap2CRU::buildCRUHeader(HalfCRUHeader& header, uint32_t bc, uint32_t h
     return totallinkdatasize;
 }
 
-void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& TrigRecord)
+void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTrigRecord, o2::trd::TriggerRecord const& digitTriggerRecord)
 {
 
     //build a HalfCRUHeader for this event/cru/endpoint
@@ -333,7 +329,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& TrigRecord)
         //now write the cruheader at the head of all the data for this halfcru.
         LOG(debug) << "cru before building cruheader for halfcru index : " << halfcru << " with contents \n"
             << halfcruheader;
-        uint32_t totalhalfcrudatasize = buildCRUHeader(halfcruheader, TrigRecord.getBCData().bc, halfcru, currentlinkrecord);
+        uint32_t totalhalfcrudatasize = buildCRUHeader(halfcruheader, trackletTriggerRecord.getBCData().bc, halfcru, currentlinkrecord);
 
         std::vector<char> rawdatavector(totalhalfcrudatasize * 32 + sizeof(halfcruheader)); // sum of link sizes + padding in units of bytes and some space for the header (512 bytes).
         char* rawdataptr = rawdatavector.data();
@@ -413,7 +409,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& TrigRecord)
             LOG(debug) << "copied " << crudatasize * 32 << "bytes to halfcrurawdata which now has  size of " << rawdatavector.size() << " for " << link << ":" << endpoint;
         }
         LOG(debug) << "writing to " << std::hex << mFeeID << std::dec << " : " << mCruID << " : " << mLinkID << " : " << mEndPointID;
-        mWriter.addData(mFeeID, mCruID, mLinkID, mEndPointID, TrigRecord.getBCData(), rawdatavector);
+        mWriter.addData(mFeeID, mCruID, mLinkID, mEndPointID, trackletTriggerRecord.getBCData(), rawdatavector);
         if (DebugDataWriting) {
             std::ofstream out2("crutestdumprawdatavector");
             out2.write(rawdatavector.data(), rawdatavector.size());
