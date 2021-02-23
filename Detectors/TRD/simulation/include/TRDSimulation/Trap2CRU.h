@@ -67,6 +67,13 @@ class Trap2CRU
   uint32_t buildHalfCRUHeader(HalfCRUHeader& header, const uint32_t bc, const uint32_t halfcru);
   void linkSizePadding(uint32_t linksize, uint32_t& crudatasize, uint32_t& padding);
   void openInputFiles();
+  uint32_t countTrackletsizeForLink();
+  uint32_t countDigitsizeForLink();
+  bool isTrackletOnLink(int link, int trackletpos);
+  bool isDigitOnLink(int link, int digitpos);
+  int buildRawMCMData(const int trackletindex);
+  int buildDigitRawData(const int digitindex, const std::array<Digit,21>&localParseDigits, char *dataptr);
+  int buildTrackletRawData(const int trackletindex, char *dataptr);
 
  private:
   int mfileGranularity; /// per link or per half cru for each file

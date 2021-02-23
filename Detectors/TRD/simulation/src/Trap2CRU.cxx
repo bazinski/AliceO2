@@ -209,13 +209,13 @@ void Trap2CRU::readTrapData()
         for (auto tracklettrigger : mTrackletTriggerRecords) {
             //get the event limits from TriggerRecord;
             uint32_t eventstart = tracklettrigger.getFirstEntry();
-            uint32_t eventend = trackelttrigger.getFirstEntry() + tracklettrigger.getNumberOfObjects();
-            for (auto digitstrigger : mDigitsTriggerRecords) { 
+            uint32_t eventend = tracklettrigger.getFirstEntry() + tracklettrigger.getNumberOfObjects();
+            for (auto digitstrigger : mDigitTriggerRecords) { 
                 //TODO come back and avoid the double looping.
                 //get the event limits from TriggerRecord;
                 uint32_t eventstart = digitstrigger.getFirstEntry();
                 uint32_t eventend = digitstrigger.getFirstEntry() + digitstrigger.getNumberOfObjects();
-                if(digitstrigger.BunchCrossing  == tracklettrigger.BunchCrossing){
+                if(digitstrigger.getBCData()  == tracklettrigger.getBCData()){
                     convertTrapData(tracklettrigger,digitstrigger);
                 }
                 //TODO check if the triggerrecrods are *always* in sync?
@@ -273,12 +273,12 @@ void Trap2CRU::linkSizePadding(uint32_t linksize, uint32_t& crudatasize, uint32_
 
 uint32_t Trap2CRU::countTrackletsizeForLink()
 {
-
+return 1;
 }
 
 uint32_t Trap2CRU::countDigitsizeForLink()
 {
-
+return 1;
 }
 
 uint32_t Trap2CRU::buildHalfCRUHeader(HalfCRUHeader& header, const uint32_t bc, const uint32_t halfcru)
@@ -296,8 +296,8 @@ uint32_t Trap2CRU::buildHalfCRUHeader(HalfCRUHeader& header, const uint32_t bc, 
 
     // halfcruheader from the relevant mLinkRecords.
     int totallinkdatasize = 0; //in units of 256bits
-    for (int link = 0; link < NLinksPerHalfCRU; link++) {
-        int linkid = link + halfcru * NLinksPerHalfCRU; // TODO this might have to change to a lut I dont think the mapping is linear.
+    for (int link = 0; link < o2::trd::constants::NLINKSPERHALFCRU; link++) {
+        int linkid = link + halfcru * o2::trd::constants::NLINKSPERHALFCRU; // TODO this might have to change to a lut I dont think the mapping is linear.
         int errors = 0;
         int linksize = 0; // linkSizePadding will convert it to 1 for the no data case.
         //count tracklets
@@ -307,12 +307,12 @@ uint32_t Trap2CRU::buildHalfCRUHeader(HalfCRUHeader& header, const uint32_t bc, 
         // 36 cru for 0A 0C 1A 1C 2A 2C ... 18C
         // each cru has 2 end points each wih 15 links
         
-        cru%2 = 0=a side 1=c side
-        then upper or lower given 15-29 or 0-14 inclusive
+        //cru%2 = 0=a side 1=c side
+        //then upper or lower given 15-29 or 0-14 inclusive
         int linktrackletsize = countTrackletsizeForLink();
         //count digits
         int linkdigitsize = countDigitsizeForLink();
-        int linkdatasize=linktrackletsize+linkdigitsize;
+        int linkdatasize=1;//linktrackletsize+linkdigitsize;
         linkSizePadding(linksize, crudatasize, padding);
         setHalfCRUHeaderLinkData(header, link, crudatasize, errors); // write one padding block for empty links.
         totallinkdatasize += crudatasize;
@@ -320,7 +320,75 @@ uint32_t Trap2CRU::buildHalfCRUHeader(HalfCRUHeader& header, const uint32_t bc, 
     return totallinkdatasize;
 }
 
-void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTrigRecord, o2::trd::TriggerRecord const& digitTriggerRecord)
+bool Trap2CRU::isTrackletOnLink(const int linkid,const int currenttrackletpos)
+{
+    //hcid is simply the halfcru*15+linkid
+    int hcid=mTracklets[currenttrackletpos].getHCID();
+    if(linkid == hcid/15 ) {
+        // this tracklet is on this link.
+        return true;
+    }
+return false;
+}
+
+bool Trap2CRU::isDigitOnLink(const int linkid, const int currentdigitpos)
+{
+  Digit *digit=&mDigits[currentdigitpos]; if(FeeParam::getORI(digit->getDetector(),digit->getROB()) == linkid){ return true;
+  }
+return false;
+}
+
+int Trap2CRU::buildDigitRawData(const int digitindex, std::array<Digit,21>&localParseDigits, char *dataptr)
+{
+    //this is not zero suppressed.
+//    Digit
+    DigitMCMHeader header;
+    int startdet=mDigits[digitindex].getDetector();
+    int startrob=mDigits[digitindex].getROB();
+    int startmcm=mDigits[digitindex].getMCM();
+    int digitcounter=0;
+    while(mDigits[digitindex+digitcounter].getROB() == startrob && 
+          mDigits[digitindex+digitcounter].getMCM()==startmcm && 
+          mDigits[digitindex+digitcounter].getDetector() == startdet){
+       //while we are still in the same mcm
+       
+    }
+}
+
+int Trap2CRU::buildTrackletRawData(const int trackletindex, char *dataptr)
+{
+
+    TrackletMCMHeader header;
+    std::array<TrackletMCMData,3> trackletdata;
+    header.col=mTracklets[trackletindex].getColumn();
+    header.padrow=mTracklets[trackletindex].getPadRow();
+    header.onea=1;
+    header.oneb=1;
+    int trackletcounter=0;
+    while(header.col==mTracklets[trackletindex+trackletcounter].getColumn() && header.padrow == mTracklets[trackletindex+trackletcounter].getPadRow()){
+
+        buildTrackletMCMData(trackletdata[trackletcounter],mTracklets[trackletindex+trackletcounter].getSlope(),
+                mTracklets[trackletindex+trackletcounter].getPosition(),mTracklets[trackletindex+trackletcounter].getQ0(),
+                mTracklets[trackletindex+trackletcounter].getQ1(), mTracklets[trackletindex+trackletcounter].getQ2());
+        int headerqpart= ((mTracklets[trackletindex+trackletcounter].getQ2()) << 2) + ((mTracklets[trackletindex+trackletcounter].getQ1()) >> 5);
+        switch(trackletindex+trackletcounter-trackletindex){
+            case 0  : header.pid0=headerqpart;break;
+            case 1 :  header.pid1=headerqpart;break;
+            case 2  : header.pid2=headerqpart;break;
+            default : LOG(error) << "we seem to have more than 3 tracklets when building the Tracklet raw data stream";
+        }
+        trackletcounter++;
+    }
+    //now copy the mcmheader and mcmdata.
+    memcpy((std::byte*)dataptr,(std::byte*)&header,sizeof(TrackletMCMHeader));
+    dataptr+=sizeof(TrackletMCMHeader);
+    for(int i=0;i<trackletcounter;trackletcounter++){
+        memcpy((std::byte*)dataptr,(std::byte*)&trackletdata[trackletcounter],sizeof(TrackletMCMData));
+    }
+    return trackletcounter;
+}
+
+void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTriggerRecord, o2::trd::TriggerRecord const& digitTriggerRecord)
 {
 
     //build a HalfCRUHeader for this event/cru/endpoint
@@ -332,10 +400,12 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTrigRecord,
     //finished for event. this method is only called per event.
     int currentlinkrecord = 0;
     char* traprawdataptr = (char*)&mTrapRawData[0];
-
-    for (int halfcru = 0; halfcru < o2::constants::NHalfCRU; halfcru++) {
-        int supermodule = halfcru / 4;
-        int endpoint = halfcru / 2;
+    std::array<Digit,21> localParsedDigits; // store the digits of an mcm
+    int trackletindex=0, digitindex=0;
+    int rawwords=0;
+    for (int halfcru = 0; halfcru < o2::trd::constants::NHALFCRU; halfcru++) {
+        int supermodule = halfcru / 4; // 2 cru per supermodule.
+        int endpoint = halfcru / 2; // 2 pci end points per cru, 15 links each 
         int side = halfcru % 2 ? 1 : 0;
         mFeeID = buildTRDFeeID(supermodule, side, endpoint);
         mCruID = halfcru / 2;
@@ -366,32 +436,48 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTrigRecord,
         rawdataptr += sizeof(halfcruheader);
         int linkdatasize = 0; // in 32 bit words
         int link = halfcru / 2;
-        for (int halfcrulink = 0; halfcrulink < NLinksPerHalfCRU; halfcrulink++) {
+        for (int halfcrulink = 0; halfcrulink < o2::trd::constants::NLINKSPERHALFCRU; halfcrulink++) {
+            //localParsedDigits.
             //links run from 0 to 14, so linkid offset is halfcru*15;
-            int linkid = halfcrulink + halfcru * NLinksPerHalfCRU;
+            int linkid = halfcrulink + halfcru * o2::trd::constants::NLINKSPERHALFCRU;
             int ori=oristart+halfcrulink;
-            LOG(debug) << "Currently checking for data on linkid : " << linkid << " from halfcru=" << halfcru << " and halfcrulink:" << halfcrulink << " ?? " << linkid << "==" << mLinkRecords[currentlinkrecord].getLinkId();
+            //    LOG(debug) << "Currently checking for data on linkid : " << linkid << " from halfcru=" << halfcru << " and halfcrulink:" << halfcrulink << " ?? " << linkid << "==" << mLinkRecords[currentlinkrecord].getLinkId();
             int errors = 0;           // put no errors in for now.
             int size = 0;             // in 32 bit words
             int datastart = 0;        // in 32 bit words
             int dataend = 0;          // in 32 bit words
             uint32_t paddingsize = 0; // in 32 bit words
             uint32_t crudatasize = 0; // in 256 bit words.
-            if (mLinkRecords[currentlinkrecord].getLinkId() == linkid) {
-                //this link has data in the stream.
-                linkdatasize = mLinkRecords[currentlinkrecord].getNumberOfObjects();
-                datastart = mLinkRecords[currentlinkrecord].getFirstEntry();
-                dataend = datastart + size;
-                LOG(debug) << "We have data on linkid = " << linkid << " and linksize : " << linkdatasize << " so :" << linkdatasize / 8 << " 256 bit words";
-                currentlinkrecord++;
-            } else {
-                assert(mLinkRecords[currentlinkrecord].getLinkId() < linkid);
-                //blank data for this link
-                // put in a 1 256 bit word of data for the link and padd with 0xeeee x 8
-                linkdatasize = 0;
-                paddingsize = 8;
+            //loop over tracklets for mcm's that match
+            while(isTrackletOnLink(linkid,trackletindex)){
+                // still on an mcm on this link
+                //localParsedTracklets[localparsedtrackletscount++]=
+                // do we have 1 2 or 3 tracklets.
+                //we need a trackletheader.
+                int tracklets = buildTrackletMCMData(trackletindex,rawptr); //returns # of 32 bits, header plus trackletdata words that would have come from the mcm.
+                trackletindex+=tracklets;
+                rawwords=tracklets+1;//to include the header.
             }
-            // now copy data to rawdata, padding as and where needed.
+            //write tracklet end marker
+            while(isDigitOnLink(linkid,digitindex)){
+                //   place digit in 
+                //   increment digit
+                //   FeeParam::
+                //while we are on a single mcm, copy the digits timebins to the array.
+                int currentROB=mDigits[digitindex].getROB();
+                int currentMCM=mDigits[digitindex].getMCM();
+                while(mDigits[digitindex].getMCM()== currentMCM && mDigits[digitindex].getROB()==currentROB){
+                    localParsedDigits[mDigits[digitindex].getChannel()]=mDigits[digitindex];
+                    digitindex++;
+                }
+                // mcm digits are full, now write it out.
+                int digits=buildDigitMCMData(localParseDigits,rawptr);
+                digitindex+=digits;
+                rawwords+=digits*11; //10 for the tiembins and 1 for the header.
+            }
+            //write digit end marker.
+            //pad up to a whole 256 bit format.
+            //
             //
             linkSizePadding(linkdatasize, crudatasize, paddingsize); //TODO this can come out as we have already called it, but previously we have lost the #padding words, solve to remove.
 
