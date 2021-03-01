@@ -336,9 +336,10 @@ bool Trap2CRU::isDigitOnLink(const int linkid, const int currentdigitpos)
   return false;
 }
 
-int Trap2CRU::buildDigitRawData(const int digitindex, const std::array<uint64_t, 21>& localParseDigits, char* dataptr)
+int Trap2CRU::buildDigitRawData(const int digitindex, const std::array<uint64_t, 21>& localParsedDigits, char* dataptr)
 {
   //this is not zero suppressed.
+  int wordswritten=0;
   //    Digit
   DigitMCMHeader header;
   int startdet = mDigits[digitindex].getDetector();
@@ -350,52 +351,74 @@ int Trap2CRU::buildDigitRawData(const int digitindex, const std::array<uint64_t,
   header.mcm = startmcm;
   header.rob = startrob;
   header.yearflag = 1; // >2007
-  while (mDigits[digitindex + digitcounter].getROB() == startrob &&
-         mDigits[digitindex + digitcounter].getMCM() == startmcm &&
-         mDigits[digitindex + digitcounter].getDetector() == startdet) {
-    //while we are still in the same mcm
+  for(auto digitindex : localParsedDigits){
+    if(digitindex!=0){
+        Digit *d=&mDigits[localParsedDigits[digitindex]];
+        DigitMCMHeader header;
+        DigitMCMData data;
+        header.eventcount=bc;
+        header.mcm=d->getMCM();
+        header.rob=d->getROB();
+        header.yearflag=1;
+        memcpy(dataptr,(char*)&header,4); // 32 bits -- 4 bytes.
+        dataptr+=4;
+        wordswritten+=1;
+        ArrayADC adcdata=d->getADC();
+        for(int timebin=0;timebin<30;timebin+=3){
+           data.x=adcdata[timebin];
+           data.y=adcdata[timebin+1];
+           data.z=adcdata[timebin+2];
+           data.c=0;
+           memcpy(dataptr,(char*)&data,4); // 32 bits -- 4 bytes.
+           dataptr+=4;
+           wordswritten+=1;
+        }
+    }
+    else{
+        //blank digit;
+    }
   }
-  return 1;
+  return wordswritten;
 }
 
 int Trap2CRU::buildTrackletRawData(const int trackletindex, char* dataptr)
 {
 
-  TrackletMCMHeader header;
-  std::array<TrackletMCMData, 3> trackletdata;
-  header.col = mTracklets[trackletindex].getColumn();
-  header.padrow = mTracklets[trackletindex].getPadRow();
-  header.onea = 1;
-  header.oneb = 1;
-  int trackletcounter = 0;
-  while (header.col == mTracklets[trackletindex + trackletcounter].getColumn() && header.padrow == mTracklets[trackletindex + trackletcounter].getPadRow()) {
+    TrackletMCMHeader header;
+    std::array<TrackletMCMData, 3> trackletdata;
+    header.col = mTracklets[trackletindex].getColumn();
+    header.padrow = mTracklets[trackletindex].getPadRow();
+    header.onea = 1;
+    header.oneb = 1;
+    int trackletcounter = 0;
+    while (header.col == mTracklets[trackletindex + trackletcounter].getColumn() && header.padrow == mTracklets[trackletindex + trackletcounter].getPadRow()) {
 
-    buildTrackletMCMData(trackletdata[trackletcounter], mTracklets[trackletindex + trackletcounter].getSlope(),
-                         mTracklets[trackletindex + trackletcounter].getPosition(), mTracklets[trackletindex + trackletcounter].getQ0(),
-                         mTracklets[trackletindex + trackletcounter].getQ1(), mTracklets[trackletindex + trackletcounter].getQ2());
-    int headerqpart = ((mTracklets[trackletindex + trackletcounter].getQ2()) << 2) + ((mTracklets[trackletindex + trackletcounter].getQ1()) >> 5);
-    switch (trackletindex + trackletcounter - trackletindex) {
-      case 0:
-        header.pid0 = headerqpart;
-        break;
-      case 1:
-        header.pid1 = headerqpart;
-        break;
-      case 2:
-        header.pid2 = headerqpart;
-        break;
-      default:
-        LOG(error) << "we seem to have more than 3 tracklets when building the Tracklet raw data stream";
+        buildTrackletMCMData(trackletdata[trackletcounter], mTracklets[trackletindex + trackletcounter].getSlope(),
+                mTracklets[trackletindex + trackletcounter].getPosition(), mTracklets[trackletindex + trackletcounter].getQ0(),
+                mTracklets[trackletindex + trackletcounter].getQ1(), mTracklets[trackletindex + trackletcounter].getQ2());
+        int headerqpart = ((mTracklets[trackletindex + trackletcounter].getQ2()) << 2) + ((mTracklets[trackletindex + trackletcounter].getQ1()) >> 5);
+        switch (trackletindex + trackletcounter - trackletindex) {
+            case 0:
+                header.pid0 = headerqpart;
+                break;
+            case 1:
+                header.pid1 = headerqpart;
+                break;
+            case 2:
+                header.pid2 = headerqpart;
+                break;
+            default:
+                LOG(error) << "we seem to have more than 3 tracklets when building the Tracklet raw data stream";
+        }
+        trackletcounter++;
     }
-    trackletcounter++;
-  }
-  //now copy the mcmheader and mcmdata.
-  memcpy((std::byte*)dataptr, (std::byte*)&header, sizeof(TrackletMCMHeader));
-  dataptr += sizeof(TrackletMCMHeader);
-  for (int i = 0; i < trackletcounter; trackletcounter++) {
-    memcpy((std::byte*)dataptr, (std::byte*)&trackletdata[trackletcounter], sizeof(TrackletMCMData));
-  }
-  return trackletcounter;
+    //now copy the mcmheader and mcmdata.
+    memcpy((std::byte*)dataptr, (std::byte*)&header, sizeof(TrackletMCMHeader));
+    dataptr += sizeof(TrackletMCMHeader);
+    for (int i = 0; i < trackletcounter; trackletcounter++) {
+        memcpy((std::byte*)dataptr, (std::byte*)&trackletdata[trackletcounter], sizeof(TrackletMCMData));
+    }
+    return trackletcounter;
 }
 
 int Trap2CRU::writeDigitEndMarker(char *dataptr)
@@ -444,7 +467,7 @@ int Trap2CRU::writeHCHeader(char* dataptr,uint64_t bc, uint32_t linkid)
     trackletheader.side=(linkid%2)? 1 : 0 ;
     trackletheader.MCLK=bc; // just has to be a consistant increasing number per event.
     trackletheader.format=12;
-    
+
     DigitHCHeader digitheader;
     digitheader.res0=1;
     digitheader.side=(linkid%2)? 1 : 0 ;
