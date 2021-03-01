@@ -49,8 +49,8 @@
 
 namespace bpo = boost::program_options;
 
-void trap2raw(const std::string& inpDigitsName, const std::string& inpTrackletsName, 
-              const std::string& outDir, int verbosity, bool filePerLink, 
+void trap2raw(const std::string& inpDigitsName, const std::string& inpTrackletsName,
+              const std::string& outDir, int verbosity, bool filePerLink,
               uint32_t rdhV = 6, bool noEmptyHBF = false, int superPageSizeInB = 1024 * 1024);
 
 int main(int argc, char** argv)
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
     auto add_option = opt_general.add_options();
     add_option("help,h", "Print this help message");
     add_option("verbosity,v", bpo::value<int>()->default_value(0), "verbosity level");
-//    add_option("input-file,i", bpo::value<std::string>()->default_value("trdtrapraw.root"), "input Trapsim raw file");
+    //    add_option("input-file,i", bpo::value<std::string>()->default_value("trdtrapraw.root"), "input Trapsim raw file");
     add_option("input-file-digits,d", bpo::value<std::string>()->default_value("trddigits.root"), "input Trapsim digits file");
     add_option("input-file-tracklets,t", bpo::value<std::string>()->default_value("trdtracklets.root"), "input Trapsim tracklets file");
     add_option("file-per-halfcru,l", bpo::value<bool>()->default_value(false)->implicit_value(true), "create output file per half cru, 2 files per cru 15 links each.");
@@ -97,7 +97,7 @@ int main(int argc, char** argv)
   //  o2::conf::ConfigurableParam::updateFromString(vm["configKeyValues"].as<std::string>());
 
   std::cout << "yay it ran" << std::endl;
-  trap2raw(vm["input-file-digits"].as<std::string>(), vm["input-file-tracklets"].as<std::string>(),vm["output-dir"].as<std::string>(), vm["verbosity"].as<int>(),
+  trap2raw(vm["input-file-digits"].as<std::string>(), vm["input-file-tracklets"].as<std::string>(), vm["output-dir"].as<std::string>(), vm["verbosity"].as<int>(),
            vm["file-per-halfcru"].as<bool>(), vm["rdh-version"].as<uint32_t>(), vm["no-empty-hbf"].as<bool>());
 
   return 0;
@@ -109,7 +109,7 @@ void trap2raw(const std::string& inpDigitsName, const std::string& inpTrackletsN
   TStopwatch swTot;
   swTot.Start();
   LOG(info) << "timer started";
-  o2::trd::Trap2CRU mc2raw(outDir,inpDigitsName,inpTrackletsName);//,superPageSizeInB);
+  o2::trd::Trap2CRU mc2raw(outDir, inpDigitsName, inpTrackletsName); //,superPageSizeInB);
   LOG(info) << "class instantiated";
   //mc2raw.setFilePerLink(filePerLink);
   mc2raw.setVerbosity(verbosity);

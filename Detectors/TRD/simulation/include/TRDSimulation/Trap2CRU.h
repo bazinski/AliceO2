@@ -99,10 +99,10 @@ class Trap2CRU
   TFile* mTrackletsFile;
   TTree* mTrackletsTree;
   // locations to store the incoming data branches
-  std::vector<Digit> mDigits, *mDigitsPtr=&mDigits;
+  std::vector<Digit> mDigits, *mDigitsPtr = &mDigits;
   std::vector<uint32_t> mDigitsIndex;
   std::vector<o2::trd::TriggerRecord> mDigitTriggerRecords, *mDigitTriggerRecordsPtr = &mDigitTriggerRecords;
-  std::vector<Tracklet64> mTracklets, *mTrackletsPtr=&mTracklets;
+  std::vector<Tracklet64> mTracklets, *mTrackletsPtr = &mTracklets;
   std::vector<uint32_t> mTrackletsIndex;
   std::vector<o2::trd::TriggerRecord> mTrackletTriggerRecords, *mTrackletTriggerRecordsPtr = &mTrackletTriggerRecords;
   std::vector<uint32_t> mTrapRawData, *mTrapRawDataPtr = &mTrapRawData;
