@@ -333,12 +333,14 @@ return false;
 
 bool Trap2CRU::isDigitOnLink(const int linkid, const int currentdigitpos)
 {
-  Digit *digit=&mDigits[currentdigitpos]; if(FeeParam::getORI(digit->getDetector(),digit->getROB()) == linkid){ return true;
+  Digit *digit=&mDigits[currentdigitpos]; 
+  if(FeeParam::getORI(digit->getDetector(),digit->getROB()) == linkid){ 
+      return true;
   }
 return false;
 }
 
-int Trap2CRU::buildDigitRawData(const int digitindex, std::array<Digit,21>&localParseDigits, char *dataptr)
+int Trap2CRU::buildDigitRawData(const int digitindex, const std::array<Digit,21>&localParseDigits, char *dataptr)
 {
     //this is not zero suppressed.
 //    Digit
@@ -347,12 +349,18 @@ int Trap2CRU::buildDigitRawData(const int digitindex, std::array<Digit,21>&local
     int startrob=mDigits[digitindex].getROB();
     int startmcm=mDigits[digitindex].getMCM();
     int digitcounter=0;
+    header.res=12; //1100
+    header.eventcount=1;//TODO find the event count from the triggerrecord.
+    header.mcm=startmcm;
+    header.rob=startrob;
+    header.yearflag=1; // >2007
     while(mDigits[digitindex+digitcounter].getROB() == startrob && 
           mDigits[digitindex+digitcounter].getMCM()==startmcm && 
           mDigits[digitindex+digitcounter].getDetector() == startdet){
        //while we are still in the same mcm
        
     }
+    return 1;
 }
 
 int Trap2CRU::buildTrackletRawData(const int trackletindex, char *dataptr)
@@ -454,7 +462,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTriggerReco
                 //localParsedTracklets[localparsedtrackletscount++]=
                 // do we have 1 2 or 3 tracklets.
                 //we need a trackletheader.
-                int tracklets = buildTrackletMCMData(trackletindex,rawptr); //returns # of 32 bits, header plus trackletdata words that would have come from the mcm.
+                int tracklets = buildTrackletRawData(trackletindex,rawdataptr); //returns # of 32 bits, header plus trackletdata words that would have come from the mcm.
                 trackletindex+=tracklets;
                 rawwords=tracklets+1;//to include the header.
             }
@@ -471,7 +479,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTriggerReco
                     digitindex++;
                 }
                 // mcm digits are full, now write it out.
-                int digits=buildDigitMCMData(localParseDigits,rawptr);
+                int digits=buildDigitRawData(digitindex,localParsedDigits,rawdataptr);
                 digitindex+=digits;
                 rawwords+=digits*11; //10 for the tiembins and 1 for the header.
             }
