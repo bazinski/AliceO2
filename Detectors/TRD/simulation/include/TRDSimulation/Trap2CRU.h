@@ -72,8 +72,8 @@ class Trap2CRU
   bool isTrackletOnLink(int link, int trackletpos);
   bool isDigitOnLink(int link, int digitpos);
   int buildRawMCMData(const int trackletindex);
-  int buildDigitRawData(const int digitindex, const std::array<Digit,21>&localParseDigits, char *dataptr);
-  int buildTrackletRawData(const int trackletindex, char *dataptr);
+  int buildDigitRawData(const int digitindex, const std::array<Digit, 21>& localParseDigits, char* dataptr);
+  int buildTrackletRawData(const int trackletindex, char* dataptr);
 
  private:
   int mfileGranularity; /// per link or per half cru for each file

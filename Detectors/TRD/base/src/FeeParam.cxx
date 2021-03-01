@@ -514,8 +514,8 @@ void FeeParam::createORILookUpTable()
 int FeeParam::getORI(int detector, int readoutboard)
 {
   int supermodule = detector / o2::trd::constants::NCHAMBERPERSEC;
-  LOG(debug3) << "getORI : " << detector << " :: " << readoutboard << getORIinSM(detector, readoutboard) + o2::trd::constants::NCHAMBERPERSEC*2  * detector;
-  return getORIinSM(detector, readoutboard) + o2::trd::constants::NCHAMBER*2 * detector; // 60 ORI per supermodule
+  LOG(debug3) << "getORI : " << detector << " :: " << readoutboard << getORIinSM(detector, readoutboard) + o2::trd::constants::NCHAMBERPERSEC * 2 * detector;
+  return getORIinSM(detector, readoutboard) + o2::trd::constants::NCHAMBER * 2 * detector; // 60 ORI per supermodule
 }
 
 int FeeParam::getORIinSM(int detector, int readoutboard)
