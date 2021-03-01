@@ -72,9 +72,13 @@ class Trap2CRU
   bool isTrackletOnLink(int link, int trackletpos);
   bool isDigitOnLink(int link, int digitpos);
   int buildRawMCMData(const int trackletindex);
-  int buildDigitRawData(const int digitindex, const std::array<Digit, 21>& localParseDigits, char* dataptr);
+  int buildDigitRawData(const int digitindex, const std::array<uint64_t, 21>& localParseDigits, char* dataptr);
   int buildTrackletRawData(const int trackletindex, char* dataptr);
-
+  int writeDigitEndMarker(char * dataptr);
+  int writeTrackletEndMarker(char * dataptr);
+  int writeHCHeader(char * dataptr);
+  int writeHCHeader(char* dataptr,uint64_t bc, uint32_t linkid);
+  void setTrackletHCHeader(bool tracklethcheader){ mTrackletHCHeader=tracklethcheader;}
  private:
   int mfileGranularity; /// per link or per half cru for each file
   uint32_t mLinkID;
@@ -91,7 +95,7 @@ class Trap2CRU
   HalfCRUHeader mHalfCRUHeader;
   TrackletMCMHeader mTrackletMCMHeader;
   TrackletMCMData mTrackletMCMData;
-
+  bool mTrackletHCHeader{false};
   std::vector<char> mRawData; // store for building data event for a single half cru
   uint32_t mRawDataPos = 0;
   TFile* mDigitsFile;
