@@ -188,10 +188,10 @@ void Trap2CRU::readTrapData()
   LOG(info) << "digit and tracklets sorted ";
   LOG(info) << "lets look at tracklet tree for now";
   if (mDigitsTree->GetEntries() != 1){
-    LOG(fatal) << "more than one entry in digits tree";
+    LOG(fatal) << "more than one entry in digits tree " << mDigitsTree->GetEntries();
   }
   if (mTrackletsTree->GetEntries() != 1){
-    LOG(fatal) << "more than one entry in tracklets tree";
+    LOG(fatal) << "more than one entry in tracklets tree " << mTrackletsTree->GetEntries();
   }
 
   for (int entry = 0; entry < mDigitsTree->GetEntries(); entry++) {
@@ -240,7 +240,7 @@ void Trap2CRU::buildCRUPayLoad()
 
 void Trap2CRU::linkSizePadding(uint32_t linksize, uint32_t& crudatasize, uint32_t& padding)
 {
-  // all data must be 256 bit aligned (8x64bit).
+
   // if zero the whole 256 bit must be padded (empty link)
   // crudatasize is the size to be stored in the cruheader, i.e. units of 256bits.
   // linksize is the incoming link size from the linkrecord,
@@ -290,30 +290,7 @@ uint32_t Trap2CRU::buildHalfCRUHeader(HalfCRUHeader& header, const uint32_t bc, 
   uint32_t padding = 0;
   setHalfCRUHeader(header, crurdhversion, bunchcrossing, stopbits, endpoint, eventtype, feeid, cruid); //TODO come back and pull this from somewhere.
 
-  // halfcruheader from the relevant mLinkRecords.
-  int totallinkdatasize = 0; //in units of 256bits
-  for (int link = 0; link < o2::trd::constants::NLINKSPERHALFCRU; link++) {
-    int linkid = link + halfcru * o2::trd::constants::NLINKSPERHALFCRU; // TODO this might have to change to a lut I dont think the mapping is linear.
-    int errors = 0;
-    int linksize = 0; // linkSizePadding will convert it to 1 for the no data case.
-    //count tracklets
-    //
-    // # cru -- AorC
-    // 18 supermodules each with A or c side
-    // 36 cru for 0A 0C 1A 1C 2A 2C ... 18C
-    // each cru has 2 end points each wih 15 links
-
-    //cru%2 = 0=a side 1=c side
-    //then upper or lower given 15-29 or 0-14 inclusive
-    int linktrackletsize = countTrackletsizeForLink();
-    //count digits
-    int linkdigitsize = countDigitsizeForLink();
-    int linkdatasize = 1; //linktrackletsize+linkdigitsize;
-    linkSizePadding(linksize, crudatasize, padding);
-    setHalfCRUHeaderLinkData(header, link, crudatasize, errors); // write one padding block for empty links.
-    totallinkdatasize += crudatasize;
-  }
-  return totallinkdatasize;
+  return 1;
 }
 
 bool Trap2CRU::isTrackletOnLink(const int linkid, const int currenttrackletpos)
@@ -336,7 +313,7 @@ bool Trap2CRU::isDigitOnLink(const int linkid, const int currentdigitpos)
   return false;
 }
 
-int Trap2CRU::buildDigitRawData(const int digitindex, const std::array<uint64_t, 21>& localParsedDigits, char* dataptr)
+int Trap2CRU::buildDigitRawData(const int digitindex, const std::array<uint64_t, 21>& localParsedDigits, const uint32_t bc, char* dataptr)
 {
   //this is not zero suppressed.
   int wordswritten=0;
@@ -383,7 +360,7 @@ int Trap2CRU::buildDigitRawData(const int digitindex, const std::array<uint64_t,
 
 int Trap2CRU::buildTrackletRawData(const int trackletindex, char* dataptr)
 {
-
+LOG(info) << __func__ << " trackletindex:" << trackletindex << " and data ptr is at : "<< (void*)dataptr;
     TrackletMCMHeader header;
     std::array<TrackletMCMData, 3> trackletdata;
     header.col = mTracklets[trackletindex].getColumn();
@@ -392,10 +369,12 @@ int Trap2CRU::buildTrackletRawData(const int trackletindex, char* dataptr)
     header.oneb = 1;
     int trackletcounter = 0;
     while (header.col == mTracklets[trackletindex + trackletcounter].getColumn() && header.padrow == mTracklets[trackletindex + trackletcounter].getPadRow()) {
+LOG(info) << " while loop with trackletcounter : " << trackletcounter << " tracklets array size is : " << mTracklets.size();
 
         buildTrackletMCMData(trackletdata[trackletcounter], mTracklets[trackletindex + trackletcounter].getSlope(),
                 mTracklets[trackletindex + trackletcounter].getPosition(), mTracklets[trackletindex + trackletcounter].getQ0(),
                 mTracklets[trackletindex + trackletcounter].getQ1(), mTracklets[trackletindex + trackletcounter].getQ2());
+        LOG(info) << " now for the headerpart";
         int headerqpart = ((mTracklets[trackletindex + trackletcounter].getQ2()) << 2) + ((mTracklets[trackletindex + trackletcounter].getQ1()) >> 5);
         switch (trackletindex + trackletcounter - trackletindex) {
             case 0:
@@ -411,13 +390,18 @@ int Trap2CRU::buildTrackletRawData(const int trackletindex, char* dataptr)
                 LOG(error) << "we seem to have more than 3 tracklets when building the Tracklet raw data stream";
         }
         trackletcounter++;
+        LOG(info) << " now to loop back for while loop with tracklet at :" << trackletindex+trackletcounter;
     }
     //now copy the mcmheader and mcmdata.
-    memcpy((std::byte*)dataptr, (std::byte*)&header, sizeof(TrackletMCMHeader));
+    memcpy((char*)dataptr, (char*)&header, sizeof(TrackletMCMHeader));
     dataptr += sizeof(TrackletMCMHeader);
-    for (int i = 0; i < trackletcounter; trackletcounter++) {
-        memcpy((std::byte*)dataptr, (std::byte*)&trackletdata[trackletcounter], sizeof(TrackletMCMData));
+    LOG(info) << " for loop for trackletcounter of : " << trackletcounter;
+    for (int i = 0; i < trackletcounter; i++) {
+    LOG(info) << "memcpy((char*)" << std::hex << (void*)dataptr << " , (char*)" << (void*)&trackletdata[trackletcounter] << " = &trackletdata["<< trackletcounter<< "], " << sizeof(TrackletMCMData);
+        memcpy((char*)dataptr, (char*)&trackletdata[trackletcounter], sizeof(TrackletMCMData));
+        dataptr+=sizeof(TrackletMCMData);
     }
+LOG(info) << "leaving " << __func__ << " trackletindex:" << trackletindex << " and data ptr is at : "<< (void*)dataptr<< " trackletcounter:" << trackletcounter;
     return trackletcounter;
 }
 
@@ -505,10 +489,12 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTriggerReco
     //  dump data to rawwriter
     //finished for event. this method is only called per event.
     int currentlinkrecord = 0;
-    char* traprawdataptr = (char*)&mTrapRawData[0];
+//    char* traprawdataptr = (char*)&mTrapRawData[0];
     std::array<uint64_t, 21> localParsedDigitsindex; // store the index of the digits of an mcm
     int trackletindex = 0, digitindex = 0;
     int rawwords = 0;
+    char* rawdataptratstart;
+    std::vector<char> rawdatavector(1024*1024*2); // sum of link sizes + padding in units of bytes and some space for the header (512 bytes).
     for (int halfcru = 0; halfcru < o2::trd::constants::NHALFCRU; halfcru++) {
         int supermodule = halfcru / 4; // 2 cru per supermodule.
         int endpoint = halfcru / 2;    // 2 pci end points per cru, 15 links each
@@ -526,9 +512,8 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTriggerReco
         //now write the cruheader at the head of all the data for this halfcru.
         LOG(debug) << "cru before building cruheader for halfcru index : " << halfcru << " with contents \n"
             << halfcruheader;
-        uint32_t totalhalfcrudatasize = buildHalfCRUHeader(halfcruheader, trackletTriggerRecord.getBCData().bc, halfcru);
+        buildHalfCRUHeader(halfcruheader, trackletTriggerRecord.getBCData().bc, halfcru);
 
-        std::vector<char> rawdatavector(totalhalfcrudatasize * 32 + sizeof(halfcruheader)); // sum of link sizes + padding in units of bytes and some space for the header (512 bytes).
         char* rawdataptr = rawdatavector.data();
 
         //dumpHalfCRUHeader(halfcruheader);
@@ -542,7 +527,9 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTriggerReco
         rawdataptr += sizeof(halfcruheader);
         int linkdatasize = 0; // in 32 bit words
         int link = halfcru / 2;
+        rawdataptratstart=rawdataptr;
         for (int halfcrulink = 0; halfcrulink < o2::trd::constants::NLINKSPERHALFCRU; halfcrulink++) {
+            int linkwordswritten=0;
             //localParsedDigits.
             //links run from 0 to 14, so linkid offset is halfcru*15;
             int linkid = halfcrulink + halfcru * o2::trd::constants::NLINKSPERHALFCRU;
@@ -562,13 +549,23 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTriggerReco
                     //localParsedTracklets[localparsedtrackletscount++]=
                     // do we have 1 2 or 3 tracklets.
                     //we need a trackletheader.
+                    LOG(info) << "Raw pointer before building raw tracklet data " << std::hex << (void*)rawdataptr;
+                    char *pretrackptr; pretrackptr=rawdataptr;
                     int tracklets = buildTrackletRawData(trackletindex, rawdataptr); //returns # of 32 bits, header plus trackletdata words that would have come from the mcm.
+                    LOG(info) << "Raw pointer after building raw tracklet data " << std::hex << (void*)rawdataptr << " difference is " << rawdataptr-pretrackptr;
                     trackletindex += tracklets;
                     rawwords = tracklets + 1; //to include the header.
+                    linkwordswritten+=tracklets+1;
                 }
                 //write tracklet end marker
-                writeTrackletEndMarker(rawdataptr);
-                writeHCHeader(rawdataptr,trackletTriggerRecord.getBCData().bc, linkid);
+                LOG(info) << "data ptr before trackletend marker : " << std::hex<< (void*)rawdataptr;
+                int trackletendmarker=writeTrackletEndMarker(rawdataptr);
+                LOG(info) << "data ptr after trackletend marker : " << std::hex<< (void*)rawdataptr;
+                linkwordswritten+=trackletendmarker;
+                LOG(info) << "data ptr before halfchamberheader : " << std::hex<< (void*)rawdataptr;
+                int hcheaderwords=writeHCHeader(rawdataptr,trackletTriggerRecord.getBCData().bc, linkid);
+                linkwordswritten+=hcheaderwords;
+                LOG(info) << "data ptr after halfchamber header : " << std::hex<< (void*)rawdataptr;
                 while (isDigitOnLink(linkid, digitindex)) {
                     //   place digit in
                     //   increment digit
@@ -576,6 +573,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTriggerReco
                     //while we are on a single mcm, copy the digits timebins to the array.
                     int currentROB = mDigits[digitindex].getROB();
                     int currentMCM = mDigits[digitindex].getMCM();
+                    int currentDetector = mDigits[digitindex].getDetector();
                     int startdigitindex=digitindex;
                     localParsedDigitsindex.fill(0); // clear the digit index array
                     while (mDigits[digitindex].getMCM() == currentMCM &&
@@ -585,45 +583,57 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& trackletTriggerReco
                         digitindex++;
                     }
                     // mcm digits are full, now write it out.
-                    int digits = buildDigitRawData(digitindex, localParsedDigitsindex, rawdataptr);
+                    LOG(info) << "Raw pointer before building raw digit" << std::hex << (void*)rawdataptr;
+                    char *preptr;preptr=rawdataptr;
+                    int digits = buildDigitRawData(digitindex, localParsedDigitsindex, digitTriggerRecord.getBCData().bc,rawdataptr);
+                    LOG(info) << "Raw pointer after building raw digit" << std::hex << (void*)rawdataptr << " difference is " << rawdataptr-preptr;
                     //digitindex += digits;
                     //due to not being zero suppressed, digits returned from buildDigitRawData should *always* be 21.
                     if(digits!=21) {
                         LOG(error) << "We are writing non zero suppressed digits yet we dont have 21 digits";
                     }
                     rawwords += digits * 11; //10 for the tiembins and 1 for the header.
+                    linkwordswritten+=digits*11;
                 }
-                writeDigitEndMarker(rawdataptr);
+                LOG(info) << "data ptr before digit end marker : " << std::hex<< (void*)rawdataptr;
+                int digitendmarkerwritten=writeDigitEndMarker(rawdataptr);
+                linkwordswritten+=digitendmarkerwritten;
+                LOG(info) << "data ptr after digit end marker : " << std::hex<< (void*)rawdataptr;
+
             }
             else{
                 LOG(info) << "no data on link : " << linkid;
             }
             //write digit end marker.
             //pad up to a whole 256 bit format.
-            //
-            //
-            linkSizePadding(linkdatasize, crudatasize, paddingsize); //TODO this can come out as we have already called it, but previously we have lost the #padding words, solve to remove.
+            crudatasize=linkwordswritten/8;
+            linkSizePadding(linkwordswritten, crudatasize, paddingsize); 
 
-            // now pad ....
+            // now pad the data if needed ....
             char* olddataptr = rawdataptr; // store the old pointer so we can do some sanity checks for how far we advance.
-            //linkdatasize is the #of 32 bit words coming from the incoming tree.
+            //linkwordswritten is the #of 32 bit words coming from the incoming tree.
             //paddingsize is the number of padding words to add 0xeeee
-            uint32_t bytestocopy = linkdatasize * (sizeof(uint32_t));
-            memcpy(rawdataptr, traprawdataptr, bytestocopy);
+     //       uint32_t bytestocopy = linkwordswritten * (sizeof(uint32_t));
+   //         memcpy(rawdataptr, traprawdataptr, bytestocopy);
             //increment pointer
-            rawdataptr += bytestocopy;
-            traprawdataptr += bytestocopy;
+    //        rawdataptr += bytestocopy;
+    //        traprawdataptr += bytestocopy;
             //now for padding
             uint16_t padbytes = paddingsize * sizeof(uint32_t);
             memset(rawdataptr, 0xee, padbytes);
+            linkwordswritten+=padbytes;
+            crudatasize=linkwordswritten/8; //convert to 256 bit alignment.
+            if((linkwordswritten % 8) != 0){
+                LOG(error) << "linkwordswritten is not 256 bit aligned" << linkwordswritten << " %8 = " << linkwordswritten%8 << " and a padding size of : " << paddingsize;
+            }
+            setHalfCRUHeaderLinkData(halfcruheader, halfcrulink, crudatasize, errors); // write one padding block for empty links.
             //increment pointer.
             rawdataptr += padbytes;
-            if (padbytes + bytestocopy != crudatasize * 32) {
-                LOG(debug) << "something wrong with data size writing padbytes:" << padbytes << " bytestocopy : " << bytestocopy << " crudatasize:" << crudatasize;
+            if ((rawdataptr - rawdataptratstart) != (crudatasize * 32)) {
+                uint32_t bytescopied  = rawdataptr-rawdataptratstart;
+                LOG(debug) << "something wrong with data size writing padbytes:" << crudatasize << " bytestocopy : " << bytescopied << " crudatasize:" << crudatasize;
             }
             //sanity check for now:
-            if (((char*)rawdataptr - (char*)olddataptr) != crudatasize * 32) { // cru words are 8 uint32 and comparison is in bytes.
-            }
             if (crudatasize != o2::trd::getlinkdatasize(halfcruheader, halfcrulink)) {
                 // we have written the wrong amount of data ....
                 LOG(debug) << "crudata is ! = get link data size " << crudatasize << "!=" << o2::trd::getlinkdatasize(halfcruheader, halfcrulink);
