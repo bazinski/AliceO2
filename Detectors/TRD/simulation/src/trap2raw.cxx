@@ -51,7 +51,7 @@ namespace bpo = boost::program_options;
 
 void trap2raw(const std::string& inpDigitsName, const std::string& inpTrackletsName,
               const std::string& outDir, int verbosity, bool filePerLink,
-              uint32_t rdhV = 6, bool noEmptyHBF = false, bool tracklethcheader=false, int superPageSizeInB = 1024 * 1024);
+              uint32_t rdhV = 6, bool noEmptyHBF = false, bool tracklethcheader = false, int superPageSizeInB = 1024 * 1024);
 
 int main(int argc, char** argv)
 {

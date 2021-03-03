@@ -74,11 +74,12 @@ class Trap2CRU
   int buildRawMCMData(const int trackletindex);
   int buildDigitRawData(const int digitindex, const std::array<uint64_t, 21>& localParseDigits, const uint32_t bc, char* dataptr);
   int buildTrackletRawData(const int trackletindex, char* dataptr);
-  int writeDigitEndMarker(char * dataptr);
-  int writeTrackletEndMarker(char * dataptr);
-  int writeHCHeader(char * dataptr);
-  int writeHCHeader(char* dataptr,uint64_t bc, uint32_t linkid);
-  void setTrackletHCHeader(bool tracklethcheader){ mTrackletHCHeader=tracklethcheader;}
+  int writeDigitEndMarker(char* dataptr);
+  int writeTrackletEndMarker(char* dataptr);
+  int writeHCHeader(char* dataptr);
+  int writeHCHeader(char* dataptr, uint64_t bc, uint32_t linkid);
+  void setTrackletHCHeader(bool tracklethcheader) { mTrackletHCHeader = tracklethcheader; }
+
  private:
   int mfileGranularity; /// per link or per half cru for each file
   uint32_t mLinkID;
@@ -109,7 +110,7 @@ class Trap2CRU
   std::vector<Tracklet64> mTracklets, *mTrackletsPtr = &mTracklets;
   std::vector<uint32_t> mTrackletsIndex;
   std::vector<o2::trd::TriggerRecord> mTrackletTriggerRecords, *mTrackletTriggerRecordsPtr = &mTrackletTriggerRecords;
- // std::vector<uint32_t> mTrapRawData, *mTrapRawDataPtr = &mTrapRawData;
+  // std::vector<uint32_t> mTrapRawData, *mTrapRawDataPtr = &mTrapRawData;
 
   const o2::raw::HBFUtils& mSampler = o2::raw::HBFUtils::Instance();
   o2::raw::RawFileWriter mWriter{"TRD"};
