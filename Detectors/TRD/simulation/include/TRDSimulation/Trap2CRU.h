@@ -57,9 +57,9 @@ class Trap2CRU
   bool isDigitOnLink(int link, int digitpos);       // is the current digit on the current link
   int buildDigitRawData(const int digitindex, const std::array<int64_t, 21>& localParseDigits, const uint32_t bc);
   int buildTrackletRawData(const int trackletindex, const int linkid); // from the current position in the tracklet vector, build the outgoing data for the current mcm the tracklet is on.
-  int writeDigitEndMarker();                         // write the digit end marker 0x0 0x0
-  int writeTrackletEndMarker();                      // write the tracklet end maker 0x10001000 0x10001000
-  int writeHCHeader(uint64_t bc, uint32_t linkid);   // write the HalfChamberHeader into the stream, after the tracklet endmarker and before the digits.
+  int writeDigitEndMarker();                                           // write the digit end marker 0x0 0x0
+  int writeTrackletEndMarker();                                        // write the tracklet end maker 0x10001000 0x10001000
+  int writeHCHeader(uint64_t bc, uint32_t linkid);                     // write the HalfChamberHeader into the stream, after the tracklet endmarker and before the digits.
 
   bool digitindexcompare(const o2::trd::Digit& A, const o2::trd::Digit& B);
   //boohhl digitindexcompare(const unsigned int A, const unsigned int B);
