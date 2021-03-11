@@ -108,10 +108,10 @@ void Trap2CRU::sortDataToLinks()
       LOG(debug) << " sorting digits from : " << trig.getFirstEntry() << " till " << trig.getFirstEntry() + trig.getNumberOfObjects();
       std::stable_sort(std::begin(mTracklets) + trig.getFirstEntry(), std::begin(mTracklets) + trig.getNumberOfObjects() + trig.getFirstEntry(),
                        [this](auto&& t1, auto&& t2) {
-                         if (t1.getHCID() != t2.getHCID()){
+                         if (t1.getHCID() != t2.getHCID()) {
                            return t1.getHCID() < t2.getHCID();
                          }
-                         if (t1.getPadRow() != t2.getPadRow()){
+                         if (t1.getPadRow() != t2.getPadRow()) {
                            return t1.getPadRow() < t2.getPadRow();
                          }
                          return t1.getMCM() < t2.getMCM();
