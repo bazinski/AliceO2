@@ -76,11 +76,11 @@ class DigitsParser
   bool mDisableByteOrderFix{false}; // simulated data is not byteswapped, real is, so deal with it accodringly.
   std::array<uint16_t, constants::TIMEBINS> mADCValues;
   bool mReturnVector{true}; // whether we are returing a vector or the raw data buffer.
-                             // yes this is terrible design but it works,
+                            // yes this is terrible design but it works,
   int mReturnVectorPos;
 
   std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX>* mData = nullptr; // compressed data return space.
-  std::vector<CompressedDigit> mDigits;                                              // outgoing parsed digits
+  std::vector<CompressedDigit> mDigits;                                    // outgoing parsed digits
                                                                            // subtle point, mDigits is not cleared between parsings,only between events.
                                                                            // this means that successive calls to Parse simply appends the new digits onto the vector.
                                                                            // at the end of the event the calling object must pull/copy the vector and clear or clear on next parse.

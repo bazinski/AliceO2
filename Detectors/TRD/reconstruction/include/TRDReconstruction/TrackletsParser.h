@@ -57,8 +57,8 @@ class TrackletsParser
   std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX>* mData;
   std::vector<Tracklet64> mTracklets;
   int mState;
-  int mDataWordsParsed; // count of data wordsin data that have been parsed in current call to parse.
-  int mTrackletsFound;  // tracklets found in the data block, mostly used for debugging.
+  int mDataWordsParsed;     // count of data wordsin data that have been parsed in current call to parse.
+  int mTrackletsFound;      // tracklets found in the data block, mostly used for debugging.
   int mPaddingWordsCounter; // count of padding words encoutnered
   Tracklet64 mCurrentTrack;
   int mWordsRead;
@@ -69,7 +69,7 @@ class TrackletsParser
 
   bool mDisableByteOrderFix{false}; // simulated data is not byteswapped, real is, so deal with it accodringly.
   bool mReturnVector{false};        // whether weare returing a vector or the raw data buffer.
-  
+
   uint16_t mDetector;
   uint16_t mMCM;
   uint16_t mROB;
