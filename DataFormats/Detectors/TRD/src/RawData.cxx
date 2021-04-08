@@ -106,28 +106,42 @@ uint32_t getlinkdatasizes(const HalfCRUHeader& cruheader, std::array<uint32_t, 1
   return 0;
 };
 
-uint32_t getQFromRaw(const o2::trd::TrackletMCMHeader *header, const o2::trd::TrackletMCMData *data, int pidindex, int trackletindex)
+uint32_t getQFromRaw(const o2::trd::TrackletMCMHeader* header, const o2::trd::TrackletMCMData* data, int pidindex, int trackletindex)
 {
- uint32_t pid=0;
- uint32_t qa,qb;
- //PID VERSION 1
- //frist part of pid is in the TrackletMCMHeader
- switch(trackletindex){
-     case 0 : qa=header->pid0;break;
-     case 1 : qa=header->pid1;break;
-     case 2 : qa=header->pid2;break;
-     default : LOG(warn) << " unknown trackletindex to getQFromRaw : " << pidindex;
- }
- //second part of pid is in the TrackletMCMData
- qb=data->pid;
- switch(pidindex) {
-     case 0 : pid=qa&0xffc>>2;break;
-     case 1 : pid=((qa&0x3)<<5)|(qb>>6);break;
-     case 2 : pid=qb&0x3f;break;
-     default : LOG(warn) << " unknown pid index of : " << pidindex;
- }
- //PID VERSION 2
-/*
+  uint32_t pid = 0;
+  uint32_t qa, qb;
+  //PID VERSION 1
+  //frist part of pid is in the TrackletMCMHeader
+  switch (trackletindex) {
+    case 0:
+      qa = header->pid0;
+      break;
+    case 1:
+      qa = header->pid1;
+      break;
+    case 2:
+      qa = header->pid2;
+      break;
+    default:
+      LOG(warn) << " unknown trackletindex to getQFromRaw : " << pidindex;
+  }
+  //second part of pid is in the TrackletMCMData
+  qb = data->pid;
+  switch (pidindex) {
+    case 0:
+      pid = qa & 0xffc >> 2;
+      break;
+    case 1:
+      pid = ((qa & 0x3) << 5) | (qb >> 6);
+      break;
+    case 2:
+      pid = qb & 0x3f;
+      break;
+    default:
+      LOG(warn) << " unknown pid index of : " << pidindex;
+  }
+  //PID VERSION 2
+  /*
  switch(pidindex) {
      case 0 : pid=qa&0xffc>>2;break;
      case 1 : pid=((qa&0x3)<<5)|(qb>>6);break;
@@ -135,7 +149,7 @@ uint32_t getQFromRaw(const o2::trd::TrackletMCMHeader *header, const o2::trd::Tr
      default : LOG(warn) << " unknown pid index of : " << pidindex;
  }
  */
- return pid;
+  return pid;
 }
 
 uint32_t setHalfCRUHeader(HalfCRUHeader& cruhead, int crurdhversion, int bunchcrossing, int stopbits, int endpoint, int eventtype, int feeid, int cruid)

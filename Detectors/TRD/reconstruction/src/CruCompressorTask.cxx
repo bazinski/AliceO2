@@ -81,7 +81,7 @@ uint64_t CruCompressorTask::buildEventOutput()
     mcmheader.rob = digit.getROB();
     mcmheader.yearflag = 1;
     mcmheader.eventcount = 1;
-    mcmheader.res=0xc; // formst is reservedto be 1100 binary
+    mcmheader.res = 0xc; // formst is reservedto be 1100 binary
     //unpack the digit.
     mcmheader.word = (*word) >> 32;
     currentpos++;
@@ -125,9 +125,9 @@ void CruCompressorTask::run(ProcessingContext& pc)
       auto dataProcessingHeaderIn = DataRefUtils::getHeader<o2::framework::DataProcessingHeader*>(ref);
       auto payloadIn = ref.payload;
       auto payloadInSize = headerIn->payloadSize;
-      std::cout << "payload In is : " <<  std::hex << payloadIn << std::endl;
-      std::cout << "payload In is : " <<  std::dec << payloadIn << std::endl;
-      std::cout << "payload In size is : " <<  std::dec << payloadInSize << std::endl;
+      std::cout << "payload In is : " << std::hex << payloadIn << std::endl;
+      std::cout << "payload In is : " << std::dec << payloadIn << std::endl;
+      std::cout << "payload In size is : " << std::dec << payloadInSize << std::endl;
       mReader.setDataBuffer(payloadIn);
       mReader.setDataBufferSize(payloadInSize);
       //      mReader.setVerbosity(mVerbose);
@@ -136,32 +136,32 @@ void CruCompressorTask::run(ProcessingContext& pc)
 
       auto payloadOutSize = buildEventOutput();
 
-      auto payloadOutSizeBytes= payloadOutSize * 8; // payloadoutsize in bytes.
+      auto payloadOutSizeBytes = payloadOutSize * 8; // payloadoutsize in bytes.
       LOG(info) << "outgoing message has a data size of : " << payloadOutSize;
-      if(payloadOutSizeBytes > 32*1024){
-          LOG(warn) << " buffer size for data is >32kB so will span rdh";
+      if (payloadOutSizeBytes > 32 * 1024) {
+        LOG(warn) << " buffer size for data is >32kB so will span rdh";
       }
-      int numberofpiecestocutinto = payloadOutSizeBytes/(32*1024);
-      int segmentsize=32*1024-0x40; // 0x40 is the size of the rdh header in bytes.
+      int numberofpiecestocutinto = payloadOutSizeBytes / (32 * 1024);
+      int segmentsize = 32 * 1024 - 0x40; // 0x40 is the size of the rdh header in bytes.
       //the above will drop the decimal due to int.
       numberofpiecestocutinto++;
-      for(int datasegment=0; datasegment< numberofpiecestocutinto; ++datasegment){
-          auto payloadMessage = device->NewMessage(payloadOutSize);
-          std::memcpy(payloadMessage->GetData(), (char*)mOutBuffer.data()+datasegment*segmentsize, payloadOutSize);
-          /* output */
-          auto headerOut = *headerIn;
-          auto dataProcessingHeaderOut = *dataProcessingHeaderIn;
-          headerOut.dataDescription = "CDATA";
-          headerOut.payloadSize = payloadOutSizeBytes;
-          // what to do about the packet count?
-          //headerOut.packetCounter;
-          o2::header::Stack headerStack{headerOut, dataProcessingHeaderOut};
-          auto headerMessage = device->NewMessage(headerStack.size());
-          std::memcpy(headerMessage->GetData(), headerStack.data(), headerStack.size());
+      for (int datasegment = 0; datasegment < numberofpiecestocutinto; ++datasegment) {
+        auto payloadMessage = device->NewMessage(payloadOutSize);
+        std::memcpy(payloadMessage->GetData(), (char*)mOutBuffer.data() + datasegment * segmentsize, payloadOutSize);
+        /* output */
+        auto headerOut = *headerIn;
+        auto dataProcessingHeaderOut = *dataProcessingHeaderIn;
+        headerOut.dataDescription = "CDATA";
+        headerOut.payloadSize = payloadOutSizeBytes;
+        // what to do about the packet count?
+        //headerOut.packetCounter;
+        o2::header::Stack headerStack{headerOut, dataProcessingHeaderOut};
+        auto headerMessage = device->NewMessage(headerStack.size());
+        std::memcpy(headerMessage->GetData(), headerStack.data(), headerStack.size());
 
-          /* add parts */
-          parts.AddPart(std::move(headerMessage));
-          parts.AddPart(std::move(payloadMessage));
+        /* add parts */
+        parts.AddPart(std::move(headerMessage));
+        parts.AddPart(std::move(payloadMessage));
       }
     }
 

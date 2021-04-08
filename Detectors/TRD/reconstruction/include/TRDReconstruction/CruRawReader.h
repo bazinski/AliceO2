@@ -56,9 +56,17 @@ class CruRawReader
 
   void checkSummary();
   void resetCounters();
-  void setBlob(bool returnblob){mReturnBlob=returnblob;}; //set class to produce blobs and not vectors. (compress vs pass through)`
-  void setDataBuffer(const char* val) { std::cout << "setting buffer position to " << std::hex << (void*) val << std::endl; mDataBuffer = val; };
-  void setDataBufferSize(long val) { LOG(info) << " Setting buffer size to : " << val; mDataBufferSize = val; };
+  void setBlob(bool returnblob) { mReturnBlob = returnblob; }; //set class to produce blobs and not vectors. (compress vs pass through)`
+  void setDataBuffer(const char* val)
+  {
+    std::cout << "setting buffer position to " << std::hex << (void*)val << std::endl;
+    mDataBuffer = val;
+  };
+  void setDataBufferSize(long val)
+  {
+    LOG(info) << " Setting buffer size to : " << val;
+    mDataBufferSize = val;
+  };
   void setVerbose(bool verbose) { mVerbose = verbose; }
   inline uint32_t getDecoderByteCounter() const { return reinterpret_cast<const char*>(mDataPointer) - mDataBuffer; };
   bool buildBlobOutput(char* outputbuffer); // should probably go into a writer object.
@@ -122,7 +130,7 @@ class CruRawReader
   uint32_t mSaveBufferDataLeft = 0;
   uint32_t mcruFeeID = 0;
   uint32_t datareadfromhbf;
-  uint32_t mTotalCRUPayLoad=0;
+  uint32_t mTotalCRUPayLoad = 0;
   //pointers to the data as we read them in, again no point in copying.
   HalfCRUHeader* mhalfcruheader;
 
@@ -146,7 +154,7 @@ class CruRawReader
   std::vector<o2::trd::TriggerRecord> mEventStartPositions;
   std::vector<CompressedDigit> mEventDigits;
   std::vector<o2::trd::TriggerRecord> mDigitStartPositions;
-  bool mReturnBlob{0}; // whether to return blobs or vectors;
+  bool mReturnBlob{0};       // whether to return blobs or vectors;
   struct TRDDataCounters_t { //thisis on a per event basis
     //TODO this should go into a dpl message for catching by qc ?? I think.
     std::array<uint32_t, 1080> LinkWordCounts;    //units of 256bits "cru word"

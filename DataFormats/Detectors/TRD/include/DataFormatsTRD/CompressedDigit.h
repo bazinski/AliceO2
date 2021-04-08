@@ -25,8 +25,6 @@ namespace o2
 namespace trd
 {
 
-
-
 // Compressed Digit class for TRD
 // Notes:
 //      This is merely to simplify the handling of raw data that comes in in the same 3 timebins per 32 bit integer format.
@@ -36,7 +34,7 @@ class CompressedDigit
  public:
   CompressedDigit() = default;
   ~CompressedDigit() = default;
-  CompressedDigit(const int det, const int rob, const int mcm, const int channel, std::array<uint16_t,constants::TIMEBINS> adc);
+  CompressedDigit(const int det, const int rob, const int mcm, const int channel, std::array<uint16_t, constants::TIMEBINS> adc);
   CompressedDigit(const int det, const int rob, const int mcm, const int channel); // add adc data in a seperate step
 
   // Copy
@@ -44,19 +42,43 @@ class CompressedDigit
   // Assignment
   CompressedDigit& operator=(const CompressedDigit&) = default;
   // Modifiers
-  void setChannel(int channel) { mHeader &= ~(0x003f); mHeader |= (channel)&0x003f; }
-  void setMCM(int mcm) { mHeader &= ~(0x3c0); mHeader |= (mcm)&0x3c0; }
-  void setROB(int rob) { mHeader &= ~(0x1c00); mHeader |= (rob)&0x1c00; }
-  void setDetector(int det) { mHeader &= ~(0x7fe000); mHeader |= (det<<12)&0x7fe000; }
-  void setADC(std::array<uint16_t,constants::TIMEBINS> const& adcs) { int adcindex=0; for(auto adc : adcs){ int rem=adcindex%3; mADC[adcindex/3] &= ~((0x3ff)<<(rem*10)); mADC[adcindex/3] |= (adcs[adcindex++] << (rem*10)); }}
+  void setChannel(int channel)
+  {
+    mHeader &= ~(0x003f);
+    mHeader |= (channel)&0x003f;
+  }
+  void setMCM(int mcm)
+  {
+    mHeader &= ~(0x3c0);
+    mHeader |= (mcm)&0x3c0;
+  }
+  void setROB(int rob)
+  {
+    mHeader &= ~(0x1c00);
+    mHeader |= (rob)&0x1c00;
+  }
+  void setDetector(int det)
+  {
+    mHeader &= ~(0x7fe000);
+    mHeader |= (det << 12) & 0x7fe000;
+  }
+  void setADC(std::array<uint16_t, constants::TIMEBINS> const& adcs)
+  {
+    int adcindex = 0;
+    for (auto adc : adcs) {
+      int rem = adcindex % 3;
+      mADC[adcindex / 3] &= ~((0x3ff) << (rem * 10));
+      mADC[adcindex / 3] |= (adcs[adcindex++] << (rem * 10));
+    }
+  }
   // Get methods
-  int getChannel() const { return mHeader&0x3f ; }
-  int getMCM() const { return (mHeader&0x3c0) >> 6; }
-  int getROB() const { return (mHeader&0x1c00)>>10; }
-  int getDetector() const { return (mHeader&0x7fe000) >> 12; }
+  int getChannel() const { return mHeader & 0x3f; }
+  int getMCM() const { return (mHeader & 0x3c0) >> 6; }
+  int getROB() const { return (mHeader & 0x1c00) >> 10; }
+  int getDetector() const { return (mHeader & 0x7fe000) >> 12; }
   bool isSharedCompressedDigit() const;
 
-  uint16_t operator[] (const int index) {return mADC[index/3] >> ((index%3)*10);}
+  uint16_t operator[](const int index) { return mADC[index / 3] >> ((index % 3) * 10); }
 
  private:
   uint32_t mHeader;
@@ -64,7 +86,7 @@ class CompressedDigit
   //             1098 7654 3210 9876 5432 1098 7654 3210
   // uint32_t:   0000 0000 0DDD DDDD DDDR RRMM MMCC CCCC
   // C= channel[5 bits 0-21], M=MCM [4bits 0-15], R=ROB[3bits 0-7], D=Detector[10 bits 0-540]
-  std::array<uint32_t,10> mADC; // ADC vector (30 time-bins) packed into 10 32bit integers.
+  std::array<uint32_t, 10> mADC; // ADC vector (30 time-bins) packed into 10 32bit integers.
   ClassDefNV(CompressedDigit, 1);
 };
 
