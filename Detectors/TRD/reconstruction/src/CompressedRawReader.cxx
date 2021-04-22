@@ -113,16 +113,18 @@ bool CompressedRawReader::processBlock()
   if (mVerbose) {
     LOG(info) << "--- END PROCESS HalfCRU with state: " << mState;
   }
-  // the  essentially inverse function of CruCompressorTask::buildOutput
+  //this is essentially the inverse function of CruCompressorTask::buildOutput
   //tracklet headers.
   CompressedRawHeader header;
   memcpy((char*)&header, &mDataBuffer, sizeof(CompressedRawHeader));
-  mDataBuffer += sizeof(CompressedRawHeader);
+  mDataPointer += sizeof(CompressedRawHeader); //bytes
   mDataReadIn += sizeof(CompressedRawHeader);
   //tracklets
   int numberoftracklets = header.size;
   o2::InteractionRecord ir(header.bc, header.orbit);
-  gsl::span((Tracklet64*)mDataBuffer, numberoftracklets);
+  Tracklet64 *trackletptr=(Tracklet64*)mDataPointer;
+  std::copy(trackletptr,trackletptr+numberoftracklets, std::back_inserter(mEventTracklets));
+  mDataPointer += numberoftracklets * sizeof(Tracklet64);  //bytes
   mDataReadIn += numberoftracklets * sizeof(Tracklet64);
 
   //digits headers.
@@ -130,16 +132,41 @@ bool CompressedRawReader::processBlock()
   memcpy((char*)&tracklettrailer, &mDataBuffer, sizeof(CompressedRawTrackletDigitSeperator));
   mDataBuffer += sizeof(CompressedRawTrackletDigitSeperator);
   mDataReadIn += sizeof(CompressedRawTrackletDigitSeperator);
+
   //digits
   int numberofdigits = tracklettrailer.digitcount;
+  if(mHeaderVerbose || mVerbose){ //sanity check
+      bool badheader=false;
+      //check compressedrawtrackletdigitseperator for the pre and postfix 0xe's
+      if((tracklettrailer.pad1 & 0xffffff) == 0xeeeeee){
+        badheader=true;
+      }
+      if((tracklettrailer.pad2 & 0xffffff) == 0xeeeeee){
+        badheader=true;
+      }
+      if(badheader){
+          LOG(info) << "Bad compressed raw header seperator digitsize :" << tracklettrailer.digitcount <<" padding1 : " << std::hex << tracklettrailer.pad1 <<" padding2:" << std::hex << tracklettrailer.pad2;
+      }
+      if(tracklettrailer.digitcount > 1000){ // TODO probably a better value, but this isfine for now, its for a single half cru count of digits
+          LOG(info) << "Digit count seems unusually high : " << tracklettrailer.digitcount;
+      }
+  }
+  
+  Digit *digitptr=(Digit*)mDataPointer;
+  std::copy(digitptr,digitptr+numberofdigits, std::back_inserter(mEventDigits));
+
   for (int digitcounter = 0; digitcounter < numberofdigits; ++digitcounter) {
     ArrayADC timebins;
+    //TODO This already pre supposes o2::trd::constants::TIMEBINS is 30 from other places, figure something out.
     for (int adc = 0; adc < o2::trd::constants::TIMEBINS; adc++) {
       timebins[adc] = mCompressedEventDigits[digitcounter][adc];
     }
     mEventDigits.emplace_back(mCompressedEventDigits[digitcounter].getDetector(), mCompressedEventDigits[digitcounter].getROB(),
                               mCompressedEventDigits[digitcounter].getMCM(), mCompressedEventDigits[digitcounter].getChannel(), timebins);
   }
+  // now we *should* have a CompressedRawDigitEndMarker or more commonly known as a lot of 0xe
+  // either 1 or more depending on padding requirements.
+  
   // now send back the digits, tracklets and trigger records.
   return true;
 }
