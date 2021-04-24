@@ -15,6 +15,8 @@
 #include "DataFormatsTRD/RawData.h"
 #include "DataFormatsTRD/Tracklet64.h"
 #include "DataFormatsTRD/CompressedHeader.h"
+#include "DataFormatsTRD/CompressedDigit.h"
+#include "DataFormatsTRD/Constants.h"
 #include "DetectorsRaw/RDHUtils.h"
 //#include "Headers/RAWDataHeader.h"
 #include "Headers/RDHAny.h"
@@ -122,7 +124,7 @@ bool CompressedRawReader::processBlock()
   //tracklets
   int numberoftracklets = header.size;
   o2::InteractionRecord ir(header.bc, header.orbit);
-  Tracklet64 *trackletptr=(Tracklet64*)mDataPointer;
+  Tracklet64 *trackletptr=(Tracklet64*)mDataPointer; //payload is supposed to be a block of tracklet64 objects.
   std::copy(trackletptr,trackletptr+numberoftracklets, std::back_inserter(mEventTracklets));
   mDataPointer += numberoftracklets * sizeof(Tracklet64);  //bytes
   mDataReadIn += numberoftracklets * sizeof(Tracklet64);
@@ -152,9 +154,10 @@ bool CompressedRawReader::processBlock()
       }
   }
   
-  Digit *digitptr=(Digit*)mDataPointer;
+  CompressedDigit *digitptr=(CompressedDigit*)mDataPointer;
   std::copy(digitptr,digitptr+numberofdigits, std::back_inserter(mEventDigits));
-
+  mDataPointer+=numberofdigits+sizeof(CompressedDigit);
+  mDataReadIn +=numberofdigits+sizeof(CompressedDigit);
   for (int digitcounter = 0; digitcounter < numberofdigits; ++digitcounter) {
     ArrayADC timebins;
     //TODO This already pre supposes o2::trd::constants::TIMEBINS is 30 from other places, figure something out.
@@ -165,26 +168,43 @@ bool CompressedRawReader::processBlock()
                               mCompressedEventDigits[digitcounter].getMCM(), mCompressedEventDigits[digitcounter].getChannel(), timebins);
   }
   // now we *should* have a CompressedRawDigitEndMarker or more commonly known as a lot of 0xe
+  if((uint32_t)*mDataPointer!=0xeeeeeeee){
+      LOG(warn) << std::hex << *mDataPointer << "  We should be seeing CompressedRawDigitEndMarker which is the same as a o2::trd::constants::CRUPADDING32" ;
+  }
+  mDataPointer+=4;
+  mDataReadIn+=4;
+  if(mDataReadIn%8!=0){
+    // we have an extra padding word to make it to a full 64bit data buffer.
+    if((uint32_t)*mDataPointer!=0xeeeeeeee){
+      LOG(warn) << std::hex << *mDataPointer << "  We should be seeing CompressedRawDigitEndMarker which is the same as a o2::trd::constants::CRUPADDING32" ;
+    }
+  mDataPointer+=4;
+  mDataReadIn+=4;
+  }
+
   // either 1 or more depending on padding requirements.
-  
-  // now send back the digits, tracklets and trigger records.
+  if(mVerbose){
+      LOG(info) << "Tracklets in block : " << numberoftracklets << " vector has size:" << mEventTracklets.size();
+      LOG(info) << "Digits in block : " << numberofdigits << " vector has size:" << mEventDigits.size();
+
+  }
   return true;
 }
 
 void CompressedRawReader::resetCounters()
 {
-  mEventCounter = 0;
-  mFatalCounter = 0;
-  mErrorCounter = 0;
+    mEventCounter = 0;
+    mFatalCounter = 0;
+    mErrorCounter = 0;
 }
 
 void CompressedRawReader::checkSummary()
 {
-  char chname[2] = {'a', 'b'};
+    char chname[2] = {'a', 'b'};
 
-  LOG(info) << "--- SUMMARY COUNTERS: " << mEventCounter << " events "
-            << " | " << mFatalCounter << " decode fatals "
-            << " | " << mErrorCounter << " decode errors ";
+    LOG(info) << "--- SUMMARY COUNTERS: " << mEventCounter << " events "
+        << " | " << mFatalCounter << " decode fatals "
+        << " | " << mErrorCounter << " decode errors ";
 }
 
 } // namespace o2::trd
