@@ -155,9 +155,10 @@ bool CompressedRawReader::processBlock()
   }
   
   CompressedDigit *digitptr=(CompressedDigit*)mDataPointer;
-  std::copy(digitptr,digitptr+numberofdigits, std::back_inserter(mEventDigits));
+  std::copy(digitptr,digitptr+numberofdigits, std::back_inserter(mCompressedEventDigits));
   mDataPointer+=numberofdigits+sizeof(CompressedDigit);
   mDataReadIn +=numberofdigits+sizeof(CompressedDigit);
+  //convert compresed digits to proper digits TODO put this in a copy operator of Compressed Digit class.
   for (int digitcounter = 0; digitcounter < numberofdigits; ++digitcounter) {
     ArrayADC timebins;
     //TODO This already pre supposes o2::trd::constants::TIMEBINS is 30 from other places, figure something out.
@@ -186,7 +187,6 @@ bool CompressedRawReader::processBlock()
   if(mVerbose){
       LOG(info) << "Tracklets in block : " << numberoftracklets << " vector has size:" << mEventTracklets.size();
       LOG(info) << "Digits in block : " << numberofdigits << " vector has size:" << mEventDigits.size();
-
   }
   return true;
 }

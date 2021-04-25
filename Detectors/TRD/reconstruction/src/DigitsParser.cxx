@@ -25,10 +25,7 @@
 #include <array>
 #include <iterator>
 
-namespace o2
-{
-namespace trd
-{
+namespace o2::trd {
 
 inline void DigitsParser::swapByteOrder(unsigned int& word)
 {
@@ -249,5 +246,4 @@ int DigitsParser::Parse(bool verbose)
   return mDataWordsParsed;
 }
 
-} // namespace trd
-} // namespace o2
+} // namespace o2::trd

@@ -30,7 +30,9 @@
 #include "TRDReconstruction/DigitsParser.h"
 #include "TRDReconstruction/TrackletsParser.h"
 #include "DataFormatsTRD/Constants.h"
+#include "TRDBase/Digit.h"
 #include "CommonDataFormat/InteractionRecord.h"
+
 
 //##include "DataFormatsTRD/CompressedDigit.h"
 
@@ -80,7 +82,8 @@ class CruRawReader
   double mIntegratedTime = 0.;
 
   std::vector<Tracklet64>& getTracklets() { return mEventTracklets; };
-  std::vector<CompressedDigit>& getDigits() { return mEventDigits; };
+  std::vector<Digit>& getDigits() { return mEventDigits; };
+  std::vector<CompressedDigit>& getCompressedDigits() { return mEventCompressedDigits; };
 
  protected:
   bool processHBFs(int datasizealreadyread = 0, bool verbose = false);
@@ -160,7 +163,8 @@ class CruRawReader
 
   std::vector<Tracklet64> mEventTracklets; // when this runs properly it will only 6 for the flp its runnung on.
   std::vector<o2::trd::TriggerRecord> mEventStartPositions;
-  std::vector<CompressedDigit> mEventDigits;
+  std::vector<CompressedDigit> mEventCompressedDigits;
+  std::vector<Digit> mEventDigits;
   std::vector<o2::trd::TriggerRecord> mDigitStartPositions;
   bool mReturnBlob{0};       // whether to return blobs or vectors;
   struct TRDDataCounters_t { //thisis on a per event basis

@@ -229,7 +229,7 @@ int CruRawReader::processHalfCRU()
   //extract the vectors and copy them to tracklets and digits here, building the indexing(triggerrecords)
   //TODO version 2 remove the tracklet and digit class and write directly the binary format.
   mEventTracklets.insert(std::end(mEventTracklets), std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
-  mEventDigits.insert(std::end(mEventDigits), std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
+  mCompressedEventDigits.insert(std::end(mEventDigits), std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
   if (mVerbose) {
     LOG(info) << "Event digits after eventi # : " << mEventDigits.size() << " having added : " << mDigitsParser.getDigits().size();
   }
