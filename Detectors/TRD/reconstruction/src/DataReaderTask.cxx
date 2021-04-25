@@ -44,8 +44,8 @@ void DataReaderTask::sendData(ProcessingContext& pc)
   if (mVerbose) {
     LOG(info) << "Sending data onwards with " << mDigits.size() << " Digits and " << mTracklets.size() << " Tracklets";
   }
-  pc.outputs().snapshot(Output{o2::header::gDataOriginTRD, "DIGITS", 0, Lifetime::Timeframe}, mDigits);
-  pc.outputs().snapshot(Output{o2::header::gDataOriginTRD, "TRACKLETS", 0, Lifetime::Timeframe}, mTracklets);
+  pc.outputs().snapshot(Output{o2::header::gDataOriginTRD, "DIGITS", 0, Lifetime::Timeframe}, *mDigits);
+  pc.outputs().snapshot(Output{o2::header::gDataOriginTRD, "TRACKLETS", 0, Lifetime::Timeframe}, *mTracklets);
   pc.outputs().snapshot(Output{o2::header::gDataOriginTRD, "TRIGGERRECORD", 0, Lifetime::Timeframe}, mTriggers);
   //    pc.outputs().snapshot(Output{o2::header::gDataOriginTRD,"STATS",0,Lifetime::Timerframe},mStats);
 }
@@ -79,11 +79,17 @@ void DataReaderTask::run(ProcessingContext& pc)
         mReader.setDataBuffer(payloadIn);
         mReader.setDataBufferSize(payloadInSize);
         mReader.run();
+        mTracklets=mReader.getTracklets();
+        mDigits=mReader.getDigits();
+        mTriggers = mReader.getIR();
         //get the payload of trigger and digits out.
       } else { // we have compressed data coming in.
         mCompressedReader.setDataBuffer(payloadIn);
         mCompressedReader.setDataBufferSize(payloadInSize);
         mCompressedReader.run();
+        mTracklets=mCompressedReader.getTracklets();
+        mDigits=mCompressedReader.getDigits();
+        mTriggers = mReader.getIR();
         //get the payload of trigger and digits out.
       }
       /* output */

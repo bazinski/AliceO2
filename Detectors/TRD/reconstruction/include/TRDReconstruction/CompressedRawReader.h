@@ -70,13 +70,13 @@ class CompressedRawReader
   void setVerbosity(bool v) { mVerbose = v; };
   void setDataVerbosity(bool v) { mDataVerbose = v; };
   void setHeaderVerbosity(bool v) { mHeaderVerbose = v; };
+  std::vector<Tracklet64>& getTracklets();
+  std::vector<TriggerRecord>& getTriggerRecords();
 
  protected:
   uint32_t processHBFs();
   bool buildCRUPayLoad();
   bool processBlock();
-  std::vector<Tracklet64>& getTracklets();
-  std::vector<TriggerRecord>& getTriggerRecords();
 
   /** decoder private functions and data members **/
 
