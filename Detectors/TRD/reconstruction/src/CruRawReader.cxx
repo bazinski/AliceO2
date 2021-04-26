@@ -233,10 +233,10 @@ int CruRawReader::processHalfCRU()
   if (mVerbose) {
     LOG(info) << "Event digits after eventi # : " << mEventDigits.size() << " having added : " << mDigitsParser.getDigits().size();
   }
-  auto lasttrigger=mEventTriggers.size()-1;
-  int lastdigit=mEventTriggers[lasttrigger].getFirstDigit() +mEventTriggers[lasttrigger].getNumberOfDigits();
-  int lasttracklet=mEventTriggers[lasttrigger].getFirstTracklet() +mEventTriggers[lasttrigger].getNumberOfTracklets();
-  mEventTriggers.emplace_back(mIR, lastdigit,mDigitsParser.getDigits().size(),lasttracklet,mTrackletsParser.getTracklets().size());
+  auto lasttrigger = mEventTriggers.size() - 1;
+  int lastdigit = mEventTriggers[lasttrigger].getFirstDigit() + mEventTriggers[lasttrigger].getNumberOfDigits();
+  int lasttracklet = mEventTriggers[lasttrigger].getFirstTracklet() + mEventTriggers[lasttrigger].getNumberOfTracklets();
+  mEventTriggers.emplace_back(mIR, lastdigit, mDigitsParser.getDigits().size(), lasttracklet, mTrackletsParser.getTracklets().size());
   //if we get here all is ok.
   return 1;
 }

@@ -70,9 +70,9 @@ class CompressedRawReader
   void setVerbosity(bool v) { mVerbose = v; };
   void setDataVerbosity(bool v) { mDataVerbose = v; };
   void setHeaderVerbosity(bool v) { mHeaderVerbose = v; };
-  std::vector<Tracklet64>& getTracklets(){return mEventTracklets;};
-  std::vector<Digit>& getDigits(){return mEventDigits;};
-  std::vector<CompressedDigit>& getCompressedDigits(){return mCompressedEventDigits;};
+  std::vector<Tracklet64>& getTracklets() { return mEventTracklets; };
+  std::vector<Digit>& getDigits() { return mEventDigits; };
+  std::vector<CompressedDigit>& getCompressedDigits() { return mCompressedEventDigits; };
   std::vector<o2::trd::TriggerRecord> getIR() { return mEventTriggers; }
 
  protected:

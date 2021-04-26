@@ -33,7 +33,6 @@
 #include "TRDBase/Digit.h"
 #include "CommonDataFormat/InteractionRecord.h"
 
-
 //##include "DataFormatsTRD/CompressedDigit.h"
 
 namespace o2::trd

@@ -125,9 +125,9 @@ bool CompressedRawReader::processBlock()
   //tracklets
   int numberoftracklets = header.size;
   o2::InteractionRecord ir(header.bc, header.orbit);
-  Tracklet64 *trackletptr=(Tracklet64*)mDataPointer; //payload is supposed to be a block of tracklet64 objects.
-  std::copy(trackletptr,trackletptr+numberoftracklets, std::back_inserter(mEventTracklets));
-  mDataPointer += numberoftracklets * sizeof(Tracklet64);  //bytes
+  Tracklet64* trackletptr = (Tracklet64*)mDataPointer; //payload is supposed to be a block of tracklet64 objects.
+  std::copy(trackletptr, trackletptr + numberoftracklets, std::back_inserter(mEventTracklets));
+  mDataPointer += numberoftracklets * sizeof(Tracklet64); //bytes
   mDataReadIn += numberoftracklets * sizeof(Tracklet64);
 
   //digits headers.
@@ -138,27 +138,27 @@ bool CompressedRawReader::processBlock()
 
   //digits
   int numberofdigits = tracklettrailer.digitcount;
-  if(mHeaderVerbose || mVerbose){ //sanity check
-      bool badheader=false;
-      //check compressedrawtrackletdigitseperator for the pre and postfix 0xe's
-      if((tracklettrailer.pad1 & 0xffffff) == 0xeeeeee){
-        badheader=true;
-      }
-      if((tracklettrailer.pad2 & 0xffffff) == 0xeeeeee){
-        badheader=true;
-      }
-      if(badheader){
-          LOG(info) << "Bad compressed raw header seperator digitsize :" << tracklettrailer.digitcount <<" padding1 : " << std::hex << tracklettrailer.pad1 <<" padding2:" << std::hex << tracklettrailer.pad2;
-      }
-      if(tracklettrailer.digitcount > 1000){ // TODO probably a better value, but this isfine for now, its for a single half cru count of digits
-          LOG(info) << "Digit count seems unusually high : " << tracklettrailer.digitcount;
-      }
+  if (mHeaderVerbose || mVerbose) { //sanity check
+    bool badheader = false;
+    //check compressedrawtrackletdigitseperator for the pre and postfix 0xe's
+    if ((tracklettrailer.pad1 & 0xffffff) == 0xeeeeee) {
+      badheader = true;
+    }
+    if ((tracklettrailer.pad2 & 0xffffff) == 0xeeeeee) {
+      badheader = true;
+    }
+    if (badheader) {
+      LOG(info) << "Bad compressed raw header seperator digitsize :" << tracklettrailer.digitcount << " padding1 : " << std::hex << tracklettrailer.pad1 << " padding2:" << std::hex << tracklettrailer.pad2;
+    }
+    if (tracklettrailer.digitcount > 1000) { // TODO probably a better value, but this isfine for now, its for a single half cru count of digits
+      LOG(info) << "Digit count seems unusually high : " << tracklettrailer.digitcount;
+    }
   }
-  
-  CompressedDigit *digitptr=(CompressedDigit*)mDataPointer;
-  std::copy(digitptr,digitptr+numberofdigits, std::back_inserter(mCompressedEventDigits));
-  mDataPointer+=numberofdigits+sizeof(CompressedDigit);
-  mDataReadIn +=numberofdigits+sizeof(CompressedDigit);
+
+  CompressedDigit* digitptr = (CompressedDigit*)mDataPointer;
+  std::copy(digitptr, digitptr + numberofdigits, std::back_inserter(mCompressedEventDigits));
+  mDataPointer += numberofdigits + sizeof(CompressedDigit);
+  mDataReadIn += numberofdigits + sizeof(CompressedDigit);
   //convert compresed digits to proper digits TODO put this in a copy operator of Compressed Digit class.
   for (int digitcounter = 0; digitcounter < numberofdigits; ++digitcounter) {
     ArrayADC timebins;
@@ -170,46 +170,46 @@ bool CompressedRawReader::processBlock()
                               mCompressedEventDigits[digitcounter].getMCM(), mCompressedEventDigits[digitcounter].getChannel(), timebins);
   }
   // now we *should* have a CompressedRawDigitEndMarker or more commonly known as a lot of 0xe
-  if((uint32_t)*mDataPointer!=0xeeeeeeee){
-      LOG(warn) << std::hex << *mDataPointer << "  We should be seeing CompressedRawDigitEndMarker which is the same as a o2::trd::constants::CRUPADDING32" ;
+  if ((uint32_t)*mDataPointer != 0xeeeeeeee) {
+    LOG(warn) << std::hex << *mDataPointer << "  We should be seeing CompressedRawDigitEndMarker which is the same as a o2::trd::constants::CRUPADDING32";
   }
-  mDataPointer+=4;
-  mDataReadIn+=4;
-  if(mDataReadIn%8!=0){
+  mDataPointer += 4;
+  mDataReadIn += 4;
+  if (mDataReadIn % 8 != 0) {
     // we have an extra padding word to make it to a full 64bit data buffer.
-    if((uint32_t)*mDataPointer!=0xeeeeeeee){
-      LOG(warn) << std::hex << *mDataPointer << "  We should be seeing CompressedRawDigitEndMarker which is the same as a o2::trd::constants::CRUPADDING32" ;
+    if ((uint32_t)*mDataPointer != 0xeeeeeeee) {
+      LOG(warn) << std::hex << *mDataPointer << "  We should be seeing CompressedRawDigitEndMarker which is the same as a o2::trd::constants::CRUPADDING32";
     }
-  mDataPointer+=4;
-  mDataReadIn+=4;
+    mDataPointer += 4;
+    mDataReadIn += 4;
   }
-  auto lasttrigger=mEventTriggers.size()-1;
-  int lastdigit=mEventTriggers[lasttrigger].getFirstDigit() +mEventTriggers[lasttrigger].getNumberOfDigits();
-  int lasttracklet=mEventTriggers[lasttrigger].getFirstTracklet() +mEventTriggers[lasttrigger].getNumberOfTracklets();
-  mEventTriggers.emplace_back(mIR, lastdigit,numberofdigits,lasttracklet,numberoftracklets);
+  auto lasttrigger = mEventTriggers.size() - 1;
+  int lastdigit = mEventTriggers[lasttrigger].getFirstDigit() + mEventTriggers[lasttrigger].getNumberOfDigits();
+  int lasttracklet = mEventTriggers[lasttrigger].getFirstTracklet() + mEventTriggers[lasttrigger].getNumberOfTracklets();
+  mEventTriggers.emplace_back(mIR, lastdigit, numberofdigits, lasttracklet, numberoftracklets);
 
   // either 1 or more depending on padding requirements.
-  if(mVerbose){
-      LOG(info) << "Tracklets in block : " << numberoftracklets << " vector has size:" << mEventTracklets.size();
-      LOG(info) << "Digits in block : " << numberofdigits << " vector has size:" << mEventDigits.size();
+  if (mVerbose) {
+    LOG(info) << "Tracklets in block : " << numberoftracklets << " vector has size:" << mEventTracklets.size();
+    LOG(info) << "Digits in block : " << numberofdigits << " vector has size:" << mEventDigits.size();
   }
   return true;
 }
 
 void CompressedRawReader::resetCounters()
 {
-    mEventCounter = 0;
-    mFatalCounter = 0;
-    mErrorCounter = 0;
+  mEventCounter = 0;
+  mFatalCounter = 0;
+  mErrorCounter = 0;
 }
 
 void CompressedRawReader::checkSummary()
 {
-    char chname[2] = {'a', 'b'};
+  char chname[2] = {'a', 'b'};
 
-    LOG(info) << "--- SUMMARY COUNTERS: " << mEventCounter << " events "
-        << " | " << mFatalCounter << " decode fatals "
-        << " | " << mErrorCounter << " decode errors ";
+  LOG(info) << "--- SUMMARY COUNTERS: " << mEventCounter << " events "
+            << " | " << mFatalCounter << " decode fatals "
+            << " | " << mErrorCounter << " decode errors ";
 }
 
 } // namespace o2::trd

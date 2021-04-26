@@ -79,16 +79,16 @@ void DataReaderTask::run(ProcessingContext& pc)
         mReader.setDataBuffer(payloadIn);
         mReader.setDataBufferSize(payloadInSize);
         mReader.run();
-        mTracklets=mReader.getTracklets();
-        mCompressedDigits=mReader.getCompressedDigits();
+        mTracklets = mReader.getTracklets();
+        mCompressedDigits = mReader.getCompressedDigits();
         mTriggers = mReader.getIR();
         //get the payload of trigger and digits out.
       } else { // we have compressed data coming in.
         mCompressedReader.setDataBuffer(payloadIn);
         mCompressedReader.setDataBufferSize(payloadInSize);
         mCompressedReader.run();
-        mTracklets=mCompressedReader.getTracklets();
-        mDigits=mCompressedReader.getDigits();
+        mTracklets = mCompressedReader.getTracklets();
+        mDigits = mCompressedReader.getDigits();
         mTriggers = mCompressedReader.getIR();
         //get the payload of trigger and digits out.
       }
