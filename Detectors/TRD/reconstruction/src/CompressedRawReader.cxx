@@ -61,6 +61,7 @@ uint32_t CompressedRawReader::processHBFs()
     //   we will "simply" parse on the fly with a basic state machine.
     mDataPointer = (uint32_t*)((char*)rdh + headerSize);
     mDataEndPointer = (const uint32_t*)((char*)rdh + offsetToNext);
+    mIR = o2::raw::RDHUtils::getTriggerIR(rdh);
     while ((void*)mDataPointer < (void*)mDataEndPointer) { // loop to handle the case where a halfcru ends/begins mid rdh data block
       mEventCounter++;
       if (processBlock()) { // at this point the entire payload is in mSaveBuffer, TODO parse this incrementally, less mem foot print.
@@ -182,6 +183,10 @@ bool CompressedRawReader::processBlock()
   mDataPointer+=4;
   mDataReadIn+=4;
   }
+  auto lasttrigger=mEventTriggers.size()-1;
+  int lastdigit=mEventTriggers[lasttrigger].getFirstDigit() +mEventTriggers[lasttrigger].getNumberOfDigits();
+  int lasttracklet=mEventTriggers[lasttrigger].getFirstTracklet() +mEventTriggers[lasttrigger].getNumberOfTracklets();
+  mEventTriggers.emplace_back(mIR, lastdigit,numberofdigits,lasttracklet,numberoftracklets);
 
   // either 1 or more depending on padding requirements.
   if(mVerbose){

@@ -76,7 +76,7 @@ class CruRawReader
   void setHeaderVerbose(bool verbose) { mHeaderVerbose = verbose; }
   inline uint32_t getDecoderByteCounter() const { return reinterpret_cast<const char*>(mDataPointer) - mDataBuffer; };
   bool buildBlobOutput(char* outputbuffer); // should probably go into a writer object.
-  o2::InteractionRecord getIR() { return mIR; }
+  std::vector<o2::trd::TriggerRecord> getIR() { return mEventTriggers; }
   // benchmarks
   double mIntegratedBytes = 0.;
   double mIntegratedTime = 0.;
@@ -162,10 +162,9 @@ class CruRawReader
   uint32_t mErrorCounter;
 
   std::vector<Tracklet64> mEventTracklets; // when this runs properly it will only 6 for the flp its runnung on.
-  std::vector<o2::trd::TriggerRecord> mEventStartPositions;
+  std::vector<o2::trd::TriggerRecord> mEventTriggers;
   std::vector<CompressedDigit> mEventCompressedDigits;
   std::vector<Digit> mEventDigits;
-  std::vector<o2::trd::TriggerRecord> mDigitStartPositions;
   bool mReturnBlob{0};       // whether to return blobs or vectors;
   struct TRDDataCounters_t { //thisis on a per event basis
     //TODO this should go into a dpl message for catching by qc ?? I think.

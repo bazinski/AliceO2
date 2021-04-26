@@ -229,10 +229,14 @@ int CruRawReader::processHalfCRU()
   //extract the vectors and copy them to tracklets and digits here, building the indexing(triggerrecords)
   //TODO version 2 remove the tracklet and digit class and write directly the binary format.
   mEventTracklets.insert(std::end(mEventTracklets), std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
-  mCompressedEventDigits.insert(std::end(mEventDigits), std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
+  mEventCompressedDigits.insert(std::end(mEventCompressedDigits), std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
   if (mVerbose) {
     LOG(info) << "Event digits after eventi # : " << mEventDigits.size() << " having added : " << mDigitsParser.getDigits().size();
   }
+  auto lasttrigger=mEventTriggers.size()-1;
+  int lastdigit=mEventTriggers[lasttrigger].getFirstDigit() +mEventTriggers[lasttrigger].getNumberOfDigits();
+  int lasttracklet=mEventTriggers[lasttrigger].getFirstTracklet() +mEventTriggers[lasttrigger].getNumberOfTracklets();
+  mEventTriggers.emplace_back(mIR, lastdigit,mDigitsParser.getDigits().size(),lasttracklet,mTrackletsParser.getTracklets().size());
   //if we get here all is ok.
   return 1;
 }
@@ -286,7 +290,7 @@ bool CruRawReader::run()
   uint32_t* bufferptr;
   bufferptr = (uint32_t*)mDataBuffer;
   do {
-    //    LOG(info) << "do while loop count " << dowhilecount++;
+    //      LOG(info) << "do while loop count " << dowhilecount++;
     //      LOG(info) << " data readin : " << mDataReadIn;
     //      LOG(info) << " mDataBuffer :" << (void*)mDataBuffer << " and offset to start on is :"<< totaldataread;
     //int datareadfromhbf = processHBFs(totaldataread, mVerbose);

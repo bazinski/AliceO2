@@ -89,7 +89,7 @@ void DataReaderTask::run(ProcessingContext& pc)
         mCompressedReader.run();
         mTracklets=mCompressedReader.getTracklets();
         mDigits=mCompressedReader.getDigits();
-        mTriggers = mReader.getIR();
+        mTriggers = mCompressedReader.getIR();
         //get the payload of trigger and digits out.
       }
       /* output */

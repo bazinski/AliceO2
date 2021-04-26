@@ -73,6 +73,7 @@ class CompressedRawReader
   std::vector<Tracklet64>& getTracklets(){return mEventTracklets;};
   std::vector<Digit>& getDigits(){return mEventDigits;};
   std::vector<CompressedDigit>& getCompressedDigits(){return mCompressedEventDigits;};
+  std::vector<o2::trd::TriggerRecord> getIR() { return mEventTriggers; }
 
  protected:
   uint32_t processHBFs();
@@ -125,10 +126,10 @@ class CompressedRawReader
   uint32_t mErrorCounter;
 
   std::vector<Tracklet64> mEventTracklets; // when this runs properly it will only 6 for the flp its runnung on.
-  std::vector<o2::trd::TriggerRecord> mEventStartPositions;
+  std::vector<o2::trd::TriggerRecord> mEventTriggers;
   std::vector<Digit> mEventDigits;
   std::vector<CompressedDigit> mCompressedEventDigits;
-
+  o2::InteractionRecord mIR;
   struct TRDDataCounters_t {
     std::array<uint32_t, 1080> LinkWordCounts;    //units of 256bits "cru word"
     std::array<uint32_t, 1080> LinkPadWordCounts; // units of 32 bits the data word size.

@@ -60,9 +60,9 @@ uint64_t CruCompressorTask::buildEventOutput()
   trackletheader->eventtime = 99;
   currentpos = 1;
   //write the
-  o2::InteractionRecord a = mReader.getIR();
-  trackletheader->bc = a.bc;
-  trackletheader->orbit = a.orbit;
+  std::vector<o2::trd::TriggerRecord> ir = mReader.getIR();
+  trackletheader->bc = ir[0].getBCData().bc;
+  trackletheader->orbit = ir[0].getBCData().orbit;
   trackletheader->padding = 0xeeee;
   trackletheader->size = mReader.getTracklets().size() * 8; // to get to bytes.
   for (auto tracklet : mReader.getTracklets()) {
