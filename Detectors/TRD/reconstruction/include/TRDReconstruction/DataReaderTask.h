@@ -34,7 +34,7 @@ namespace o2::trd
 class DataReaderTask : public Task
 {
  public:
-  DataReaderTask(bool compresseddata, bool byteswap, bool verbose, bool headerverbose, bool dataverbose): mCompressedData(compresseddata), mByteSwap(byteswap), mVerbose(verbose), mHeaderVerbose(headerverbose),mDataVerbose(dataverbose) {}
+  DataReaderTask(bool compresseddata, bool byteswap, bool verbose, bool headerverbose, bool dataverbose) : mCompressedData(compresseddata), mByteSwap(byteswap), mVerbose(verbose), mHeaderVerbose(headerverbose), mDataVerbose(dataverbose) {}
   ~DataReaderTask() override = default;
   void init(InitContext& ic) final;
   void sendData(ProcessingContext& pc);

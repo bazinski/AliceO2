@@ -22,31 +22,24 @@
 #include "Framework/Logger.h"
 #include "DetectorsRaw/RDHUtils.h"
 
-
-
 // add workflow options, note that customization needs to be declared before
 // including Framework/runDataProcessing
 void customize(std::vector<ConfigParamSpec>& workflowOptions)
 {
 
-
   std::vector<o2::framework::ConfigParamSpec> options{
-  {"trd-datareader-inputspec", VariantType::String, "RAWDATA", {"TRD raw data spec"}},
-  {"trd-datareader-output-desc", VariantType::String, "TRDTLT", {"Output specs description string"}},
-  {"trd-datareader-verbose", VariantType::Bool, false, {"Enable verbose epn data reading"}},
-  {"trd-datareader-headerverbose", VariantType::Bool, false, {"Enable verbose header info"}},
-  {"trd-datareader-dataverbose", VariantType::Bool, false, {"Enable verbose data info"}},
-  {"trd-datareader-compresseddata", VariantType::Bool, false, {"The incoming data is compressed or not"}},
-  {"trd-datareader-disablebyteswapdata", VariantType::Bool, false, {"byteswap the incoming data, raw data needs it and simulation does not."}}
-  };
+    {"trd-datareader-inputspec", VariantType::String, "RAWDATA", {"TRD raw data spec"}},
+    {"trd-datareader-output-desc", VariantType::String, "TRDTLT", {"Output specs description string"}},
+    {"trd-datareader-verbose", VariantType::Bool, false, {"Enable verbose epn data reading"}},
+    {"trd-datareader-headerverbose", VariantType::Bool, false, {"Enable verbose header info"}},
+    {"trd-datareader-dataverbose", VariantType::Bool, false, {"Enable verbose data info"}},
+    {"trd-datareader-compresseddata", VariantType::Bool, false, {"The incoming data is compressed or not"}},
+    {"trd-datareader-disablebyteswapdata", VariantType::Bool, false, {"byteswap the incoming data, raw data needs it and simulation does not."}}};
 
   o2::raw::HBFUtilsInitializer::addConfigOption(options);
 
   std::swap(workflowOptions, options);
 }
-
-
-
 
 #include "Framework/runDataProcessing.h" // the main driver
 
@@ -55,9 +48,9 @@ using namespace o2::framework;
 WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
 {
 
-//  auto config = cfgc.options().get<std::string>("trd-datareader-config");
-//
-//
+  //  auto config = cfgc.options().get<std::string>("trd-datareader-config");
+  //
+  //
   o2::conf::ConfigurableParam::updateFromString(cfgc.options().get<std::string>("configKeyValues"));
   o2::conf::ConfigurableParam::writeINI("o2trdrawreader-workflow_configuration.ini");
 
@@ -89,22 +82,21 @@ WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
      comma-separated strings. For instance
   */
 
-//  std::stringstream ssconfig(inputspec);
+  //  std::stringstream ssconfig(inputspec);
   std::string iconfig;
   std::string inputDescription;
   int idevice = 0;
-//  LOG(info) << "expected incoming data definition : " << inputspec;
+  //  LOG(info) << "expected incoming data definition : " << inputspec;
   // this is probably never going to be used but would to nice to know hence here.
   workflow.emplace_back(DataProcessorSpec{
     std::string("trd-datareader"), // left as a string cast incase we append stuff to the string
-    select(std::string("x:TRD/RAWDATA"/* + inputspec*/).c_str()),
+    select(std::string("x:TRD/RAWDATA" /* + inputspec*/).c_str()),
     outputs,
     algoSpec,
-    Options{}
-    });
+    Options{}});
 
-// configure dpl timer to inject correct firstTFOrbit: start from the 1st orbit of TF containing 1st sampled orbit
-   o2::raw::HBFUtilsInitializer hbfIni(cfgc, workflow);
+  // configure dpl timer to inject correct firstTFOrbit: start from the 1st orbit of TF containing 1st sampled orbit
+  o2::raw::HBFUtilsInitializer hbfIni(cfgc, workflow);
 
   return workflow;
 }

@@ -59,7 +59,13 @@ class CruRawReader
 
   void checkSummary();
   void resetCounters();
-  void configure(bool byteswap,bool verbose, bool headerverbose, bool dataverbose){mByteSwap=byteswap; mVerbose=verbose; mHeaderVerbose=headerverbose; mDataVerbose=dataverbose;}
+  void configure(bool byteswap, bool verbose, bool headerverbose, bool dataverbose)
+  {
+    mByteSwap = byteswap;
+    mVerbose = verbose;
+    mHeaderVerbose = headerverbose;
+    mDataVerbose = dataverbose;
+  }
   void setBlob(bool returnblob) { mReturnBlob = returnblob; }; //set class to produce blobs and not vectors. (compress vs pass through)`
   void setDataBuffer(const char* val)
   {

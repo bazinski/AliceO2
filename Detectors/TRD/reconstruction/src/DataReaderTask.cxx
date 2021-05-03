@@ -78,7 +78,7 @@ void DataReaderTask::run(ProcessingContext& pc)
         }
         mReader.setDataBuffer(payloadIn);
         mReader.setDataBufferSize(payloadInSize);
-        mReader.configure(mByteSwap,mVerbose,mHeaderVerbose,mDataVerbose);
+        mReader.configure(mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
         mReader.run();
         mTracklets = mReader.getTracklets();
         mCompressedDigits = mReader.getCompressedDigits();
@@ -87,7 +87,7 @@ void DataReaderTask::run(ProcessingContext& pc)
       } else { // we have compressed data coming in.
         mCompressedReader.setDataBuffer(payloadIn);
         mCompressedReader.setDataBufferSize(payloadInSize);
-        mCompressedReader.configure(mByteSwap,mVerbose,mHeaderVerbose,mDataVerbose);
+        mCompressedReader.configure(mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
         mCompressedReader.run();
         mTracklets = mCompressedReader.getTracklets();
         mDigits = mCompressedReader.getDigits();
