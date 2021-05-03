@@ -51,7 +51,7 @@ class TrackletsParser
     mHeaderVerbose = header;
     mDataVerbose = data;
   }
-  void setDisableByteSwap(bool swap){mDisableByteOrderFix=swap;}
+  void setDisableByteSwap(bool swap) { mDisableByteOrderFix = swap; }
 
   int getDataWordsParsed() { return mDataWordsParsed; }
   int getTrackletsFound() { return mTrackletsFound; }

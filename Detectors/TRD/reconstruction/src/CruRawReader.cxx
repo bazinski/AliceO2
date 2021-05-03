@@ -206,8 +206,8 @@ int CruRawReader::processHalfCRU()
       if (mVerbose) {
         LOG(info) << "parse tracklets ";
       }
-      bool cleardigits=false;
-      trackletwordsread = mTrackletsParser.Parse(&mCRUPayLoad, linkstart, linkend, currentdetector, cleardigits,mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose); // this will read up to the tracnklet end marker.
+      bool cleardigits = false;
+      trackletwordsread = mTrackletsParser.Parse(&mCRUPayLoad, linkstart, linkend, currentdetector, cleardigits, mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose); // this will read up to the tracnklet end marker.
       linkstart += trackletwordsread;
 
       digitwordsread = 0;
