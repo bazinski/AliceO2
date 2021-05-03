@@ -59,6 +59,13 @@ class CruRawReader
 
   void checkSummary();
   void resetCounters();
+  void configure(bool byteswap, bool verbose, bool headerverbose, bool dataverbose)
+  {
+    mByteSwap = byteswap;
+    mVerbose = verbose;
+    mHeaderVerbose = headerverbose;
+    mDataVerbose = dataverbose;
+  }
   void setBlob(bool returnblob) { mReturnBlob = returnblob; }; //set class to produce blobs and not vectors. (compress vs pass through)`
   void setDataBuffer(const char* val)
   {
@@ -102,6 +109,7 @@ class CruRawReader
   bool mVerbose{false};
   bool mHeaderVerbose{false};
   bool mDataVerbose{false};
+  bool mByteSwap{true};
   const char* mDataBuffer = nullptr;
   static const uint32_t mMaxCRUBufferSize = o2::trd::constants::CRUBUFFERMAX;
   std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX> mCRUPayLoad; //this holds a single cruhalfchamber buffer to pass to parsing.

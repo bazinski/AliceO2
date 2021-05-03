@@ -35,13 +35,14 @@ class TrackletsParser
   void setData(std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX>* data) { mData = data; }
   int Parse(); // presupposes you have set everything up already.
   int Parse(std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX>* data, std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX>::iterator start,
-            std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX>::iterator end, int detector, bool cleardigits = false, bool verbose = true, bool headerverbose = false, bool dataverbose = false) //, std::array<uint32_t, 15>& lengths) // change to calling per link.
+            std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX>::iterator end, int detector, bool cleardigits = false, bool disablebyteswap = false, bool verbose = true, bool headerverbose = false, bool dataverbose = false) //, std::array<uint32_t, 15>& lengths) // change to calling per link.
   {
     mStartParse = start;
     mEndParse = end;
     mDetector = detector;
     setData(data);
     setVerbose(verbose, headerverbose, dataverbose);
+    setDisableByteSwap(disablebyteswap);
     return Parse();
   };
   void setVerbose(bool verbose, bool header = false, bool data = false)
@@ -50,6 +51,7 @@ class TrackletsParser
     mHeaderVerbose = header;
     mDataVerbose = data;
   }
+  void setDisableByteSwap(bool swap) { mDisableByteOrderFix = swap; }
 
   int getDataWordsParsed() { return mDataWordsParsed; }
   int getTrackletsFound() { return mTrackletsFound; }
