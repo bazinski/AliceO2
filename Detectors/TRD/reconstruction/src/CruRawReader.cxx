@@ -202,17 +202,17 @@ int CruRawReader::processHalfCRU()
     // tracklets end with tracklet end marker(0x10001000 0x10001000), digits end with digit endmarker (0x0 0x0)
     if (linkstart != linkend) { // if link is not empty
       //        LOG(info) << "linkstart != linkend";
-      mTrackletsParser.setVerbose(mVerbose, mHeaderVerbose, mDataVerbose);
 
       if (mVerbose) {
         LOG(info) << "parse tracklets ";
       }
-
-      trackletwordsread = mTrackletsParser.Parse(&mCRUPayLoad, linkstart, linkend, currentdetector); // this will read up to the tracnklet end marker.
+      bool cleardigits=false;
+      trackletwordsread = mTrackletsParser.Parse(&mCRUPayLoad, linkstart, linkend, currentdetector, cleardigits,mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose); // this will read up to the tracnklet end marker.
       linkstart += trackletwordsread;
 
       digitwordsread = 0;
       mDigitsParser.setVerbose(mVerbose, mHeaderVerbose, mDataVerbose);
+      mDigitsParser.setDisableByteSwap(mByteSwap);
       if (mVerbose) {
         LOG(info) << "parse digits";
       }

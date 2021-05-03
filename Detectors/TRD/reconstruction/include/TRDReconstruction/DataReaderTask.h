@@ -34,7 +34,7 @@ namespace o2::trd
 class DataReaderTask : public Task
 {
  public:
-  DataReaderTask() = default;
+  DataReaderTask(bool compresseddata, bool byteswap, bool verbose, bool headerverbose, bool dataverbose): mCompressedData(compresseddata), mByteSwap(byteswap), mVerbose(verbose), mHeaderVerbose(headerverbose),mDataVerbose(dataverbose) {}
   ~DataReaderTask() override = default;
   void init(InitContext& ic) final;
   void sendData(ProcessingContext& pc);
@@ -56,6 +56,7 @@ class DataReaderTask : public Task
   bool mDataVerbose{false};    // verbose output of data unpacking
   bool mHeaderVerbose{false};  // verbose output of headers
   bool mCompressedData{false}; // are we dealing with the compressed data from the flp (send via option)
+  bool mByteSwap{true};        // whether we are to byteswap the incoming data, mc is not byteswapped, raw data is (too be changed in cru at some point)
 };
 
 } // namespace o2::trd

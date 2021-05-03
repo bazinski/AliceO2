@@ -70,6 +70,7 @@ class CompressedRawReader
   void setVerbosity(bool v) { mVerbose = v; };
   void setDataVerbosity(bool v) { mDataVerbose = v; };
   void setHeaderVerbosity(bool v) { mHeaderVerbose = v; };
+  void configure(bool byteswap,bool verbose, bool headerverbose, bool dataverbose){mByteSwap=byteswap; mVerbose=verbose; mHeaderVerbose=headerverbose; mDataVerbose=dataverbose;}
   std::vector<Tracklet64>& getTracklets() { return mEventTracklets; };
   std::vector<Digit>& getDigits() { return mEventDigits; };
   std::vector<CompressedDigit>& getCompressedDigits() { return mCompressedEventDigits; };
@@ -119,6 +120,7 @@ class CompressedRawReader
   bool mVerbose{false};
   bool mHeaderVerbose{false};
   bool mDataVerbose{false};
+  bool mByteSwap{true};
   int mState; // basic state machine for where we are in the parsing.
               // we parse rdh to rdh but data is cru to cru.
   uint32_t mEventCounter;

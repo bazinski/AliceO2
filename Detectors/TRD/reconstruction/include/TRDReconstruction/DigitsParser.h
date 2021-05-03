@@ -42,7 +42,7 @@ class DigitsParser
   //  void setLinkLengths(std::array<uint32_t, 15>& lengths) { mCurrentHalfCRULinkLengths = lengths; };
   int Parse(bool verbose = false); // presupposes you have set everything up already.
   int Parse(std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX>* data, std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX>::iterator start,
-            std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX>::iterator end, int detector, bool cleardigits = false, bool verbose = true, bool headerverbose = false, bool dataverbose = false) //, std::array<uint32_t, 15>& lengths) // change to calling per link.
+            std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX>::iterator end, int detector, bool cleardigits = false, bool disablebyteswap = false, bool verbose = true, bool headerverbose = false, bool dataverbose = false) //, std::array<uint32_t, 15>& lengths) // change to calling per link.
   {
     setData(data);
     //   setLinkLengths(lengths);
@@ -50,24 +50,28 @@ class DigitsParser
     mEndParse = end;
     mDetector = detector;
     setVerbose(verbose, headerverbose, dataverbose);
-    clearDigits();
+    if(cleardigits) {
+        clearDigits();
+    }
+    setDisableByteSwap(disablebyteswap);
     mReturnVectorPos = 0;
     return Parse();
   };
   enum DigitParserState { StateDigitHCHeader, // always the start of a half chamber.
-                          StateDigitMCMHeader,
-                          StateDigitMCMData,
-                          StatePadding,
-                          StateDigitEndMarker };
+      StateDigitMCMHeader,
+      StateDigitMCMData,
+      StatePadding,
+      StateDigitEndMarker };
 
   inline void swapByteOrder(unsigned int& word);
   bool getVerbose() { return mVerbose; }
   void setVerbose(bool value, bool header, bool data)
   {
-    mVerbose = value;
-    mHeaderVerbose = header;
-    mDataVerbose = data;
+      mVerbose = value;
+      mHeaderVerbose = header;
+      mDataVerbose = data;
   }
+  void setDisableByteSwap(bool disablebyteswap){mDisableByteOrderFix=disablebyteswap;}
   std::vector<CompressedDigit>& getDigits() { return mDigits; }
   void clearDigits() { mDigits.clear(); }
 
