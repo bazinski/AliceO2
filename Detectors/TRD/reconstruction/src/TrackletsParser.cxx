@@ -40,13 +40,12 @@ int TrackletsParser::Parse()
   //producing a vector of digits.
   if (mVerbose) {
     LOG(info) << "Tracklet Parser parse of data sitting at :" << std::hex << (void*)mData << " starting at pos " << mStartParse;
-    if(mDisableByteOrderFix){
+    if (mDisableByteOrderFix) {
 
-    LOG(info) << " we will not be byte swapping";
-    }
-    else {
+      LOG(info) << " we will not be byte swapping";
+    } else {
 
-    LOG(info) << " we will be byte swapping";
+      LOG(info) << " we will be byte swapping";
     }
   }
   //mData holds a buffer containing tracklets parse placing tracklets in the output vector.
