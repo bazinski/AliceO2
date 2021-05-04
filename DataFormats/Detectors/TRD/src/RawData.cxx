@@ -261,14 +261,14 @@ void dumpHalfCRUHeader(o2::trd::HalfCRUHeader& halfcru)
 
 void clearHalfCRUHeader(o2::trd::HalfCRUHeader& halfcru)
 {
-    halfcru.word0=0;
-    halfcru.word12[0]=0;
-    halfcru.word12[1]=0;
-    halfcru.word3=0;
-    halfcru.word47[0]=0;
-    halfcru.word47[1]=0;
-    halfcru.word47[2]=0;
-    halfcru.word47[3]=0;
+  halfcru.word0 = 0;
+  halfcru.word12[0] = 0;
+  halfcru.word12[1] = 0;
+  halfcru.word3 = 0;
+  halfcru.word47[0] = 0;
+  halfcru.word47[1] = 0;
+  halfcru.word47[2] = 0;
+  halfcru.word47[3] = 0;
 }
 std::ostream& operator<<(std::ostream& stream, const HalfCRUHeader& halfcru)
 { // make a pretty output of the header.
