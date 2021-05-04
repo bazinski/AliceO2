@@ -51,11 +51,11 @@ WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
   //  auto config = cfgc.options().get<std::string>("trd-datareader-config");
   //
   //
-  o2::conf::ConfigurableParam::updateFromString(cfgc.options().get<std::string>("configKeyValues"));
-  o2::conf::ConfigurableParam::writeINI("o2trdrawreader-workflow_configuration.ini");
+  //  o2::conf::ConfigurableParam::updateFromString(cfgc.options().get<std::string>("configKeyValues"));
+  // o2::conf::ConfigurableParam::writeINI("o2trdrawreader-workflow_configuration.ini");
 
   auto inputspec = cfgc.options().get<std::string>("trd-datareader-inputspec");
-  auto outputspec = cfgc.options().get<std::string>("trd-datareader-outputspec");
+  //auto outputspec = cfgc.options().get<std::string>("trd-datareader-outputspec");
   auto verbose = cfgc.options().get<bool>("trd-datareader-verbose");
   auto byteswap = cfgc.options().get<bool>("trd-datareader-disablebyteswapdata");
   auto compresseddata = cfgc.options().get<bool>("trd-datareader-compresseddata");

@@ -158,10 +158,9 @@ uint32_t setHalfCRUHeader(HalfCRUHeader& cruhead, int crurdhversion, int bunchcr
   cruhead.StopBit = stopbits;
   cruhead.EndPoint = endpoint;
   cruhead.EventType = eventtype;
-  //later versions
-  //   cruhead.rdhversion = crurdhversion;
-  //   cruhead.FeeID = feeid;
-  //   cruhead.CRUID = cruid;
+  cruhead.HeaderVersion = crurdhversion;
+  //cruhead.FeeID = feeid;
+  //cruhead.CRUID = cruid;
   return 0;
 }
 
@@ -236,7 +235,7 @@ void dumpHalfChamber(o2::trd::TrackletHCHeader const& halfchamber)
   LOGF(INFO, "HalfChamber : 0x%08x", halfchamber.word);
 }
 
-void printHalfCRUHeader(o2::trd::HalfCRUHeader const& halfcru)
+void printHalfCRUHeader(o2::trd::HalfCRUHeader& halfcru)
 {
   std::array<uint32_t, 15> sizes;
   std::array<uint32_t, 15> errorflags;
@@ -260,6 +259,17 @@ void dumpHalfCRUHeader(o2::trd::HalfCRUHeader& halfcru)
   }
 }
 
+void clearHalfCRUHeader(o2::trd::HalfCRUHeader& halfcru)
+{
+    halfcru.word0=0;
+    halfcru.word12[0]=0;
+    halfcru.word12[1]=0;
+    halfcru.word3=0;
+    halfcru.word47[0]=0;
+    halfcru.word47[1]=0;
+    halfcru.word47[2]=0;
+    halfcru.word47[3]=0;
+}
 std::ostream& operator<<(std::ostream& stream, const HalfCRUHeader& halfcru)
 { // make a pretty output of the header.
   stream << std::hex;
