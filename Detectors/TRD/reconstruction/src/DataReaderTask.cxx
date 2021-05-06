@@ -55,7 +55,7 @@ void DataReaderTask::run(ProcessingContext& pc)
   LOG(info) << "TRD Translator Task run";
   auto dataReadStart = std::chrono::high_resolution_clock::now();
   /* set encoder output buffer */
-  char bufferOut[o2::trd::constants::CRUBUFFERMAX];
+  char bufferOut[o2::trd::constants::HBFBUFFERMAX];
 
   auto device = pc.services().get<o2::framework::RawDeviceService>().device();
   auto outputRoutes = pc.services().get<o2::framework::RawDeviceService>().spec().outputs;

@@ -41,12 +41,45 @@ int DigitsParser::Parse(bool verbose)
 
   //we are handed the buffer payload of an rdh and need to parse its contents.
   //producing a vector of digits.
-  mVerbose = verbose;
+  mVerbose = true; //verbose;
+  mDataVerbose = true;
+  mHeaderVerbose = true;
+
   mState = StateDigitHCHeader;
   mDataWordsParsed = 0; // count of data wordsin data that have been parsed in current call to parse.
   mDigitsFound = 0;     // tracklets found in the data block, mostly used for debugging.
   mBufferLocation = 0;
   mPaddingWordsCounter = 0;
+  if (mVerbose) {
+    LOG(info) << "Digit Parser parse of data sitting at :" << std::hex << (void*)mData << " starting at pos " << mStartParse;
+    if (mDisableByteOrderFix) {
+
+      LOG(info) << " we will not be byte swapping";
+    } else {
+
+      LOG(info) << " we will be byte swapping";
+    }
+  }
+  if (mDataVerbose) {
+    LOG(info) << "trackletdata to parse begin";
+    std::vector<uint32_t> datacopy(mStartParse, mEndParse);
+    if (!mDisableByteOrderFix) {
+      for (auto a : datacopy) {
+        swapByteOrder(a);
+      }
+    }
+
+    LOG(info) << "digitdata to parse with size of " << datacopy.size();
+    int loopsize = 0;
+    if (datacopy.size() > 1024)
+      loopsize = 64;
+    for (int i = 0; i < loopsize; i += 8) {
+      LOG(info) << std::hex << "0x" << datacopy[i] << " " << std::hex << "0x" << datacopy[i + 1] << " " << std::hex << "0x" << datacopy[i + 2] << " " << std::hex << "0x" << datacopy[i + 3] << " " << std::hex << "0x" << datacopy[i + 4] << " " << std::hex << "0x" << datacopy[i + 5] << " " << std::hex << "0x" << datacopy[i + 6] << " " << std::hex << "0x" << datacopy[i + 7];
+    }
+    LOG(info) << "digitdata to parse end";
+    if (datacopy.size() > 1024)
+      LOG(fatal) << "some very wrong with digit parsing >1024";
+  }
   int mcmdatacount = 0;
   int mcmadccount = 0;
   int digitwordcount = 9;
@@ -97,13 +130,15 @@ int DigitsParser::Parse(bool verbose)
       swapByteOrder(*word);
     }
     auto nextword = std::next(word, 1);
-    if ((*word) == 0x0 && (*nextword == 0x0)) { // no need to byte swap nextword as zero does not change.
+    if ((*word) == 0x0 && (*nextword == 0x0)) { // no need to byte swap nextword
       // end of digits marker.
       if (mVerbose || mHeaderVerbose || mDataVerbose) {
         LOG(info) << "Found digits end marker :" << std::hex << *word << "::" << *nextword;
       }
       //state *should* be StateDigitMCMData check that it is
-      if (mState != StateDigitMCMData || mState != StateDigitEndMarker) {
+      if (mState == StateDigitMCMData || mState == StateDigitEndMarker) {
+      } else {
+
         LOG(fatal) << "Digit end marker found but state is not StateDigitMCMData(" << StateDigitMCMData << ") or StateDigitbut rather " << mState;
       }
       //only thing that can remain is the padding.
@@ -238,7 +273,7 @@ int DigitsParser::Parse(bool verbose)
     LOG(info) << "***** parsing loop finished for this link";
   }
 
-  if (mState != StateDigitMCMHeader || mState != StatePadding || mState != StateDigitEndMarker) {
+  if (!(mState == StateDigitMCMHeader || mState == StatePadding || mState == StateDigitEndMarker)) {
     LOG(warn) << "Exiting parsing but the state is wrong ... mState= " << mState;
     if (mVerbose) {
       LOG(info) << "Exiting parsing but the state is wrong ... mState= " << mState;

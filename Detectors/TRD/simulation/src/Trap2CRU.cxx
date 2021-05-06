@@ -295,7 +295,8 @@ bool Trap2CRU::isDigitOnLink(const int linkid, const int currentdigitpos)
 
 int Trap2CRU::buildDigitRawData(const int digitindex, const std::array<int64_t, o2::trd::constants::NADCMCM>& localParsedDigits, const uint32_t triggerrecordcount)
 {
-  LOG(debug) << __func__ << " digitindex:" << digitindex << " and triggercount of" << triggerrecordcount;
+  LOG(info) << __func__ << " digitindex:" << digitindex << " and triggercount of" << triggerrecordcount << " and digit count of : " << localParsedDigits.size();
+  LOG(info) << "raw pointer at start : " << (void*)mRawDataPtr;
   //this is not zero suppressed.
   int digitswritten = 0;
   //    Digit
@@ -311,44 +312,46 @@ int Trap2CRU::buildDigitRawData(const int digitindex, const std::array<int64_t, 
   header.yearflag = 1; // >2007
   header.eventcount = triggerrecordcount;
   header.yearflag = 1;
-  memcpy(mRawDataPtr, (char*)&header, 4); // 32 bits -- 4 bytes.
-  LOG(debug) << "writing data to digit stream of " << std::hex << header.word;
+  memcpy(mRawDataPtr, (char*)&header, 4); // uint32 -- 4 bytes.
+  DigitMCMHeader* headerptr = (DigitMCMHeader*)mRawDataPtr;
+  LOG(info) << "writing data to digit stream of " << std::hex << header.word;
   mRawDataPtr += 4;
   for (auto digitindex : localParsedDigits) {
-    LOG(debug) << "digit indexof : " << digitindex; //<<
+    LOG(info) << "digit index of : " << digitindex; //<<
     if (digitindex != -1) {
       Digit* d = &mDigits[digitindex];
       ArrayADC adcdata = d->getADC();
       //write these 2 now as we only have it now.
-      header.mcm = d->getMCM();
-      header.rob = d->getROB();
+      headerptr->mcm = d->getMCM();
+      headerptr->rob = d->getROB();
 
+      LOG(info) << "writing real data to digit stream of " << std::hex << data.word;
       for (int timebin = 0; timebin < o2::trd::constants::TIMEBINS; timebin += 3) {
-        LOG(debug) << "ADC values  : " << timebin << " = " << adcdata[timebin] << ":" << adcdata[timebin + 1] << ":" << adcdata[timebin + 2];
+        //LOG(info) << "ADC values  : " << timebin << " = " << adcdata[timebin] << ":" << adcdata[timebin + 1] << ":" << adcdata[timebin + 2];
         data.x = adcdata[timebin];
         data.y = adcdata[timebin + 1];
         data.z = adcdata[timebin + 2];
         data.c = 0;
-        LOG(debug) << "writing data to digit stream of " << std::hex << data.word;
-        memcpy(mRawDataPtr, (char*)&data, 4); // 32 bits -- 4 bytes.
+        memcpy(mRawDataPtr, (char*)&data, 4); // uint32 -- 4 bytes.
         mRawDataPtr += 4;
       }
       digitswritten++;
-    } else {
+    } /*else {
       //blank digit;//10 words of 0 for the 30 timebins, its done this way incase we want to or need to change c.
+      LOG(info) << "writing blank data to digit stream of " << std::hex << data.word;
       for (int timebin = 0; timebin < o2::trd::constants::TIMEBINS; timebin += 3) {
         data.x = 0;
         data.y = 0;
         data.z = 0;
         data.c = 0;
-        LOG(debug) << "writing data to digit stream of " << std::hex << data.word;
         memcpy(mRawDataPtr, (char*)&data, 4); // 32 bits -- 4 bytes.
         mRawDataPtr += 4;
       }
       digitswritten++;
-    }
+    }*/
   }
-  LOG(debug) << __func__ << " leaving with digitswritten of: " << digitswritten << " for det:rob:mcm of " << startdet << ":" << startrob << ":" << startmcm;
+  LOG(info) << "raw pointer at end : " << (void*)mRawDataPtr;
+  LOG(info) << __func__ << " leaving with digitswritten of: " << digitswritten << " for det:rob:mcm of " << startdet << ":" << startrob << ":" << startmcm;
   return digitswritten;
 }
 
@@ -403,6 +406,7 @@ int Trap2CRU::writeDigitEndMarker()
 {
   int wordswritten = 0;
   uint32_t digitendmarker = 0;
+  LOG(info) << __func__ << " writing digit end marker at : " << (void*)mRawDataPtr;
 
   memcpy(mRawDataPtr, (char*)&digitendmarker, 4);
   mRawDataPtr += 4;
@@ -410,6 +414,7 @@ int Trap2CRU::writeDigitEndMarker()
   memcpy(mRawDataPtr, (char*)&digitendmarker, 4);
   mRawDataPtr += 4;
   wordswritten++;
+  LOG(info) << __func__ << " writen digit end marker ptr at : " << (void*)mRawDataPtr << " words written : " << wordswritten;
 
   return wordswritten;
 }
@@ -450,10 +455,10 @@ int Trap2CRU::writeHCHeader(const int eventcount, const uint32_t linkid)
   digitheader.stack = (detector % (o2::trd::constants::NLAYER * o2::trd::constants::NSTACK)) / o2::trd::constants::NLAYER;
   digitheader.layer = (detector % o2::trd::constants::NLAYER);
   digitheader.supermodule = linkid / 60;
-  digitheader.numberHCW = 1; //TODO put something more real in here?
-  digitheader.minor = 42;    //TODO put something more real in here?
-  digitheader.major = 42;    //TODO put something more real in here?
-  digitheader.version = 1;   //TODO put something more real in here?
+  digitheader.numberHCW = 1; // number of additional words in th header, we are using 2 header words so 1 here.
+  digitheader.minor = 1;     // test pattern 10 bit psuedo random
+  digitheader.major = 5;     // test pattern 10 bit psuedo random   // at least structured like that.
+  digitheader.version = 1;   //new version of the header. we only have 1 version
   digitheader.res1 = 1;
   digitheader.ptrigcount = 1;             //TODO put something more real in here?
   digitheader.ptrigphase = 1;             //TODO put something more real in here?
@@ -487,6 +492,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
   std::vector<char> rawdatavector(1024 * 1024 * 2); // sum of link sizes + padding in units of bytes and some space for the header (512 bytes).
   LOG(info) << "BUNCH CROSSING : " << triggerrecord.getBCData().bc << " with orbit : " << triggerrecord.getBCData().orbit;
   for (int halfcru = 0; halfcru < o2::trd::constants::NHALFCRU; halfcru++) {
+    LOG(info) << "+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+  ======   start of halfcru";
     int halfcruwordswritten = 0;
     int supermodule = halfcru / 4; // 2 cru per supermodule.
     int endpoint = halfcru / 2;    // 2 pci end points per cru, 15 links each
@@ -562,11 +568,11 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
           char* preptr;
           preptr = mRawDataPtr;
           int digits = buildDigitRawData(mDigitsIndex[mCurrentDigit], localParsedDigitsindex, triggercount);
-          //mCurrentDigit += digits;
           //due to not being zero suppressed, digits returned from buildDigitRawData should *always* be 21.
           if (digits != 21) {
             LOG(error) << "We are writing non zero suppressed digits yet we dont have 21 digits"; //<<
           }
+          //mRawDataPtr += digits*40+4;
           rawwords += digits * 10 + 1; //10 for the tiembins and 1 for the header.
           linkwordswritten += digits * 10 + 1;
         }
@@ -576,10 +582,11 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
 
       } else {
         LOG(info) << "no data on link : " << linkid;
+        setHalfCRUHeaderLinkData(halfcruheader, halfcrulink, 0,0);
       }
-      //write digit end marker.
       //pad up to a whole 256 bit word size
       if (linkwordswritten != 0) {
+        LOG(info) << "linkwordswritten is non zero : " << linkwordswritten;
         crudatasize = linkwordswritten / 8;
         linkSizePadding(linkwordswritten, crudatasize, paddingsize);
 
@@ -599,6 +606,10 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
           LOG(error) << "linkwordswritten is not 256 bit aligned " << linkwordswritten << " %8 = " << linkwordswritten % 8 << " and a padding size of : " << paddingsize << " or padbytes of : " << padbytes;
         }
         //fix the halfcruheader for the length of this link.
+        if(crudatasize>100){
+            LOG(error) << " linksize is huge : " << crudatasize;
+        }
+        LOG(info)<<" setting halfcrulink " << halfcrulink << " linksize to : " << crudatasize << " with a linkwordswrittern=" << linkwordswritten;
         setHalfCRUHeaderLinkData(halfcruheader, halfcrulink, crudatasize, errors);
         uint32_t bytescopied;
         totallinklengths += crudatasize;
@@ -618,9 +629,17 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
         }
         LOG(info) << "Link words to be written : " << linkwordswritten * 4;
       } // if we have data on link
-      LOG(info) << "incrementing halfcruwordswritten : " << halfcruwordswritten << " by linkwordswritten : " << linkwordswritten;
+      else{
+        LOG(info) << "linkwordswritten is zero : " << linkwordswritten;
+            if(crudatasize!=0){
+                LOG(warn) << " we should not be here with a crudatasize of " << crudatasize << " as the linkwordswritten is " << linkwordswritten << " with a halfcrulink of : " << halfcrulink;
+                LOG(info)<<" ### setting halfcrulink " << halfcrulink << " linksize to : " << crudatasize << " with a linkwordswrittern=" << linkwordswritten;
+            }
+       // setHalfCRUHeaderLinkData(halfcruheader, halfcrulink, 0,0);
+      }
+      //LOG(info) << "incrementing halfcruwordswritten : " << halfcruwordswritten << " by linkwordswritten : " << linkwordswritten;
       halfcruwordswritten += linkwordswritten;
-      LOG(info) << "incremented halfcruwordswritten : " << halfcruwordswritten << " by linkwordswritten : " << linkwordswritten;
+     // LOG(info) << "incremented halfcruwordswritten : " << halfcruwordswritten << " by linkwordswritten : " << linkwordswritten;
     }
     //write the cruhalfheader now that we know the lengths.
     memcpy((char*)halfcruheaderptr, (char*)&halfcruheader, sizeof(halfcruheader));
@@ -639,7 +658,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
     h = (HalfCRUHeader*)feeidpayload.data();
     HalfCRUHeader h1 = *h;
     printHalfCRUHeader(h1);
-    LOG(info) << " ======   end of writing";
+    LOG(info) << "+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+  ======   end of writing";
   }
 }
 

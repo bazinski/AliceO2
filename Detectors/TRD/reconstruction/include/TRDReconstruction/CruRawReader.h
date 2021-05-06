@@ -95,7 +95,7 @@ class CruRawReader
   bool processHBFs(int datasizealreadyread = 0, bool verbose = false);
   bool processHBFsa(int datasizealreadyread = 0, bool verbose = false);
   bool buildCRUPayLoad();
-  int processHalfCRU();
+  int processHalfCRU(int cruhbfstartoffset);
   bool processCRULink();
   bool skipRDH();
 
@@ -111,9 +111,10 @@ class CruRawReader
   bool mDataVerbose{false};
   bool mByteSwap{true};
   const char* mDataBuffer = nullptr;
-  static const uint32_t mMaxCRUBufferSize = o2::trd::constants::CRUBUFFERMAX;
-  std::array<uint32_t, o2::trd::constants::CRUBUFFERMAX> mCRUPayLoad; //this holds a single cruhalfchamber buffer to pass to parsing.
+  static const uint32_t mMaxHBFBufferSize = o2::trd::constants::HBFBUFFERMAX;
+  std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX> mHBFPayload; //this holds the O2 payload held with in the HBFs to pass to parsing.
   uint32_t mHalfCRUPayLoadRead{0};                                    // the words current read in for the currnt cru payload.
+  uint32_t mO2PayLoadRead{0};                                         // the words current read in for the currnt cru payload.
   int mCurrentHalfCRULinkHeaderPoisition = 0;
   // no need to waste time doing the copy  std::array<uint32_t,8> mCurrentCRUWord; // data for a cru comes in words of 256 bits.
   uint32_t mCurrentLinkDataPosition256;    // count of data read for current link in units of 256 bits
@@ -147,7 +148,8 @@ class CruRawReader
   uint32_t mSaveBufferDataLeft = 0;
   uint32_t mcruFeeID = 0;
   uint32_t datareadfromhbf;
-  uint32_t mTotalCRUPayLoad = 0;
+  uint32_t mTotalHBFPayLoad = 0; // total data payload of the heart beat frame in question.
+  uint32_t mHBFoffset32 = 0;     // total data payload of the heart beat frame in question.
   //pointers to the data as we read them in, again no point in copying.
   HalfCRUHeader* mhalfcruheader;
   o2::InteractionRecord mIR;
