@@ -504,7 +504,8 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
     printHalfCRUHeader(halfcruheader);
     halfcruheader.EndPoint = mEndPointID;
     mRawDataPtr = rawdatavector.data();
-    memcpy(mRawDataPtr, (char*)&halfcruheader, sizeof(halfcruheader));
+    //memcpy(mRawDataPtr, (char*)&halfcruheader, sizeof(halfcruheader));//no point in writing it now we dont know the lengths.
+    HalfCRUHeader* halfcruheaderptr = (HalfCRUHeader*)mRawDataPtr; // store the ptr to the halfcruheader for later adding the link lengths and possibly simulated errors.
     mRawDataPtr += sizeof(halfcruheader);
     halfcruwordswritten += sizeof(halfcruheader) / 4;
     int totallinklengths = 0;
@@ -568,7 +569,9 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
           }
           rawwords += digits * 10 + 1; //10 for the tiembins and 1 for the header.
           linkwordswritten += digits * 10 + 1;
-        } int digitendmarkerwritten = writeDigitEndMarker(); linkwordswritten += digitendmarkerwritten;
+        }
+        int digitendmarkerwritten = writeDigitEndMarker();
+        linkwordswritten += digitendmarkerwritten;
         rawwords += digitendmarkerwritten;
 
       } else {
@@ -619,22 +622,24 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
       halfcruwordswritten += linkwordswritten;
       LOG(info) << "incremented halfcruwordswritten : " << halfcruwordswritten << " by linkwordswritten : " << linkwordswritten;
     }
+    //write the cruhalfheader now that we know the lengths.
+    memcpy((char*)halfcruheaderptr, (char*)&halfcruheader, sizeof(halfcruheader));
+
     //write halfcru data here.
     std::vector<char> feeidpayload(halfcruwordswritten * 4);
     memcpy(feeidpayload.data(), &rawdatavector[0], halfcruwordswritten * 4);
     assert(halfcruwordswritten % 8 == 0);
-    mWriter.addData(mFeeID, mCruID, mLinkID, mEndPointID, triggerrecord.getBCData(), feeidpayload, false,triggercount );
-    LOG(info) << "written file for trigger : " << triggercount << " feeid of 0x" << std::hex << mFeeID << " cruid : " << mCruID << " and linkid: "<< mLinkID << " and EndPoint: " << mEndPointID << " orbit :0x" << std::hex << triggerrecord.getBCData().orbit << " bc:0x" << std::hex <<triggerrecord.getBCData().bc << " and payload size of : " << halfcruwordswritten << " with  a half cru of: ";
+    mWriter.addData(mFeeID, mCruID, mLinkID, mEndPointID, triggerrecord.getBCData(), feeidpayload, false, triggercount);
+    LOG(info) << "written file for trigger : " << triggercount << " feeid of 0x" << std::hex << mFeeID << " cruid : " << mCruID << " and linkid: " << mLinkID << " and EndPoint: " << mEndPointID << " orbit :0x" << std::hex << triggerrecord.getBCData().orbit << " bc:0x" << std::hex << triggerrecord.getBCData().bc << " and payload size of : " << halfcruwordswritten << " with  a half cru of: ";
     printHalfCRUHeader(halfcruheader);
-    for(int a=0;a<halfcruwordswritten;++a){
-        LOG(info) << std::hex << " 0x" << (unsigned int)feeidpayload[a*4] << " 0x" << (unsigned int)feeidpayload[a*4+1] << " 0x" << (unsigned int)feeidpayload[a*4+2] << " 0x" << (unsigned int)feeidpayload[a*4+3] ;
+    for (int a = 0; a < halfcruwordswritten; ++a) {
+      LOG(info) << std::hex << " 0x" << (unsigned int)feeidpayload[a * 4] << " 0x" << (unsigned int)feeidpayload[a * 4 + 1] << " 0x" << (unsigned int)feeidpayload[a * 4 + 2] << " 0x" << (unsigned int)feeidpayload[a * 4 + 3];
     }
-    HalfCRUHeader *h;
-    h=(HalfCRUHeader*)feeidpayload.data();
-    HalfCRUHeader h1=*h;
+    HalfCRUHeader* h;
+    h = (HalfCRUHeader*)feeidpayload.data();
+    HalfCRUHeader h1 = *h;
     printHalfCRUHeader(h1);
     LOG(info) << " ======   end of writing";
-
   }
 }
 

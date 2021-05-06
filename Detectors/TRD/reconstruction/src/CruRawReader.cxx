@@ -231,12 +231,16 @@ int CruRawReader::processHalfCRU()
   mEventTracklets.insert(std::end(mEventTracklets), std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
   mEventCompressedDigits.insert(std::end(mEventCompressedDigits), std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
   if (mVerbose) {
-    LOG(info) << "Event digits after eventi # : " << mEventDigits.size() << " having added : " << mDigitsParser.getDigits().size();
+    LOG(info) << "Event digits after eventi # : " << mEventCompressedDigits.size() << " having added : " << mDigitsParser.getDigits().size();
   }
-  auto lasttrigger = mEventTriggers.size() - 1;
-  int lastdigit = mEventTriggers[lasttrigger].getFirstDigit() + mEventTriggers[lasttrigger].getNumberOfDigits();
-  int lasttracklet = mEventTriggers[lasttrigger].getFirstTracklet() + mEventTriggers[lasttrigger].getNumberOfTracklets();
+  int lasttrigger = 0, lastdigit = 0, lasttracklet = 0;
+  if (mEventTriggers.size() != 0) {
+    lasttrigger = mEventTriggers.size() - 1;
+    lastdigit = mEventTriggers[lasttrigger].getFirstDigit() + mEventTriggers[lasttrigger].getNumberOfDigits();
+    lasttracklet = mEventTriggers[lasttrigger].getFirstTracklet() + mEventTriggers[lasttrigger].getNumberOfTracklets();
+  }
   mEventTriggers.emplace_back(mIR, lastdigit, mDigitsParser.getDigits().size(), lasttracklet, mTrackletsParser.getTracklets().size());
+  LOG(info) << " D";
   //if we get here all is ok.
   return 1;
 }
