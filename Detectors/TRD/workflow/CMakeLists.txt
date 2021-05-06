@@ -8,7 +8,7 @@
 # granted to it by virtue of its status as an Intergovernmental Organization or
 # submit itself to any jurisdiction.
 
-#add_compile_options(-O0 -pg -fPIC)
+add_compile_options(-O0 -pg -fPIC)
 
 add_subdirectory(io)
 
@@ -41,11 +41,6 @@ o2_add_executable(global-tracking
 o2_add_executable(tracklet-transformer
                   COMPONENT_NAME trd
                   SOURCES src/TRDTrackletTransformerWorkflow.cxx
-                  PUBLIC_LINK_LIBRARIES O2::TRDWorkflow)
-
-o2_add_executable(track-reader
-                  COMPONENT_NAME trd
-                  SOURCES src/trd-track-reader-workflow.cxx
                   PUBLIC_LINK_LIBRARIES O2::TRDWorkflow)
 
 if (OpenMP_CXX_FOUND)
