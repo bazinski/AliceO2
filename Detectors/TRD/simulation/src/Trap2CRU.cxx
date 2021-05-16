@@ -582,7 +582,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
 
       } else {
         LOG(info) << "no data on link : " << linkid;
-        setHalfCRUHeaderLinkData(halfcruheader, halfcrulink, 0,0);
+        setHalfCRUHeaderLinkData(halfcruheader, halfcrulink, 0, 0);
       }
       //pad up to a whole 256 bit word size
       if (linkwordswritten != 0) {
@@ -606,10 +606,10 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
           LOG(error) << "linkwordswritten is not 256 bit aligned " << linkwordswritten << " %8 = " << linkwordswritten % 8 << " and a padding size of : " << paddingsize << " or padbytes of : " << padbytes;
         }
         //fix the halfcruheader for the length of this link.
-        if(crudatasize>100){
-            LOG(error) << " linksize is huge : " << crudatasize;
+        if (crudatasize > 100) {
+          LOG(error) << " linksize is huge : " << crudatasize;
         }
-        LOG(info)<<" setting halfcrulink " << halfcrulink << " linksize to : " << crudatasize << " with a linkwordswrittern=" << linkwordswritten;
+        LOG(info) << " setting halfcrulink " << halfcrulink << " linksize to : " << crudatasize << " with a linkwordswrittern=" << linkwordswritten;
         setHalfCRUHeaderLinkData(halfcruheader, halfcrulink, crudatasize, errors);
         uint32_t bytescopied;
         totallinklengths += crudatasize;
@@ -629,17 +629,17 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
         }
         LOG(info) << "Link words to be written : " << linkwordswritten * 4;
       } // if we have data on link
-      else{
+      else {
         LOG(info) << "linkwordswritten is zero : " << linkwordswritten;
-            if(crudatasize!=0){
-                LOG(warn) << " we should not be here with a crudatasize of " << crudatasize << " as the linkwordswritten is " << linkwordswritten << " with a halfcrulink of : " << halfcrulink;
-                LOG(info)<<" ### setting halfcrulink " << halfcrulink << " linksize to : " << crudatasize << " with a linkwordswrittern=" << linkwordswritten;
-            }
-       // setHalfCRUHeaderLinkData(halfcruheader, halfcrulink, 0,0);
+        if (crudatasize != 0) {
+          LOG(warn) << " we should not be here with a crudatasize of " << crudatasize << " as the linkwordswritten is " << linkwordswritten << " with a halfcrulink of : " << halfcrulink;
+          LOG(info) << " ### setting halfcrulink " << halfcrulink << " linksize to : " << crudatasize << " with a linkwordswrittern=" << linkwordswritten;
+        }
+        // setHalfCRUHeaderLinkData(halfcruheader, halfcrulink, 0,0);
       }
       //LOG(info) << "incrementing halfcruwordswritten : " << halfcruwordswritten << " by linkwordswritten : " << linkwordswritten;
       halfcruwordswritten += linkwordswritten;
-     // LOG(info) << "incremented halfcruwordswritten : " << halfcruwordswritten << " by linkwordswritten : " << linkwordswritten;
+      // LOG(info) << "incremented halfcruwordswritten : " << halfcruwordswritten << " by linkwordswritten : " << linkwordswritten;
     }
     //write the cruhalfheader now that we know the lengths.
     memcpy((char*)halfcruheaderptr, (char*)&halfcruheader, sizeof(halfcruheader));

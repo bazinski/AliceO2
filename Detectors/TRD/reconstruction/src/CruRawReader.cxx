@@ -61,6 +61,7 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
 {
   if (mVerbose) {
     LOG(info) << "PROCESS HBF starting at " << std::hex << (void*)mDataPointer;
+    LOG(info) << "PROCESS HBF from payload starting at " << std::hex << (void*)&mHBFPayload[0];
   }
   mDataRDH = reinterpret_cast<const o2::header::RDHAny*>(mDataPointer);
   mOpenRDH = reinterpret_cast<o2::header::RDHAny*>((char*)mDataPointer);
@@ -75,7 +76,10 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     if (mVerbose) {
       LOG(info) << "--- RDH open/continue detected";
       o2::raw::RDHUtils::printRDH(rdh);
-      LOG(info) << "--- parsing that rdh";
+      for (int i = 0; i < 64; ++i) {
+        LOG(info) << std::hex << " 0x" << *(mDataPointer + i);
+      }
+      LOG(info) << "---------------------- parsing that rdh";
     }
     preceedingrdh = rdh;
     auto headerSize = o2::raw::RDHUtils::getHeaderSize(rdh);
@@ -127,7 +131,7 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
   // at this point the entire HBF data payload is sitting in mHBFPayload and the total data count is mTotalHBFPayLoad
   int counthalfcru = 0;
   mHBFoffset32 = 0;
-  while (mHBFoffset32 <= mTotalHBFPayLoad / 4) {
+  while (mHBFoffset32 < mTotalHBFPayLoad / 4) {
     if (mVerbose) {
       LOG(info) << "Looping over cruheaders in HBF, loop count " << counthalfcru << " current offset is" << mHBFoffset32 << " total payload is " << mTotalHBFPayLoad / 4 << "  raw :" << mTotalHBFPayLoad;
     }
@@ -147,7 +151,7 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     }
     counthalfcru++;
   } // loop of halfcru's while there is still data in the heart beat frame.
-  datareadfromhbf = totaldataread;
+  mDatareadfromhbf = totaldataread;
   return true; //totaldataread;
 }
 
@@ -195,10 +199,15 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   std::array<uint32_t, 1024>::iterator linkstart, linkend;
   int dataoffsetstart32 = sizeof(mCurrentHalfCRUHeader) / 4 + cruhbfstartoffset; // in uint32
   printHalfCRUHeader(mCurrentHalfCRUHeader);
-  for(int i=0;i<16;++i){
-    LOG(info) <<std::hex <<" 0x"<< mHBFPayload[mHBFoffset32+i];
+  for (int i = 0; i < 16; ++i) {
+    LOG(info) << std::hex << " 0x" << mHBFPayload[mHBFoffset32 + i];
   }
-  LOG(info) <<"end halfcrudump";
+  for (auto t : mCurrentHalfCRULinkLengths) {
+    if (t > 100) {
+      LOG(info) << " errorin lengthof cru link";
+    }
+  }
+  LOG(info) << "end halfcrudump";
   mHBFoffset32 += sizeof(mCurrentHalfCRUHeader) / 4;
   linkstart = mHBFPayload.begin() + dataoffsetstart32;
   linkend = mHBFPayload.begin() + dataoffsetstart32;
@@ -236,10 +245,10 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       TrackletHCHeader* tracklethcheader = (TrackletHCHeader*)&mHBFPayload[mHBFoffset32];
       mHBFoffset32 += sizeof(TrackletHCHeader) / 4; //bytes to uint32
       DigitHCHeader* digithcheader = (DigitHCHeader*)&mHBFPayload[mHBFoffset32];
-      mHBFoffset32 += sizeof(DigitHCHeader) / 4;                             //bytes to uint32
+      mHBFoffset32 += sizeof(DigitHCHeader) / 4; //bytes to uint32
       LOG(info) << " linkstart before adding the 3 words for header " << linkstart;
       linkstart += sizeof(TrackletHCHeader) / 4 + sizeof(DigitHCHeader) / 4; // advance linkstart by number of 32 bit words in the headers, 3 for now.
-      LOG(info) << " linkstart after adding the 3 words for header " << linkstart;
+      LOG(info) << " linkstart after before adding the 3 words for header " << linkstart;
       digitwordsread = 0;
       if (mVerbose) {
         LOG(info) << "parse digits";
@@ -252,15 +261,15 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       if (mVerbose) {
         LOG(info) << "digitwordsread : " << digitwordsread << " mem copy with offset of : " << cruhbfstartoffset << " parsing digits with linkstart: " << linkstart << " ending at : " << linkend;
       }
+      sumlinklengths += mCurrentHalfCRULinkLengths[currentlinkindex];
+      sumtrackletwords = trackletwordsread;
+      sumdigitwords = digitwordsread;
+      mHBFoffset32 += digitwordsread; // all 3 in 32bit units
     } else {
       if (mVerbose) {
         LOG(info) << "link start and end are the same, link appears to be empty for link currentlinkdex";
       }
     }
-    sumlinklengths += mCurrentHalfCRULinkLengths[currentlinkindex];
-    sumtrackletwords = trackletwordsread;
-    sumdigitwords = digitwordsread;
-    mHBFoffset32 += digitwordsread; // all 3 in 32bit units
   } //for loop over link index.
   // we have read in all the digits and tracklets for this event.
   //digits and tracklets are sitting inside the parsing classes.
@@ -331,14 +340,16 @@ bool CruRawReader::run()
   uint32_t* bufferptr;
   bufferptr = (uint32_t*)mDataBuffer;
   do {
-    //      LOG(info) << "do while loop count " << dowhilecount++;
+    LOG(info) << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ do while loop count " << dowhilecount++;
     //      LOG(info) << " data readin : " << mDataReadIn;
-    //      LOG(info) << " mDataBuffer :" << (void*)mDataBuffer << " and offset to start on is :"<< totaldataread;
-    //int datareadfromhbf = processHBFs(totaldataread, mVerbose);
-    datareadfromhbf = 0;
+    LOG(info) << " mDataBuffer :" << (void*)mDataBuffer << " and offset to start on is :" << totaldataread;
+    //int mDatareadfromhbf = processHBFs(totaldataread, mVerbose);
+    mDatareadfromhbf = 0;
     processHBFs(totaldataread, mVerbose);
-    //       LOG(info) << "end with " << datareadfromhbf;
-    //      LOG(info) << " about to end do while with " << mDataPointer << " < " << mDataBufferSize;
+    totaldataread += mDatareadfromhbf;
+    LOG(info) << "end with " << mDatareadfromhbf << " total data read : " << totaldataread;
+
+    LOG(info) << " about to end do while with " << (void*)mDataPointer << "-" << (void*)bufferptr << " < " << mDataBufferSize;
     //      LOG(info) << " about to end do while having read in " << mDataPointer-bufferptr << " < " << mDataBufferSize;
     //      LOG(info) << " about to end do while with databuffer+databuffersize > datapointer ... " << std::hex << (void*)mDataBuffer+mDataBufferSize << " > " <<std::hex <<  mDataPointer;
 

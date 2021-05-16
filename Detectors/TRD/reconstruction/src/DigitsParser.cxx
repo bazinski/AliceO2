@@ -41,9 +41,9 @@ int DigitsParser::Parse(bool verbose)
 
   //we are handed the buffer payload of an rdh and need to parse its contents.
   //producing a vector of digits.
-  mVerbose = true; //verbose;
-  mDataVerbose = true;
-  mHeaderVerbose = true;
+  mVerbose = verbose;
+  //  mDataVerbose = true;
+  //  mHeaderVerbose = true;
 
   mState = StateDigitHCHeader;
   mDataWordsParsed = 0; // count of data wordsin data that have been parsed in current call to parse.
@@ -136,7 +136,7 @@ int DigitsParser::Parse(bool verbose)
         LOG(info) << "Found digits end marker :" << std::hex << *word << "::" << *nextword;
       }
       //state *should* be StateDigitMCMData check that it is
-      if (mState == StateDigitMCMData || mState == StateDigitEndMarker) {
+      if (mState == StateDigitMCMData || mState == StateDigitEndMarker || mState == StateDigitHCHeader) {
       } else {
 
         LOG(fatal) << "Digit end marker found but state is not StateDigitMCMData(" << StateDigitMCMData << ") or StateDigitbut rather " << mState;
@@ -169,7 +169,7 @@ int DigitsParser::Parse(bool verbose)
         }
         if (mHeaderVerbose) {
           printDigitMCMHeader(*mDigitMCMHeader);
-        };
+        }
         mBufferLocation++;
         mState = StateDigitHCHeader;
         //new header so digit word count becomes zero
@@ -179,6 +179,8 @@ int DigitsParser::Parse(bool verbose)
         mEventCounter = mDigitMCMHeader->eventcount;
         mDataWordsParsed++;
         mChannel = 0;
+        mADCValues.fill(0);
+        digittimebinoffset = 0;
         if (!mReturnVector) {
           //returning the raw "compressed" data stream.
           //build the digit header and add to outgoing buffer;
@@ -216,6 +218,10 @@ int DigitsParser::Parse(bool verbose)
             if (mVerbose || mDataVerbose) {
               LOG(info) << "adc values : " << mDigitMCMData->x << "::" << mDigitMCMData->y << "::" << mDigitMCMData->z;
             }
+            if (mDigitMCMData->x == 15 && mDigitMCMData->y == 15 && mDigitMCMData->z == 13) {
+              LOG(info) << "stopping here for a crash";
+            }
+            LOG(info) << "digittimebinoffset = " << digittimebinoffset;
             mADCValues[digittimebinoffset] = mDigitMCMData->x;
             mADCValues[digittimebinoffset++] = mDigitMCMData->y;
             mADCValues[digittimebinoffset++] = mDigitMCMData->z;

@@ -147,7 +147,7 @@ class CruRawReader
   uint32_t mSaveBufferDataSize = 0;
   uint32_t mSaveBufferDataLeft = 0;
   uint32_t mcruFeeID = 0;
-  uint32_t datareadfromhbf;
+  uint32_t mDatareadfromhbf;
   uint32_t mTotalHBFPayLoad = 0; // total data payload of the heart beat frame in question.
   uint32_t mHBFoffset32 = 0;     // total data payload of the heart beat frame in question.
   //pointers to the data as we read them in, again no point in copying.
