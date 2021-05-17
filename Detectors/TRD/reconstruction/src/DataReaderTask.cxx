@@ -86,37 +86,37 @@ void DataReaderTask::run(ProcessingContext& pc)
         mReader.setDataBuffer(payloadIn);
         mReader.setDataBufferSize(payloadInSize);
         mReader.configure(mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
-        if(mVerbose){
-            LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-            LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-            LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%% about to run %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-            LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-            LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
+        if (mVerbose) {
+          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
+          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
+          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%% about to run %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
+          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
+          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
         }
         mReader.run();
-        if(mVerbose){
-            LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-            LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-            LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%% finished running %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-            LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-            LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
+        if (mVerbose) {
+          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
+          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
+          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%% finished running %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
+          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
+          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
         }
         mTracklets = mReader.getTracklets();
         mCompressedDigits = mReader.getCompressedDigits();
-        if(mVerbose){
-            LOG(info) << "from parsing received: " << mTracklets.size() << " tracklets and " << mCompressedDigits.size() << " compressed digits";
+        if (mVerbose) {
+          LOG(info) << "from parsing received: " << mTracklets.size() << " tracklets and " << mCompressedDigits.size() << " compressed digits";
         }
         mTriggers = mReader.getIR();
         //get the payload of trigger and digits out.
       } else { // we have compressed data coming in.
-          mCompressedReader.setDataBuffer(payloadIn);
-          mCompressedReader.setDataBufferSize(payloadInSize);
-          mCompressedReader.configure(mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
-          mCompressedReader.run();
-          mTracklets = mCompressedReader.getTracklets();
-          mDigits = mCompressedReader.getDigits();
-          mTriggers = mCompressedReader.getIR();
-          //get the payload of trigger and digits out.
+        mCompressedReader.setDataBuffer(payloadIn);
+        mCompressedReader.setDataBufferSize(payloadInSize);
+        mCompressedReader.configure(mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
+        mCompressedReader.run();
+        mTracklets = mCompressedReader.getTracklets();
+        mDigits = mCompressedReader.getDigits();
+        mTriggers = mCompressedReader.getIR();
+        //get the payload of trigger and digits out.
       }
       /* output */
       sendData(pc); //TODO do we ever have to not post the data. i.e. can we get here mid event? I dont think so.

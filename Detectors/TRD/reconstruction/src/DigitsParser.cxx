@@ -155,36 +155,35 @@ int DigitsParser::Parse(bool verbose)
         mDigitMCMHeader = (DigitMCMHeader*)(word);
         //if (mVerbose)
         if (mVerbose || mHeaderVerbose) {
-            LOG(info) << "state mcmheader and word : 0x" << std::hex << *word;
-            printDigitMCMHeader(*mDigitMCMHeader);
+          LOG(info) << "state mcmheader and word : 0x" << std::hex << *word;
+          printDigitMCMHeader(*mDigitMCMHeader);
         }
         //sanity check of digitheader ??  Still to implement.
-        if(mHeaderVerbose){
-            std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator tmpword;
+        if (mHeaderVerbose) {
+          std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator tmpword;
 
-            if (!digitMCMHeaderSanityCheck(mDigitMCMHeader)) {
-                LOG(warn) << "Sanity check Failure Digit MCMHeader : " << std::hex << mDigitMCMHeader->word;
-                LOG(warn) << "Sanity check Failure Digit MCMHeader word: " << std::hex << *word;
-                DigitMCMHeader *t;
-                tmpword=std::prev(word, 3);
-                printDigitMCMHeader(*(DigitMCMHeader*)(tmpword));
-                tmpword=std::prev(word, 2);
-                printDigitMCMHeader(*(DigitMCMHeader*)(tmpword));
-                tmpword=std::prev(word, 1);
-                printDigitMCMHeader(*(DigitMCMHeader*)(tmpword));
-                printDigitMCMHeader(*mDigitMCMHeader);
-                tmpword=std::next(word, 1);
-                printDigitMCMHeader(*(DigitMCMHeader*)(tmpword));
-                tmpword=std::next(word, 2);
-                printDigitMCMHeader(*(DigitMCMHeader*)(tmpword));
-                tmpword=std::next(word, 3);
-                printDigitMCMHeader(*(DigitMCMHeader*)(tmpword));
-                LOG(warn) << "Sanity check Failure Digit MCMHeader print out finished";
-            }
-            else{ 
-                LOG(info) << " sanity check passed for digitmcmheader";
-                printDigitMCMHeader(*mDigitMCMHeader);
-            }
+          if (!digitMCMHeaderSanityCheck(mDigitMCMHeader)) {
+            LOG(warn) << "Sanity check Failure Digit MCMHeader : " << std::hex << mDigitMCMHeader->word;
+            LOG(warn) << "Sanity check Failure Digit MCMHeader word: " << std::hex << *word;
+            DigitMCMHeader* t;
+            tmpword = std::prev(word, 3);
+            printDigitMCMHeader(*(DigitMCMHeader*)(tmpword));
+            tmpword = std::prev(word, 2);
+            printDigitMCMHeader(*(DigitMCMHeader*)(tmpword));
+            tmpword = std::prev(word, 1);
+            printDigitMCMHeader(*(DigitMCMHeader*)(tmpword));
+            printDigitMCMHeader(*mDigitMCMHeader);
+            tmpword = std::next(word, 1);
+            printDigitMCMHeader(*(DigitMCMHeader*)(tmpword));
+            tmpword = std::next(word, 2);
+            printDigitMCMHeader(*(DigitMCMHeader*)(tmpword));
+            tmpword = std::next(word, 3);
+            printDigitMCMHeader(*(DigitMCMHeader*)(tmpword));
+            LOG(warn) << "Sanity check Failure Digit MCMHeader print out finished";
+          } else {
+            LOG(info) << " sanity check passed for digitmcmheader";
+            printDigitMCMHeader(*mDigitMCMHeader);
+          }
         }
         mBufferLocation++;
         mState = StateDigitHCHeader;
@@ -198,87 +197,86 @@ int DigitsParser::Parse(bool verbose)
         mADCValues.fill(0);
         digittimebinoffset = 0;
         if (!mReturnVector) {
-            //returning the raw "compressed" data stream.
-            //build the digit header and add to outgoing buffer;
-            uint32_t* header = &(*mData)[mReturnVectorPos];
-            //build header.
+          //returning the raw "compressed" data stream.
+          //build the digit header and add to outgoing buffer;
+          uint32_t* header = &(*mData)[mReturnVectorPos];
+          //build header.
         }
         // we dont care about the year flag, we are >2007 already.
       } else {
-          if (*word == o2::trd::constants::CRUPADDING32) {
-              if (mVerbose) {
-                  LOG(info) << "state padding and word : 0x" << std::hex << *word;
-              }
-              //another pointer with padding.
-              mBufferLocation++;
-              mPaddingWordsCounter++;
-              mState = StatePadding;
-              mDataWordsParsed++;
-              mcmdatacount = 0;
-
-              // this is supposed to carry on till the end of the buffer, hence the term padding.
-              //TRDStatCounters.LinkPadWordCounts[mHCID]++; // keep track off all the padding words.
-          } else { // all we are left with is digitmcmdata words.
-              if(mState==StateDigitEndMarker){
-
-                  //we are at the end
-                  // do nothing.
-                  if(mDataVerbose){
-                      LOG(info) << " digit end marker state ...";
-                  }
-              }
-              else{
-                  if (mVerbose || mDataVerbose) {
-                      LOG(info) << "mDigitMCMData with state=" << mState << " is at " << mBufferLocation << " had value 0x" << std::hex << *word << " mcmdatacount of : " << mcmdatacount << " adc#" << mcmadccount;
-                  }
-                  //for the case of on flp build a vector of tracklets, then pack them into a data stream with a header.
-                  //for dpl build a vector and connect it with a triggerrecord.
-                  mDataWordsParsed++;
-                  mcmdatacount++;
-                  if (mReturnVector) { // we will generate a vector
-                      mDigitMCMData = (DigitMCMData*)word;
-                      mBufferLocation++;
-                      mState = StateDigitMCMData;
-                      digitwordcount++;
-                      if (mVerbose || mDataVerbose) {
-                          LOG(info) << "adc values : " << mDigitMCMData->x << "::" << mDigitMCMData->y << "::" << mDigitMCMData->z;
-                          LOG(info) << "digittimebinoffset = " << digittimebinoffset;
-                      }
-                      mADCValues[digittimebinoffset] = mDigitMCMData->x;
-                      mADCValues[digittimebinoffset++] = mDigitMCMData->y;
-                      mADCValues[digittimebinoffset++] = mDigitMCMData->z;
-                      if (mVerbose || mDataVerbose) {
-                          LOG(info) << "digit word count is : " << digitwordcount;
-                      }
-                      if (digitwordcount == constants::TIMEBINS / 3) {
-                          //sanity check, next word shouldbe either a. end of digit marker, digitMCMHeader,or padding.
-                          if (mSanityCheck) {
-                              uint32_t* tmp = std::next(word);
-                              if (mDataVerbose) {
-                                  LOG(info) << "digitwordcount = " << digitwordcount << " hopefully the next data is digitendmarker, didgitMCMHeader or padding 0x" << std::hex << *tmp;
-                              }
-                          }
-                          if (mDataVerbose) {
-                              LOG(info) << "change of adc";
-                          }
-                          mcmadccount++;
-                          //write out adc value to vector
-                          //zero digittimebinoffset
-                          mDigits.emplace_back(mDetector, mROB, mMCM, mChannel, mADCValues); // outgoing parsed digits
-                          digittimebinoffset = 0;
-                          digitwordcount = 0; // end of the digit.
-                          mChannel++;
-                      }
-
-                  } else { //version 2 will have below, it will be quicker not to have the intermediary step, but is it really needed?
-                      //returning digits raw, as its pretty much the most compressed you are going to get in anycase.
-                      // we will send the raw stream back. "compressed"
-                      // memcpy((char*)&(*mData)[mReturnVectorPos], (void*)word, sizeof(uint32_t));
-                      //TODO or should we just copy all timebins at the same time?
-                      //
-                  }
-              }//end state endmarker
+        if (*word == o2::trd::constants::CRUPADDING32) {
+          if (mVerbose) {
+            LOG(info) << "state padding and word : 0x" << std::hex << *word;
           }
+          //another pointer with padding.
+          mBufferLocation++;
+          mPaddingWordsCounter++;
+          mState = StatePadding;
+          mDataWordsParsed++;
+          mcmdatacount = 0;
+
+          // this is supposed to carry on till the end of the buffer, hence the term padding.
+          //TRDStatCounters.LinkPadWordCounts[mHCID]++; // keep track off all the padding words.
+        } else { // all we are left with is digitmcmdata words.
+          if (mState == StateDigitEndMarker) {
+
+            //we are at the end
+            // do nothing.
+            if (mDataVerbose) {
+              LOG(info) << " digit end marker state ...";
+            }
+          } else {
+            if (mVerbose || mDataVerbose) {
+              LOG(info) << "mDigitMCMData with state=" << mState << " is at " << mBufferLocation << " had value 0x" << std::hex << *word << " mcmdatacount of : " << mcmdatacount << " adc#" << mcmadccount;
+            }
+            //for the case of on flp build a vector of tracklets, then pack them into a data stream with a header.
+            //for dpl build a vector and connect it with a triggerrecord.
+            mDataWordsParsed++;
+            mcmdatacount++;
+            if (mReturnVector) { // we will generate a vector
+              mDigitMCMData = (DigitMCMData*)word;
+              mBufferLocation++;
+              mState = StateDigitMCMData;
+              digitwordcount++;
+              if (mVerbose || mDataVerbose) {
+                LOG(info) << "adc values : " << mDigitMCMData->x << "::" << mDigitMCMData->y << "::" << mDigitMCMData->z;
+                LOG(info) << "digittimebinoffset = " << digittimebinoffset;
+              }
+              mADCValues[digittimebinoffset] = mDigitMCMData->x;
+              mADCValues[digittimebinoffset++] = mDigitMCMData->y;
+              mADCValues[digittimebinoffset++] = mDigitMCMData->z;
+              if (mVerbose || mDataVerbose) {
+                LOG(info) << "digit word count is : " << digitwordcount;
+              }
+              if (digitwordcount == constants::TIMEBINS / 3) {
+                //sanity check, next word shouldbe either a. end of digit marker, digitMCMHeader,or padding.
+                if (mSanityCheck) {
+                  uint32_t* tmp = std::next(word);
+                  if (mDataVerbose) {
+                    LOG(info) << "digitwordcount = " << digitwordcount << " hopefully the next data is digitendmarker, didgitMCMHeader or padding 0x" << std::hex << *tmp;
+                  }
+                }
+                if (mDataVerbose) {
+                  LOG(info) << "change of adc";
+                }
+                mcmadccount++;
+                //write out adc value to vector
+                //zero digittimebinoffset
+                mDigits.emplace_back(mDetector, mROB, mMCM, mChannel, mADCValues); // outgoing parsed digits
+                digittimebinoffset = 0;
+                digitwordcount = 0; // end of the digit.
+                mChannel++;
+              }
+
+            } else { //version 2 will have below, it will be quicker not to have the intermediary step, but is it really needed?
+                     //returning digits raw, as its pretty much the most compressed you are going to get in anycase.
+                     // we will send the raw stream back. "compressed"
+                     // memcpy((char*)&(*mData)[mReturnVectorPos], (void*)word, sizeof(uint32_t));
+                     //TODO or should we just copy all timebins at the same time?
+                     //
+            }
+          } //end state endmarker
+        }
       }
     }
 
@@ -288,25 +286,25 @@ int DigitsParser::Parse(bool verbose)
     // mTotalHalfCRUDataLength++;
     //end of data so
     if (word == mEndParse) {
-        if (mVerbose) {
-            LOG(info) << "word is mEndParse";
-        }
+      if (mVerbose) {
+        LOG(info) << "word is mEndParse";
+      }
     }
     if (std::distance(word, mEndParse) < 0) {
-        if (mVerbose || mDataVerbose || mHeaderVerbose) {
-            LOG(info) << std::dec << "word to mEndParse is :" << std::distance(word, mEndParse);
-        }
+      if (mVerbose || mDataVerbose || mHeaderVerbose) {
+        LOG(info) << std::dec << "word to mEndParse is :" << std::distance(word, mEndParse);
+      }
     }
   }
   if (mVerbose) {
-      LOG(info) << "***** parsing loop finished for this link";
+    LOG(info) << "***** parsing loop finished for this link";
   }
 
   if (!(mState == StateDigitMCMHeader || mState == StatePadding || mState == StateDigitEndMarker)) {
-      LOG(warn) << "Exiting parsing but the state is wrong ... mState= " << mState;
-      if (mVerbose) {
-          LOG(info) << "Exiting parsing but the state is wrong ... mState= " << mState;
-      }
+    LOG(warn) << "Exiting parsing but the state is wrong ... mState= " << mState;
+    if (mVerbose) {
+      LOG(info) << "Exiting parsing but the state is wrong ... mState= " << mState;
+    }
   }
   return mDataWordsParsed;
 }
