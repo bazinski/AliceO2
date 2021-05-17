@@ -65,7 +65,8 @@ class TrackletsParser
   enum TrackletParserState { StateTrackletHCHeader, // always the start of a half chamber.
                              StateTrackletMCMHeader,
                              StateTrackletMCMData,
-                             StatePadding };
+                             StatePadding,
+                             StateFinished };
   std::vector<Tracklet64>& getTracklets() { return mTracklets; }
   inline void swapByteOrder(unsigned int& ui);
 

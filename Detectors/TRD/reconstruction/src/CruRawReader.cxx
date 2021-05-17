@@ -265,6 +265,17 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       sumtrackletwords = trackletwordsread;
       sumdigitwords = digitwordsread;
       mHBFoffset32 += digitwordsread; // all 3 in 32bit units
+      LOG(info) << "After parsing digits digitwordsread:"<<digitwordsread<< " trackletwordsread:" << trackletwordsread;
+      LOG(info) << " pointer content is :0x"<<std::hex << mHBFPayload[mHBFoffset32-5];
+      LOG(info) << " data pointer content is :0x"<<std::hex << mHBFPayload[mHBFoffset32-4];
+      LOG(info) << " data pointer content is :0x"<<std::hex << mHBFPayload[mHBFoffset32-3];
+      LOG(info) << " data pointer content is :0x"<<std::hex << mHBFPayload[mHBFoffset32-2];
+      LOG(info) << " data pointer content is :0x"<<std::hex << mHBFPayload[mHBFoffset32-1];
+      LOG(info) << "Current data pointer content is :0x"<<std::hex << mHBFPayload[mHBFoffset32];
+      LOG(info) << " data pointer content is :0x"<<std::hex << mHBFPayload[mHBFoffset32+1];
+      LOG(info) << " data pointer content is :0x"<<std::hex << mHBFPayload[mHBFoffset32+2];
+      LOG(info) << " data pointer content is :0x"<<std::hex << mHBFPayload[mHBFoffset32+3];
+      LOG(info) << "After parsing digits sumdigitwords:"<<sumdigitwords << " sumtrackletwords:" << sumtrackletwords;
     } else {
       if (mVerbose) {
         LOG(info) << "link start and end are the same, link appears to be empty for link currentlinkdex";

@@ -79,6 +79,7 @@ int TrackletsParser::Parse()
   int trackletloopcount = 0;
   LOG(info) << "distance to parse over is " << std::distance(mStartParse, mEndParse);
   for (auto word = mStartParse; word != mEndParse; word++) { // loop over the entire data buffer (a complete link of tracklets and digits)
+      if(mState==StateFinished) return mWordsRead;
     //  for (uint32_t index = start; index < end; index++) { // loop over the entire cru payload.
     //loop over all the words ... duh
     //check for tracklet end marker 0x1000 0x1000
@@ -115,6 +116,27 @@ int TrackletsParser::Parse()
         LOG(info) << "=!=!=!=!=!=! loop around for  Tracklet Loop WordsRead = " << mWordsRead + 2 << " count : " << trackletloopcount << " and index " << index << " words till end :" << indexend << " word is :" << word << "  start is : " << mStartParse << " endis : " << mEndParse;
       }
       mWordsRead += 2;
+      //we should now have a tracklet half chamber header.
+      mState=StateTrackletHCHeader;
+      std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator hchword = word;
+      std::advance(hchword, 2);
+      uint32_t halfchamberheaderint = *hchword;
+      if ((((*hchword) & (0x1 << 11)) != 0) && !mIgnoreTrackletHCHeader ) { //TrackletHCHeader has bit 11 set to 1 always. Check for state because raw data can have bit 11 set!
+        if (mHeaderVerbose) {
+          LOG(info) << "after tracklet end marker mTrackletHCHeader is has value 0x" << std::hex << *word;
+        }
+        //read the header
+        //we actually have an header word.
+        mTrackletHCHeader = (TrackletHCHeader*)&word;
+        if (mHeaderVerbose) {
+          LOG(info) << "state mcmheader and word : 0x" << std::hex << *word << " sanity check : " << trackletHCHeaderSanityCheck(*mTrackletHCHeader);
+          //printTrackletMCMHeader(*word);
+        }
+        mWordsRead++;
+        mState=StateFinished;
+      }
+
+      //
       return mWordsRead;
     }
     //if (mState == StateTrackletHCHeader && (mWordsRead != 0)) {

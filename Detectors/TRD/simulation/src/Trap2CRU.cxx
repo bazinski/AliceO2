@@ -331,7 +331,7 @@ int Trap2CRU::buildDigitRawData(const int digitindex, const std::array<int64_t, 
         data.x = adcdata[timebin];
         data.y = adcdata[timebin + 1];
         data.z = adcdata[timebin + 2];
-        data.c = 0;
+        data.c = 1;
         memcpy(mRawDataPtr, (char*)&data, 4); // uint32 -- 4 bytes.
         mRawDataPtr += 4;
       }
