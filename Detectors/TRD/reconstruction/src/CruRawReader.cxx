@@ -235,48 +235,48 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       }
       bool cleardigits = false; //linkstart and linkend already have the multiple cruheaderoffsets built in
       if (mVerbose) {
-          LOG(info) << "mem copy with offset of : " << cruhbfstartoffset << " parsing tracklets with linkstart: " << linkstart << " ending at : " << linkend;
+        LOG(info) << "mem copy with offset of : " << cruhbfstartoffset << " parsing tracklets with linkstart: " << linkstart << " ending at : " << linkend;
       }
       trackletwordsread = mTrackletsParser.Parse(&mHBFPayload, linkstart, linkend, currentdetector, cleardigits, mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose); // this will read up to the tracnklet end marker.
       if (mVerbose) {
-          LOG(info) << "trackletwordsread:" << trackletwordsread << "  mem copy with offset of : " << cruhbfstartoffset << " parsing with linkstart: " << linkstart << " ending at : " << linkend;
+        LOG(info) << "trackletwordsread:" << trackletwordsread << "  mem copy with offset of : " << cruhbfstartoffset << " parsing with linkstart: " << linkstart << " ending at : " << linkend;
       }
       linkstart += trackletwordsread;
       //now we have a tracklethcheader and a digithcheader.
       mHBFoffset32 += trackletwordsread;
       digitwordsread = 0;
       if (mVerbose) {
-          LOG(info) << "parse digits";
+        LOG(info) << "parse digits";
       }
       //linkstart and linkend already have the multiple cruheaderoffsets built in
       if (mVerbose) {
-          LOG(info) << "mem copy with offset of : " << cruhbfstartoffset << " parsing digits with linkstart: " << linkstart << " ending at : " << linkend;
+        LOG(info) << "mem copy with offset of : " << cruhbfstartoffset << " parsing digits with linkstart: " << linkstart << " ending at : " << linkend;
       }
       digitwordsread = mDigitsParser.Parse(&mHBFPayload, linkstart, linkend, currentdetector, cleardigits, mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
       if (mVerbose) {
-          LOG(info) << "digitwordsread : " << digitwordsread << " mem copy with offset of : " << cruhbfstartoffset << " parsing digits with linkstart: " << linkstart << " ending at : " << linkend;
+        LOG(info) << "digitwordsread : " << digitwordsread << " mem copy with offset of : " << cruhbfstartoffset << " parsing digits with linkstart: " << linkstart << " ending at : " << linkend;
       }
       sumlinklengths += mCurrentHalfCRULinkLengths[currentlinkindex];
       sumtrackletwords = trackletwordsread;
       sumdigitwords = digitwordsread;
       mHBFoffset32 += digitwordsread; // all 3 in 32bit units
       if (mDataVerbose) {
-          LOG(info) << "After parsing digits digitwordsread:" << digitwordsread << " trackletwordsread:" << trackletwordsread;
-          LOG(info) << " pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 - 5];
-          LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 - 4];
-          LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 - 3];
-          LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 - 2];
-          LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 - 1];
-          LOG(info) << "Current data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32];
-          LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 + 1];
-          LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 + 2];
-          LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 + 3];
-          LOG(info) << "After parsing digits sumdigitwords:" << sumdigitwords << " sumtrackletwords:" << sumtrackletwords;
+        LOG(info) << "After parsing digits digitwordsread:" << digitwordsread << " trackletwordsread:" << trackletwordsread;
+        LOG(info) << " pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 - 5];
+        LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 - 4];
+        LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 - 3];
+        LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 - 2];
+        LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 - 1];
+        LOG(info) << "Current data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32];
+        LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 + 1];
+        LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 + 2];
+        LOG(info) << " data pointer content is :0x" << std::hex << mHBFPayload[mHBFoffset32 + 3];
+        LOG(info) << "After parsing digits sumdigitwords:" << sumdigitwords << " sumtrackletwords:" << sumtrackletwords;
       }
     } else {
-        if (mVerbose) {
-            LOG(info) << "link start and end are the same, link appears to be empty for link currentlinkdex";
-        }
+      if (mVerbose) {
+        LOG(info) << "link start and end are the same, link appears to be empty for link currentlinkdex";
+      }
     }
   } //for loop over link index.
   // we have read in all the digits and tracklets for this event.
@@ -328,11 +328,11 @@ void CruRawReader::resetCounters()
 
 void CruRawReader::checkSummary()
 {
-    char chname[2] = {'a', 'b'};
+  char chname[2] = {'a', 'b'};
 
-    LOG(info) << "--- SUMMARY COUNTERS: " << mEventCounter << " events "
-        << " | " << mFatalCounter << " decode fatals "
-        << " | " << mErrorCounter << " decode errors ";
+  LOG(info) << "--- SUMMARY COUNTERS: " << mEventCounter << " events "
+            << " | " << mFatalCounter << " decode fatals "
+            << " | " << mErrorCounter << " decode errors ";
 }
 
 bool CruRawReader::run()
