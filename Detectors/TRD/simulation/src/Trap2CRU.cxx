@@ -309,9 +309,8 @@ int Trap2CRU::buildDigitRawData(const int digitindex, const std::array<int64_t, 
   header.res = 12; //1100
   header.mcm = startmcm;
   header.rob = startrob;
-  header.yearflag = 1; // >2007
+  header.yearflag = 1; // >10.2007
   header.eventcount = triggerrecordcount;
-  header.yearflag = 1;
   memcpy(mRawDataPtr, (char*)&header, 4); // uint32 -- 4 bytes.
   DigitMCMHeader* headerptr = (DigitMCMHeader*)mRawDataPtr;
   LOG(info) << "writing data to digit stream of " << std::hex << header.word;

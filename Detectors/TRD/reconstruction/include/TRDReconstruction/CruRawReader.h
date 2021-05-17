@@ -69,12 +69,13 @@ class CruRawReader
   void setBlob(bool returnblob) { mReturnBlob = returnblob; }; //set class to produce blobs and not vectors. (compress vs pass through)`
   void setDataBuffer(const char* val)
   {
-    std::cout << "setting buffer position to " << std::hex << (void*)val << std::endl;
     mDataBuffer = val;
   };
   void setDataBufferSize(long val)
   {
-    LOG(info) << " Setting buffer size to : " << val;
+    if(mVerbose){
+        LOG(info) << " Setting buffer size to : " << val;
+    }
     mDataBufferSize = val;
   };
   void setVerbose(bool verbose) { mVerbose = verbose; }
@@ -101,7 +102,9 @@ class CruRawReader
 
   inline void rewind()
   {
-    LOG(info) << "rewinding crurawreader incoming data buffer";
+    if(mVerbose){
+        LOG(info) << "rewinding crurawreader incoming data buffer";
+    }
     mDataPointer = reinterpret_cast<const uint32_t*>(mDataBuffer);
   };
 
@@ -157,7 +160,7 @@ class CruRawReader
   bool checkerCheck();
   void checkerCheckRDH();
   int mState; // basic state machine for where we are in the parsing.
-              // we parse rdh to rdh but data is cru to cru.
+  // we parse rdh to rdh but data is cru to cru.
   //the relevant parsers. Not elegant but we need both so pointers to base classes and sending them in with templates or some other such mechanism seems impossible, or its just late and I cant think.
   //TODO think of a more elegant way of incorporating the parsers.
   TrackletsParser mTrackletsParser;
@@ -176,18 +179,18 @@ class CruRawReader
   std::vector<Digit> mEventDigits;
   bool mReturnBlob{0};       // whether to return blobs or vectors;
   struct TRDDataCounters_t { //thisis on a per event basis
-    //TODO this should go into a dpl message for catching by qc ?? I think.
-    std::array<uint32_t, 1080> LinkWordCounts;    //units of 256bits "cru word"
-    std::array<uint32_t, 1080> LinkPadWordCounts; // units of 32 bits the data pad word size.
-    std::array<uint32_t, 1080> LinkFreq;          //units of 256bits "cru word"
-                                                  //from the above you can get the stats for supermodule and detector.
-    std::array<bool, 1080> LinkEmpty;             // Link only has padding words, probably not serious in pp.
-    uint32_t EmptyLinks;
-    //maybe change this to actual traps ?? but it will get large.
-    std::array<uint32_t, 1080> LinkTrackletPerTrap1; // incremented if a trap on this link has 1 tracklet
-    std::array<uint32_t, 1080> LinkTrackletPerTrap2; // incremented if a trap on this link has 2 tracklet
-    std::array<uint32_t, 1080> LinkTrackletPerTrap3; // incremented if a trap on this link has 3 tracklet
-    std::vector<uint32_t> EmptyTraps;                // MCM indexes of traps that are empty ?? list might better
+      //TODO this should go into a dpl message for catching by qc ?? I think.
+      std::array<uint32_t, 1080> LinkWordCounts;    //units of 256bits "cru word"
+      std::array<uint32_t, 1080> LinkPadWordCounts; // units of 32 bits the data pad word size.
+      std::array<uint32_t, 1080> LinkFreq;          //units of 256bits "cru word"
+      //from the above you can get the stats for supermodule and detector.
+      std::array<bool, 1080> LinkEmpty;             // Link only has padding words, probably not serious in pp.
+      uint32_t EmptyLinks;
+      //maybe change this to actual traps ?? but it will get large.
+      std::array<uint32_t, 1080> LinkTrackletPerTrap1; // incremented if a trap on this link has 1 tracklet
+      std::array<uint32_t, 1080> LinkTrackletPerTrap2; // incremented if a trap on this link has 2 tracklet
+      std::array<uint32_t, 1080> LinkTrackletPerTrap3; // incremented if a trap on this link has 3 tracklet
+      std::vector<uint32_t> EmptyTraps;                // MCM indexes of traps that are empty ?? list might better
   } TRDStatCounters;
 
   /** summary data **/

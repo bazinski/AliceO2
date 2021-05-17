@@ -77,7 +77,9 @@ int TrackletsParser::Parse()
   int currentLinkStart = 0;
   int mcmtrackletcount = 0;
   int trackletloopcount = 0;
-  LOG(info) << "distance to parse over is " << std::distance(mStartParse, mEndParse);
+  if(mDataVerbose){
+      LOG(info) << "distance to parse over is " << std::distance(mStartParse, mEndParse);
+  }
   for (auto word = mStartParse; word != mEndParse; word++) { // loop over the entire data buffer (a complete link of tracklets and digits)
       if(mState==StateFinished) return mWordsRead;
     //  for (uint32_t index = start; index < end; index++) { // loop over the entire cru payload.
