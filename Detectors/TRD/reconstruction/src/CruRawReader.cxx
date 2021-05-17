@@ -242,7 +242,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       linkstart += trackletwordsread;
       //now we have a tracklethcheader and a digithcheader.
       mHBFoffset32 += trackletwordsread;
-/*    TrackletHCHeader* tracklethcheader = (TrackletHCHeader*)&mHBFPayload[mHBFoffset32];
+      /*    TrackletHCHeader* tracklethcheader = (TrackletHCHeader*)&mHBFPayload[mHBFoffset32];
       mHBFoffset32 += sizeof(TrackletHCHeader) / 4; //bytes to uint32
       DigitHCHeader* digithcheader = (DigitHCHeader*)&mHBFPayload[mHBFoffset32];
       mHBFoffset32 += sizeof(DigitHCHeader) / 4; //bytes to uint32

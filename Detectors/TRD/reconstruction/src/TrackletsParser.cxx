@@ -210,7 +210,7 @@ int TrackletsParser::Parse()
       LOG(info) << "=!=!=!=!=!=! loop around for  Tracklet Loop count : " << trackletloopcount << " and index " << index << " word is :" << word << "  start is : " << mStartParse << " endis : " << mEndParse;
     }
     trackletloopcount++;
-  }   //end of for loop
+  } //end of for loop
   //sanity check, we should now see a digit Half Chamber Header in the following 2 32bit words.
   LOG(warn) << " end of Trackelt parsing but we are exiting with out a tracklet end marker with " << mWordsRead << " 32bit words read";
   return mWordsRead;
