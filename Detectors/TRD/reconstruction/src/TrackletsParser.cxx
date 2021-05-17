@@ -87,11 +87,9 @@ int TrackletsParser::Parse()
     if (mVerbose) {
       LOG(info) << "====== Tracklet Loop WordsRead = " << mWordsRead << " count : " << trackletloopcount << " and index " << index << " words till end : " << indexend << " word is :" << word << "  start is : " << mStartParse << " endis : " << mEndParse;
     }
-    // uint32_t word = (*mData)[index];
 
     std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator nextword = word;
     std::advance(nextword, 1);
-    //    uint32_t nextword = (*mData)[index + 1]; std::
     uint32_t nextwordcopy = *nextword;
 
     if (mDataVerbose) {
@@ -210,7 +208,7 @@ int TrackletsParser::Parse()
       LOG(info) << "=!=!=!=!=!=! loop around for  Tracklet Loop count : " << trackletloopcount << " and index " << index << " word is :" << word << "  start is : " << mStartParse << " endis : " << mEndParse;
     }
     trackletloopcount++;
-  }   //end of for loop
+  } //end of for loop
   //sanity check, we should now see a digit Half Chamber Header in the following 2 32bit words.
   LOG(warn) << " end of Trackelt parsing but we are exiting with out a tracklet end marker with " << mWordsRead << " 32bit words read";
   return mWordsRead;
