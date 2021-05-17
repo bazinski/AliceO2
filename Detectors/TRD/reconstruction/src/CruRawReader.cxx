@@ -242,13 +242,13 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       linkstart += trackletwordsread;
       //now we have a tracklethcheader and a digithcheader.
       mHBFoffset32 += trackletwordsread;
-      TrackletHCHeader* tracklethcheader = (TrackletHCHeader*)&mHBFPayload[mHBFoffset32];
+/*    TrackletHCHeader* tracklethcheader = (TrackletHCHeader*)&mHBFPayload[mHBFoffset32];
       mHBFoffset32 += sizeof(TrackletHCHeader) / 4; //bytes to uint32
       DigitHCHeader* digithcheader = (DigitHCHeader*)&mHBFPayload[mHBFoffset32];
       mHBFoffset32 += sizeof(DigitHCHeader) / 4; //bytes to uint32
       LOG(info) << " linkstart before adding the 3 words for header " << linkstart;
       linkstart += sizeof(TrackletHCHeader) / 4 + sizeof(DigitHCHeader) / 4; // advance linkstart by number of 32 bit words in the headers, 3 for now.
-      LOG(info) << " linkstart after before adding the 3 words for header " << linkstart;
+      LOG(info) << " linkstart after before adding the 3 words for header " << linkstart;*/
       digitwordsread = 0;
       if (mVerbose) {
         LOG(info) << "parse digits";
