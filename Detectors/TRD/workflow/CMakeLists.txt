@@ -43,11 +43,6 @@ o2_add_executable(tracklet-transformer
                   SOURCES src/TRDTrackletTransformerWorkflow.cxx
                   PUBLIC_LINK_LIBRARIES O2::TRDWorkflow)
 
-o2_add_executable(track-reader
-                  COMPONENT_NAME trd
-                  SOURCES src/trd-track-reader-workflow.cxx
-                  PUBLIC_LINK_LIBRARIES O2::TRDWorkflow)
-
 if (OpenMP_CXX_FOUND)
     target_compile_definitions(${targetName} PRIVATE WITH_OPENMP)
     target_link_libraries(${targetName} PRIVATE OpenMP::OpenMP_CXX)
