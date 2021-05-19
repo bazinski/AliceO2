@@ -346,5 +346,16 @@ void printDigitHCHeader(o2::trd::DigitHCHeader& header)
        header.word0, header.word1, header.res0, header.side, header.stack, header.layer, header.supermodule, header.numberHCW, header.minor, header.major, header.version, header.res1, header.ptrigcount, header.ptrigphase, header.bunchcrossing, header.numtimebins);
 }
 
+DigitMCMADCMask buildBlankADCMask()
+{
+  //set the default values for the mask.
+  DigitMCMADCMask mask;
+  mask.c = 0x1f;
+  mask.n = 0x3;
+  mask.j = 0xc;
+  // actual mask will beset somewhere else, the above values are *always* that.
+  return mask;
+}
+
 } // namespace trd
 } // namespace o2
