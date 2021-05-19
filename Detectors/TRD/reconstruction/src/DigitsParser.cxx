@@ -155,6 +155,17 @@ int DigitsParser::Parse(bool verbose)
         mcmadccount = 0;
         mcmdatacount = 0;
         mDigitMCMHeader = (DigitMCMHeader*)(word);
+        if (mDigitHCHeader->major == 4) {
+          //zero suppressed
+          //so we have an adcmask next
+          std::advance(word, 1);
+          mDigitMCMADCMask = (DigitMCMADCMask*)(word);
+          mADCMask = mDigitMCMADCMask->adcmask;
+          //TODO check for end of loop?
+          if (word == mEndParse) {
+            LOG(warn) << "we have a problem we have advanced from MCMHeader to the adcmask but are now at the end of the loop";
+          }
+        }
         //if (mVerbose)
         if (mVerbose || mHeaderVerbose) {
           LOG(info) << "state mcmheader and word : 0x" << std::hex << *word;
@@ -235,54 +246,54 @@ int DigitsParser::Parse(bool verbose)
             //for dpl build a vector and connect it with a triggerrecord.
             mDataWordsParsed++;
             mcmdatacount++;
-            if (mReturnVector) { // we will generate a vector
-              mDigitMCMData = (DigitMCMData*)word;
-              mBufferLocation++;
-              mState = StateDigitMCMData;
-              digitwordcount++;
-              if (mVerbose || mDataVerbose) {
-                LOG(info) << "adc values : " << mDigitMCMData->x << "::" << mDigitMCMData->y << "::" << mDigitMCMData->z;
-                LOG(info) << "digittimebinoffset = " << digittimebinoffset;
-              }
-              mADCValues[digittimebinoffset] = mDigitMCMData->x;
-              mADCValues[digittimebinoffset++] = mDigitMCMData->y;
-              mADCValues[digittimebinoffset++] = mDigitMCMData->z;
-              if (mVerbose || mDataVerbose) {
-                LOG(info) << "digit word count is : " << digitwordcount;
-              }
-              if (digitwordcount == constants::TIMEBINS / 3) {
-                //sanity check, next word shouldbe either a. end of digit marker, digitMCMHeader,or padding.
-                if (mSanityCheck) {
-                  uint32_t* tmp = std::next(word);
-                  if (mDataVerbose) {
-                    LOG(info) << "digitwordcount = " << digitwordcount << " hopefully the next data is digitendmarker, didgitMCMHeader or padding 0x" << std::hex << *tmp;
-                  }
-                }
-                if (mDataVerbose) {
-                  LOG(info) << "change of adc";
-                }
-                mcmadccount++;
-                //write out adc value to vector
-                //zero digittimebinoffset
-                mDigits.emplace_back(mDetector, mROB, mMCM, mChannel, mADCValues); // outgoing parsed digits
-                digittimebinoffset = 0;
-                digitwordcount = 0; // end of the digit.
-                mChannel++;
-              }
-
-            } else { //version 2 will have below, it will be quicker not to have the intermediary step, but is it really needed?
-                     //returning digits raw, as its pretty much the most compressed you are going to get in anycase.
-                     // we will send the raw stream back. "compressed"
-                     // memcpy((char*)&(*mData)[mReturnVectorPos], (void*)word, sizeof(uint32_t));
-                     //TODO or should we just copy all timebins at the same time?
-                     //
+            mDigitMCMData = (DigitMCMData*)word;
+            mBufferLocation++;
+            mState = StateDigitMCMData;
+            digitwordcount++;
+            if (mVerbose || mDataVerbose) {
+              LOG(info) << "adc values : " << mDigitMCMData->x << "::" << mDigitMCMData->y << "::" << mDigitMCMData->z;
+              LOG(info) << "digittimebinoffset = " << digittimebinoffset;
             }
+            mADCValues[digittimebinoffset] = mDigitMCMData->x;
+            mADCValues[digittimebinoffset++] = mDigitMCMData->y;
+            mADCValues[digittimebinoffset++] = mDigitMCMData->z;
+            if (mVerbose || mDataVerbose) {
+              LOG(info) << "digit word count is : " << digitwordcount;
+            }
+            if (digitwordcount == constants::TIMEBINS / 3) {
+              //sanity check, next word shouldbe either a. end of digit marker, digitMCMHeader,or padding.
+              if (mSanityCheck) {
+                uint32_t* tmp = std::next(word);
+                if (mDataVerbose) {
+                  LOG(info) << "digitwordcount = " << digitwordcount << " hopefully the next data is digitendmarker, didgitMCMHeader or padding 0x" << std::hex << *tmp;
+                }
+              }
+              if (mDataVerbose) {
+                LOG(info) << "change of adc";
+              }
+              mcmadccount++;
+              //write out adc value to vector
+              //zero digittimebinoffset
+              if (mDigitHCHeader->major == 4) {
+                //zero suppressed, so channel must be extracted from next available bit in adcmask
+                int setbit = ffs(mADCMask);
+                mChannel = setbit; //channel is the right most bit of the adcmask
+                //set that bit to zero
+                mADCMask &= ~(1UL << setbit);
+              }
+              mDigits.emplace_back(mDetector, mROB, mMCM, mChannel, mADCValues); // outgoing parsed digits
+              digittimebinoffset = 0;
+              digitwordcount = 0; // end of the digit.
+              if (mDigitHCHeader->major == 5)
+                mChannel++; // we count channels as all 21 channels are present, no way to check this.
+            }
+
           } //end state endmarker
         }
       }
     }
 
-    //accounting ....
+    //accounting
     // mCurrentLinkDataPosition256++;
     // mCurrentHalfCRUDataPosition256++;
     // mTotalHalfCRUDataLength++;

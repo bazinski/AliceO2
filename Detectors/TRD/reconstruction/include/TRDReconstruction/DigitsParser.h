@@ -97,6 +97,8 @@ class DigitsParser
   int mParsedWords{0}; // words parsed in data vector, last complete bit is not parsed, and left for another round of data update.
   DigitHCHeader* mDigitHCHeader;
   DigitMCMHeader* mDigitMCMHeader;
+  DigitMCMADCMask* mDigitMCMADCMask;
+  uint32_t mADCMask;
   DigitMCMData* mDigitMCMData;
   bool mVerbose{false};
   bool mHeaderVerbose{false};
