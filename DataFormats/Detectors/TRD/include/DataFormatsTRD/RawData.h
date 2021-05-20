@@ -441,6 +441,7 @@ bool digitMCMHeaderSanityCheck(o2::trd::DigitMCMHeader* header);
 void printDigitMCMHeader(o2::trd::DigitMCMHeader& header);
 void printDigitHCHeader(o2::trd::DigitHCHeader& header);
 DigitMCMADCMask buildBlankADCMask();
+int getNumberofTracklets(o2::trd::TrackletMCMHeader& header);
 }
 }
 #endif

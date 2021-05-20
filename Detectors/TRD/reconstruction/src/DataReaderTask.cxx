@@ -79,9 +79,9 @@ void DataReaderTask::run(ProcessingContext& pc)
 
         int a = 1;
         int debugstopper = 1;
-        //while(debugstopper==1){
-        //  a=sin(rand());
-        //}
+//        while(debugstopper==1){
+//          a=sin(rand());
+//      }
 
         mReader.setDataBuffer(payloadIn);
         mReader.setDataBufferSize(payloadInSize);
@@ -125,6 +125,10 @@ void DataReaderTask::run(ProcessingContext& pc)
 
   auto dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;
   LOG(info) << "Processing time for Data reading  " << std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count() << "ms";
+  if (!mCompressedData) {
+    LOG(info) << "Digits found : " << mReader.getDigitsFound();
+    LOG(info) << "Tracklets found : " << mReader.getTrackletsFound();
+  }
 }
 
 } // namespace o2::trd

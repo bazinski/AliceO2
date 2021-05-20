@@ -64,6 +64,8 @@ class DigitsParser
                           StateDigitEndMarker };
 
   inline void swapByteOrder(unsigned int& word);
+
+  int getDigitsFound(){return mDigitsFound;}
   bool getVerbose() { return mVerbose; }
   void setVerbose(bool value, bool header, bool data)
   {

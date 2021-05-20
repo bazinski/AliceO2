@@ -57,7 +57,6 @@ class TrackletsParser
     mDataVerbose = data;
   }
   void setDisableByteSwap(bool swap) { mDisableByteOrderFix = swap; }
-
   int getDataWordsParsed() { return mDataWordsParsed; }
   int getTrackletsFound() { return mTrackletsFound; }
   void setIgnoreTrackletHCHeader(bool ignore) { mIgnoreTrackletHCHeader = ignore; }
@@ -66,6 +65,7 @@ class TrackletsParser
                              StateTrackletMCMHeader,
                              StateTrackletMCMData,
                              StatePadding,
+                             StateTrackletEndMarker,
                              StateFinished };
   std::vector<Tracklet64>& getTracklets() { return mTracklets; }
   inline void swapByteOrder(unsigned int& ui);

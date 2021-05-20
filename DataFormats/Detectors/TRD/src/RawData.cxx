@@ -357,5 +357,46 @@ DigitMCMADCMask buildBlankADCMask()
   return mask;
 }
 
+int getNumberofTracklets(o2::trd::TrackletMCMHeader& header)
+{
+ int headertrackletcount=0;
+ if(header.pid0==0){
+   LOG(warn) << "! we have an MCM Tracklet Header with the first pid zero implying no tracklets! header to follow:";
+   LOG(warn) << header;
+   return 0;
+ }
+ else{
+   if(header.pid2!=0){
+     // 3 tracklets
+     headertrackletcount=3;
+     if(header.pid1==0 || header.pid0==0){
+       LOG(warn) << "! we have an MCM Tracklet Header with the pid2!=0 but pid1 or pid0 is ! header to follow:";
+       LOG(warn) << header;
+     }
+   }
+   else{
+     if(header.pid1!=0){
+       // 2 tracklets
+       headertrackletcount=2;
+       if(header.pid0==0){
+         LOG(warn) << "! we have an MCM Tracklet Header with the pid1!=0 but pid0 is ! header to follow:";
+         LOG(warn) << header;
+       }
+     }
+     else{
+       if(header.pid0!=0){
+         // 1 tracklet
+         headertrackletcount=1;
+       }
+       else{
+         LOG(warn) << "! we have an MCM Tracklet Header with the pidx==0  we should not be here due to first if statement though! header to follow:";
+         LOG(warn) << header;
+       }
+     }
+   }
+ }
+ return headertrackletcount;
+}
+
 } // namespace trd
 } // namespace o2

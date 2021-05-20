@@ -15,6 +15,7 @@
 #include "DataFormatsTRD/RawData.h"
 #include "DataFormatsTRD/Constants.h"
 #include "DataFormatsTRD/CompressedDigit.h"
+#include "TRDBase/Digit.h"
 
 #include "fairlogger/Logger.h"
 
@@ -282,6 +283,19 @@ int DigitsParser::Parse(bool verbose)
                 mADCMask &= ~(1UL << setbit);
               }
               mDigits.emplace_back(mDetector, mROB, mMCM, mChannel, mADCValues); // outgoing parsed digits
+             // if(mDataVerbose){
+            //    CompressedDigit t = mDigits.back();
+              // LOG(info) << " DDD "<< mDigitMCMHeader->eventcount << " Digit " << mDetector << " -" << mROB << "-" << mMCM <<"-" <<  mChannel;
+               // LOG(info) << "     "<< mDigitMCMHeader->eventcount << " header:"<< mDigitHCHeader->supermodule << "-" << mDigitHCHeader->layer << "-" << mDigitHCHeader->stack << "=" << mDigitHCHeader->side;
+   /*       LOG(info) << "Digit "  
+                    << " calculated hcid=" << t.getDetector() * 2 + t.getROB() % 2
+                    << " det=" << t.getDetector()
+                    << " mcm=" << t.getMCM()
+                    << " rob=" << t.getROB()
+         //           << " adcsum=" << t.getADCsum()
+                    << " channel=" << t.getChannel();
+           */ //  }
+              mDigitsFound++;
               digittimebinoffset = 0;
               digitwordcount = 0; // end of the digit.
               if (mDigitHCHeader->major == 5)

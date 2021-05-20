@@ -76,6 +76,7 @@ class CompressedDigit
   bool isSharedCompressedDigit() const;
 
   uint16_t operator[](const int index) { return mADC[index / 3] >> ((index % 3) * 10); }
+  uint32_t getADCsum() const { uint32_t sum=0; for(int i=0;i<constants::TIMEBINS;++i){ sum+=(mADC[i / 3] >> ((i % 3) * 10));}return sum; }
 
  private:
   uint32_t mHeader;

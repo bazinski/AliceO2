@@ -137,7 +137,12 @@ void Trap2CRU::sortDataToLinks()
                     << " mcm=" << mTracklets[trackletcount].getMCM()
                     << " rob=" << mTracklets[trackletcount].getROB()
                     << " col=" << mTracklets[trackletcount].getColumn()
-                    << " padrow=" << mTracklets[trackletcount].getPadRow();
+                    << " padrow=" << mTracklets[trackletcount].getPadRow()
+                    << " pos=" << mTracklets[trackletcount].getPosition()
+                    << " slope=" << mTracklets[trackletcount].getSlope()
+                    << " q0=" << mTracklets[trackletcount].getQ0()
+                    << " q1=" << mTracklets[trackletcount].getQ1()
+                    << " q2=" << mTracklets[trackletcount].getQ2();
         }
       } else {
         LOG(info) << "No Tracklets for this trigger";
@@ -151,8 +156,11 @@ void Trap2CRU::sortDataToLinks()
                     << " det=" << mDigits[mDigitsIndex[digitcount]].getDetector()
                     << " mcm=" << mDigits[mDigitsIndex[digitcount]].getMCM()
                     << " rob=" << mDigits[mDigitsIndex[digitcount]].getROB()
+                    << " channel=" << mDigits[mDigitsIndex[digitcount]].getChannel()
                     << " col=" << mDigits[mDigitsIndex[digitcount]].getRow()
-                    << " pad=" << mDigits[mDigitsIndex[digitcount]].getPad();
+                    << " pad=" << mDigits[mDigitsIndex[digitcount]].getPad()
+                    << " adcsum=" << mDigits[mDigitsIndex[digitcount]].getADCsum()
+                    << " hcid=" << mDigits[mDigitsIndex[digitcount]].getHCId();
         }
 
       } else {
@@ -241,11 +249,14 @@ void Trap2CRU::readTrapData()
   if (mTrackletsTree->GetEntries() != mDigitsTree->GetEntries()) {
     LOG(fatal) << "Entry counts in mTrackletsTree and Digits Tree dont match " << mTrackletsTree->GetEntries() << "!=" << mDigitsTree->GetEntries();
   }
-
+  uint32_t totaltracklets=0;
+  uint32_t totaldigits=0;
   int triggercount = 42; // triggercount is here so that we can span timeframes. The actual number is of no consequence,but must increase.
   for (int entry = 0; entry < mTrackletsTree->GetEntries(); entry++) {
     mTrackletsTree->GetEntry(entry);
     mDigitsTree->GetEntry(entry);
+    totaltracklets+=mTracklets.size();
+    totaldigits+=mDigits.size();
     //migrate digit trigger information into the tracklettrigger (historical)
     mergetriggerDigitRanges(); // merge data (if needed) from the digits trigger record to the tracklets trigger record (different files)
 
@@ -264,6 +275,8 @@ void Trap2CRU::readTrapData()
       triggercount++;
     }
   }
+  LOG(info) << " Total digits : "<< totaldigits;
+  LOG(info) << " Total tracklets : "<< totaltracklets;
 }
 
 void Trap2CRU::linkSizePadding(uint32_t linksize, uint32_t& crudatasize, uint32_t& padding)

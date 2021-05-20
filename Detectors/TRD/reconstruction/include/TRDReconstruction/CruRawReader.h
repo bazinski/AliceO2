@@ -91,7 +91,8 @@ class CruRawReader
   std::vector<Tracklet64>& getTracklets() { return mEventTracklets; };
   std::vector<Digit>& getDigits() { return mEventDigits; };
   std::vector<CompressedDigit>& getCompressedDigits() { return mEventCompressedDigits; };
-
+  int getDigitsFound(){return mTotalDigitsFound;}
+  int getTrackletsFound(){return mTotalTrackletsFound;}
  protected:
   bool processHBFs(int datasizealreadyread = 0, bool verbose = false);
   bool processHBFsa(int datasizealreadyread = 0, bool verbose = false);
@@ -125,6 +126,9 @@ class CruRawReader
   uint32_t mCurrentHalfCRUDataPosition256; //count of data read for this half cru.
   uint32_t mTotalHalfCRUDataLength;
   uint32_t mTotalHalfCRUDataLength256;
+
+  uint32_t mTotalTrackletsFound{0};
+  uint32_t mTotalDigitsFound{0};
 
   long mDataBufferSize;
   uint64_t mDataReadIn = 0;

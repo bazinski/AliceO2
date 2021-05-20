@@ -244,6 +244,8 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       linkstart += trackletwordsread;
       //now we have a tracklethcheader and a digithcheader.
       mHBFoffset32 += trackletwordsread;
+      LOG(info) << " incrementing total found tracklets by : " << mTrackletsParser.getTrackletsFound() << " and trackletwordsread : " << trackletwordsread;
+      mTotalTrackletsFound+= mTrackletsParser.getTrackletsFound();
       digitwordsread = 0;
       if (mVerbose) {
         LOG(info) << "parse digits";
@@ -253,6 +255,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
         LOG(info) << "mem copy with offset of : " << cruhbfstartoffset << " parsing digits with linkstart: " << linkstart << " ending at : " << linkend;
       }
       digitwordsread = mDigitsParser.Parse(&mHBFPayload, linkstart, linkend, currentdetector, cleardigits, mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
+      mTotalDigitsFound+= mDigitsParser.getDigitsFound();
       if (mVerbose) {
         LOG(info) << "digitwordsread : " << digitwordsread << " mem copy with offset of : " << cruhbfstartoffset << " parsing digits with linkstart: " << linkstart << " ending at : " << linkend;
       }

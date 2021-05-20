@@ -9,6 +9,7 @@
 #submit itself to any jurisdiction.
 
 add_compile_options(-O0 -pg -fPIC)
+
 o2_add_library(TRDReconstruction
                SOURCES src/CTFCoder.cxx
                        src/CTFHelper.cxx
