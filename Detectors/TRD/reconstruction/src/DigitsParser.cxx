@@ -111,13 +111,12 @@ int DigitsParser::Parse(bool verbose)
     if (mHeaderVerbose) {
       printDigitHCHeader(*mDigitHCHeader);
     }
-    mState = StateDigitMCMHeader;
     mBufferLocation += 2;
     mDataWordsParsed += 2;
     std::advance(mStartParse, 2);
     //move over the DigitHCHeader;
+    mState = StateDigitMCMHeader;
   }
-  mState = StateDigitHCHeader;
   for (auto word = mStartParse; word != mEndParse; word++) { // loop over the entire data buffer (a complete link of digits)
     //loop over all the words
     if (mDataVerbose || mVerbose) {
@@ -155,22 +154,28 @@ int DigitsParser::Parse(bool verbose)
         //we actually have an header word.
         mcmadccount = 0;
         mcmdatacount = 0;
+        mChannel=0;
         mDigitMCMHeader = (DigitMCMHeader*)(word);
+        if (mVerbose || mHeaderVerbose) {
+          LOG(info) << "state mcmheader and word : 0x" << std::hex << *word;
+          printDigitMCMHeader(*mDigitMCMHeader);
+        }
+        LOG(info) << " Digit Version is " << mDigitHCHeader->major <<"."<<mDigitHCHeader->minor;
         if (mDigitHCHeader->major == 4) {
           //zero suppressed
+          LOG(info) << "Digit data is zero suppressed, MajorVersion=" << mDigitHCHeader->major;
           //so we have an adcmask next
           std::advance(word, 1);
           mDigitMCMADCMask = (DigitMCMADCMask*)(word);
           mADCMask = mDigitMCMADCMask->adcmask;
+          //std::advance(word, 1);
+          if(mVerbose || mHeaderVerbose){
+            LOG(info) << "adc mask is " <<std::hex <<mDigitMCMADCMask->adcmask << " raw form : 0x" << std::hex << mDigitMCMADCMask->word;
+          }
           //TODO check for end of loop?
           if (word == mEndParse) {
             LOG(warn) << "we have a problem we have advanced from MCMHeader to the adcmask but are now at the end of the loop";
           }
-        }
-        //if (mVerbose)
-        if (mVerbose || mHeaderVerbose) {
-          LOG(info) << "state mcmheader and word : 0x" << std::hex << *word;
-          printDigitMCMHeader(*mDigitMCMHeader);
         }
         //sanity check of digitheader ??  Still to implement.
         if (mHeaderVerbose) {
@@ -200,9 +205,9 @@ int DigitsParser::Parse(bool verbose)
           }
         }
         mBufferLocation++;
-        mState = StateDigitHCHeader;
         //new header so digit word count becomes zero
         digitwordcount = 0;
+        mState = StateDigitMCMData;
         mMCM = mDigitMCMHeader->mcm;
         mROB = mDigitMCMHeader->rob;
         mEventCounter = mDigitMCMHeader->eventcount;
@@ -218,9 +223,12 @@ int DigitsParser::Parse(bool verbose)
         }
         // we dont care about the year flag, we are >2007 already.
       } else {
+        if(mState==StateDigitMCMHeader){
+          LOG(warn) << " state is MCMHeader but we have just bypassed it as the bitmask is wrong :" << std::hex << *word;
+        }
         if (*word == o2::trd::constants::CRUPADDING32) {
           if (mVerbose) {
-            LOG(info) << "state padding and word : 0x" << std::hex << *word;
+            LOG(info) << "state padding and word : 0x" << std::hex << *word << "  state is:" << mState;
           }
           //another pointer with padding.
           mBufferLocation++;
@@ -240,6 +248,9 @@ int DigitsParser::Parse(bool verbose)
               LOG(info) << " digit end marker state ...";
             }
           } else {
+            if(mState != StateDigitMCMData){
+              LOG(warn) << "something is wrong we are in the statement for MCMdata, but the state is : " << mState << " and MCMData state is:" << StateDigitMCMData;
+            }
             if (mVerbose || mDataVerbose) {
               LOG(info) << "mDigitMCMData with state=" << mState << " is at " << mBufferLocation << " had value 0x" << std::hex << *word << " mcmdatacount of : " << mcmdatacount << " adc#" << mcmadccount;
             }
@@ -263,24 +274,35 @@ int DigitsParser::Parse(bool verbose)
             }
             if (digitwordcount == constants::TIMEBINS / 3) {
               //sanity check, next word shouldbe either a. end of digit marker, digitMCMHeader,or padding.
-              if (mSanityCheck) {
-                uint32_t* tmp = std::next(word);
-                if (mDataVerbose) {
-                  LOG(info) << "digitwordcount = " << digitwordcount << " hopefully the next data is digitendmarker, didgitMCMHeader or padding 0x" << std::hex << *tmp;
-                }
-              }
               if (mDataVerbose) {
-                LOG(info) << "change of adc";
+                LOG(info) << "change of adc hopefully adcmask is non zero " << std::hex << mADCMask;
               }
               mcmadccount++;
               //write out adc value to vector
               //zero digittimebinoffset
               if (mDigitHCHeader->major == 4) {
                 //zero suppressed, so channel must be extracted from next available bit in adcmask
-                int setbit = ffs(mADCMask);
-                mChannel = setbit; //channel is the right most bit of the adcmask
+                LOG(info) << "adcmask: 0x" <<std::hex<< mADCMask << " and channel : " << std::dec<<mChannel;
+                mChannel=nextmcmadc(mADCMask,mChannel);
+                LOG(info) << "after mask check adcmask: 0x" <<std::hex<< mADCMask << " and channel : " << std::dec<<mChannel;
+                LOG(info) << "the above is the preceding digit above us not the one below us ";
+                if(mChannel==22){
+                  LOG(error) << "invalid bitpattern for this mcm";
+                }
                 //set that bit to zero
-                mADCMask &= ~(1UL << setbit);
+                if(mADCMask==0) {
+                  //no more adc for zero suppression.
+                  LOG(info) << "ADCMask is zero, we should change state to something useful";
+                  //now we should either have another MCMHeader, or End marker
+                  if(word!=0 && std::next(word) != 0){ // end marker is a sequence of 32 bit 2 zeros.
+                    mState=StateDigitMCMHeader;
+                  LOG(info) << "ADCMask is zero, changing state to MCMHeader";
+                  }
+                  else{
+                    mState=StateDigitEndMarker;
+                  LOG(info) << "ADCMask is zero, changing state to Endmarker";
+                  }
+                }
               }
               mDigits.emplace_back(mDetector, mROB, mMCM, mChannel, mADCValues); // outgoing parsed digits
              // if(mDataVerbose){

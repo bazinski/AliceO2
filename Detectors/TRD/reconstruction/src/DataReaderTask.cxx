@@ -78,10 +78,10 @@ void DataReaderTask::run(ProcessingContext& pc)
         }
 
         int a = 1;
-        int debugstopper = 1;
-//        while(debugstopper==1){
+        int d = 1;
+//        while(d==1){
 //          a=sin(rand());
-//      }
+//        }
 
         mReader.setDataBuffer(payloadIn);
         mReader.setDataBufferSize(payloadInSize);

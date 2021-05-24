@@ -237,10 +237,12 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       if (mVerbose) {
         LOG(info) << "mem copy with offset of : " << cruhbfstartoffset << " parsing tracklets with linkstart: " << linkstart << " ending at : " << linkend;
       }
+      LOG(info) << "FFF Tracklet Parse Start";
       trackletwordsread = mTrackletsParser.Parse(&mHBFPayload, linkstart, linkend, currentdetector, cleardigits, mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose); // this will read up to the tracnklet end marker.
       if (mVerbose) {
         LOG(info) << "trackletwordsread:" << trackletwordsread << "  mem copy with offset of : " << cruhbfstartoffset << " parsing with linkstart: " << linkstart << " ending at : " << linkend;
       }
+      LOG(info) << "FFF Tracklet Parse end";
       linkstart += trackletwordsread;
       //now we have a tracklethcheader and a digithcheader.
       mHBFoffset32 += trackletwordsread;

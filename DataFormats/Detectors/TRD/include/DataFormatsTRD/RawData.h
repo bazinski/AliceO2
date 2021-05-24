@@ -442,6 +442,8 @@ void printDigitMCMHeader(o2::trd::DigitMCMHeader& header);
 void printDigitHCHeader(o2::trd::DigitHCHeader& header);
 DigitMCMADCMask buildBlankADCMask();
 int getNumberofTracklets(o2::trd::TrackletMCMHeader& header);
+void setNumberOfTrackletsInHeader(o2::trd::TrackletMCMHeader& header, int numberoftracklets);
+int nextmcmadc(unsigned int& bp, int channel);
 }
 }
 #endif
