@@ -132,10 +132,13 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
   // at this point the entire HBF data payload is sitting in mHBFPayload and the total data count is mTotalHBFPayLoad
   int counthalfcru = 0;
   mHBFoffset32 = 0;
-  while (mHBFoffset32 < mTotalHBFPayLoad / 4) {
+  
+  LOG(info) << "while loop over cruheaders in HBF, loop count " << counthalfcru << " current offset is" << mHBFoffset32 << " total payload is " << mTotalHBFPayLoad / 4 << "  raw :" << mTotalHBFPayLoad;
+  while ((mHBFoffset32 < ((mTotalHBFPayLoad) / 4 ))){//} && mTotalHBFPayLoad>0) { // need at least a complete half cru header else we are in an error condition any case.
     if (mVerbose) {
       LOG(info) << "Looping over cruheaders in HBF, loop count " << counthalfcru << " current offset is" << mHBFoffset32 << " total payload is " << mTotalHBFPayLoad / 4 << "  raw :" << mTotalHBFPayLoad;
     }
+    LOG(info) << "calling process HalfCRU with " << mHBFoffset32 << " and supposed to halt at : " << mTotalHBFPayLoad/4 << " actual payload size is:" << mTotalHBFPayLoad;
     int halfcruprocess = processHalfCRU(mHBFoffset32);
     if (mVerbose) {
       switch (halfcruprocess) {
@@ -210,6 +213,9 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
     }
     LOG(info) << "end halfcrudump";
   }
+  // verify cru header vs rdh header
+  //FEEID has supermodule/layer/stack/side in it.
+  //CRU has 
   mHBFoffset32 += sizeof(mCurrentHalfCRUHeader) / 4;
   linkstart = mHBFPayload.begin() + dataoffsetstart32;
   linkend = mHBFPayload.begin() + dataoffsetstart32;

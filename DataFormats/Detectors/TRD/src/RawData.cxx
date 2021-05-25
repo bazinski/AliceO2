@@ -423,7 +423,7 @@ int nextmcmadc(unsigned int& bp, int channel)
     if(channel==21)break;
   }
   bp &= ~(1UL << (channel));
-  return channel+1;
+  return channel; // zero based
 }
 
 

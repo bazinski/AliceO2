@@ -134,10 +134,10 @@ int DigitsParser::Parse(bool verbose)
         LOG(info) << "Found digits end marker :" << std::hex << *word << "::" << *nextword;
       }
       //state *should* be StateDigitMCMData check that it is
-      if (mState == StateDigitMCMData || mState == StateDigitEndMarker || mState == StateDigitHCHeader) {
+      if (mState == StateDigitMCMData || mState == StateDigitEndMarker || mState == StateDigitHCHeader || mState== StateDigitMCMHeader) {
       } else {
 
-        LOG(fatal) << "Digit end marker found but state is not StateDigitMCMData(" << StateDigitMCMData << ") or StateDigitbut rather " << mState;
+        LOG(fatal) << "Digit end marker found but state is not StateDigitMCMData(" << StateDigitMCMData << ") or StateDigit but rather " << mState;
       }
       //only thing that can remain is the padding.
       //now read padding words till end.
@@ -210,8 +210,22 @@ int DigitsParser::Parse(bool verbose)
         mState = StateDigitMCMData;
         mMCM = mDigitMCMHeader->mcm;
         mROB = mDigitMCMHeader->rob;
+        //cru /2 = supermodule
+        //link channel == readoutboard as per guido doc.
+        int layer=mDigitHCHeader->layer;
+        int stack=mDigitHCHeader->stack;
+        int sector=mDigitHCHeader->supermodule;
+        mDetector=layer + stack * constants::NLAYER + sector * constants::NLAYER * constants::NSTACK;
+        //TODO check that his matches up with the CRU Link info
+        //TOOD does it match the feeid which ncodes this information as well.
+        //
         mEventCounter = mDigitMCMHeader->eventcount;
-        mDataWordsParsed++;
+        mDataWordsParsed++; // header
+        if (mDigitHCHeader->major == 4) {
+          //zero suppressed digits
+          mDataWordsParsed++; // adc mask
+
+        }
         mChannel = 0;
         mADCValues.fill(0);
         digittimebinoffset = 0;
@@ -308,6 +322,12 @@ int DigitsParser::Parse(bool verbose)
              // if(mDataVerbose){
             //    CompressedDigit t = mDigits.back();
               // LOG(info) << " DDD "<< mDigitMCMHeader->eventcount << " Digit " << mDetector << " -" << mROB << "-" << mMCM <<"-" <<  mChannel;
+              uint32_t adcsum=0;
+              for(auto adc : mADCValues){
+                adcsum+=adc;
+
+              }
+             LOG(info) << "DDDD " << mDetector<<":"<<mROB <<":" <<mMCM << ":" << mChannel<<":" <<adcsum <<":"<<  mADCValues[0] << ":" << mADCValues[1] << ":" << mADCValues[2]<< "::" << mADCValues[27]<< ":" << mADCValues[28]<< ":" << mADCValues[29];
                // LOG(info) << "     "<< mDigitMCMHeader->eventcount << " header:"<< mDigitHCHeader->supermodule << "-" << mDigitHCHeader->layer << "-" << mDigitHCHeader->stack << "=" << mDigitHCHeader->side;
    /*       LOG(info) << "Digit "  
                     << " calculated hcid=" << t.getDetector() * 2 + t.getROB() % 2

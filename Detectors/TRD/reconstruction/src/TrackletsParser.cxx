@@ -256,7 +256,7 @@ int TrackletsParser::Parse()
               auto nextdataword=std::next(word,1);
               // the check is unambigous between trackletendmarker and mcmheader
               if((*nextdataword)==constants::TRACKLETENDMARKER){
-                LOG(warn) << "Next up we should be finished parsing next line should say found tracklet end markers ";
+                LOG(info) << "Next up we should be finished parsing next line should say found tracklet end markers ";
                 LOG(info) << "changing state to Trackletendmarker from mcmdata";
                 mState=StateTrackletEndMarker;
               }
