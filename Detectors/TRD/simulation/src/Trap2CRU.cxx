@@ -162,7 +162,8 @@ void Trap2CRU::sortDataToLinks()
                     << " pad=" << mDigits[mDigitsIndex[digitcount]].getPad()
                     << " adcsum=" << mDigits[mDigitsIndex[digitcount]].getADCsum()
                     << " hcid=" << mDigits[mDigitsIndex[digitcount]].getHCId();
-          LOG(info) << "DDDDD " << mDigits[mDigitsIndex[digitcount]].getDetector()<<":"<<mDigits[mDigitsIndex[digitcount]].getROB() <<":" <<mDigits[mDigitsIndex[digitcount]].getMCM() << ":" << mDigits[mDigitsIndex[digitcount]].getChannel()<<":" << mDigits[mDigitsIndex[digitcount]].getADCsum()<< ":"<< mDigits[mDigitsIndex[digitcount]].getADC()[0] << ":"<< mDigits[mDigitsIndex[digitcount]].getADC()[1] << ":"<< mDigits[mDigitsIndex[digitcount]].getADC()[2]<< "::"<< mDigits[mDigitsIndex[digitcount]].getADC()[27] << ":"<< mDigits[mDigitsIndex[digitcount]].getADC()[28] << ":"<< mDigits[mDigitsIndex[digitcount]].getADC()[29];;
+          LOG(info) << "DDDDD " << mDigits[mDigitsIndex[digitcount]].getDetector() << ":" << mDigits[mDigitsIndex[digitcount]].getROB() << ":" << mDigits[mDigitsIndex[digitcount]].getMCM() << ":" << mDigits[mDigitsIndex[digitcount]].getChannel() << ":" << mDigits[mDigitsIndex[digitcount]].getADCsum() << ":" << mDigits[mDigitsIndex[digitcount]].getADC()[0] << ":" << mDigits[mDigitsIndex[digitcount]].getADC()[1] << ":" << mDigits[mDigitsIndex[digitcount]].getADC()[2] << "::" << mDigits[mDigitsIndex[digitcount]].getADC()[27] << ":" << mDigits[mDigitsIndex[digitcount]].getADC()[28] << ":" << mDigits[mDigitsIndex[digitcount]].getADC()[29];
+          ;
         }
 
       } else {
@@ -251,14 +252,14 @@ void Trap2CRU::readTrapData()
   if (mTrackletsTree->GetEntries() != mDigitsTree->GetEntries()) {
     LOG(fatal) << "Entry counts in mTrackletsTree and Digits Tree dont match " << mTrackletsTree->GetEntries() << "!=" << mDigitsTree->GetEntries();
   }
-  uint32_t totaltracklets=0;
-  uint32_t totaldigits=0;
+  uint32_t totaltracklets = 0;
+  uint32_t totaldigits = 0;
   int triggercount = 42; // triggercount is here so that we can span timeframes. The actual number is of no consequence,but must increase.
   for (int entry = 0; entry < mTrackletsTree->GetEntries(); entry++) {
     mTrackletsTree->GetEntry(entry);
     mDigitsTree->GetEntry(entry);
-    totaltracklets+=mTracklets.size();
-    totaldigits+=mDigits.size();
+    totaltracklets += mTracklets.size();
+    totaldigits += mDigits.size();
     //migrate digit trigger information into the tracklettrigger (historical)
     mergetriggerDigitRanges(); // merge data (if needed) from the digits trigger record to the tracklets trigger record (different files)
 
@@ -277,8 +278,8 @@ void Trap2CRU::readTrapData()
       triggercount++;
     }
   }
-  LOG(info) << " Total digits : "<< totaldigits;
-  LOG(info) << " Total tracklets : "<< totaltracklets;
+  LOG(info) << " Total digits : " << totaldigits;
+  LOG(info) << " Total tracklets : " << totaltracklets;
 }
 
 void Trap2CRU::linkSizePadding(uint32_t linksize, uint32_t& crudatasize, uint32_t& padding)
@@ -399,39 +400,39 @@ int Trap2CRU::buildDigitRawData(const int digitstartindex, const int digitendind
     }
     int channel = d->getChannel();
     //set adcmask for the channel we currently have.
-    LOG(info) << "setting bit :"<<channel<< " in mask "<<adcmaskptr->adcmask;
+    LOG(info) << "setting bit :" << channel << " in mask " << adcmaskptr->adcmask;
     adcmaskptr->adcmask |= 1UL << channel;
-    LOG(info) << "set bit :"<<channel<< " in mask "<<adcmaskptr->adcmask;
-//    LOG(info) << "Setting adc mask to :0x" << std::hex << adcmaskptr->adcmask << " having just set channel : " << std::dec << channel;
-//    LOG(debug) << "writing real data to digit stream of " << std::hex << data.word;
+    LOG(info) << "set bit :" << channel << " in mask " << adcmaskptr->adcmask;
+    //    LOG(info) << "Setting adc mask to :0x" << std::hex << adcmaskptr->adcmask << " having just set channel : " << std::dec << channel;
+    //    LOG(debug) << "writing real data to digit stream of " << std::hex << data.word;
     for (int timebin = 0; timebin < o2::trd::constants::TIMEBINS; timebin += 3) {
       data.x = adcdata[timebin];
       data.y = adcdata[timebin + 1];
       data.z = adcdata[timebin + 2];
       data.c = 1;
-        LOG(info) << "ADC values  raw: 0x"<< std::hex <<data.word << std::dec <<" adc:"<<   timebin << " = " << adcdata[timebin] << ":" << adcdata[timebin + 1] << ":" << adcdata[timebin + 2];
-          memcpy(mRawDataPtr, (char*)&data, sizeof(DigitMCMData)); // uint32 -- 4 bytes.
-//        LOG(info) << "ADC raw data written is digitmcmdata size=" << sizeof(DigitMCMData) << "  actually 0x"<< std::hex<< ((DigitMCMData*)mRawDataPtr)->word;
-        LOG(info) << " x:"<< ((DigitMCMData*)mRawDataPtr)->x << " y:"<< ((DigitMCMData*)mRawDataPtr)->y <<" z:"<< ((DigitMCMData*)mRawDataPtr)->z;
-//        LOG(info) << "adc mask is now : " << std::hex << adcmaskptr->adcmask;
-        mRawDataPtr += sizeof(DigitMCMData);
+      LOG(info) << "ADC values  raw: 0x" << std::hex << data.word << std::dec << " adc:" << timebin << " = " << adcdata[timebin] << ":" << adcdata[timebin + 1] << ":" << adcdata[timebin + 2];
+      memcpy(mRawDataPtr, (char*)&data, sizeof(DigitMCMData)); // uint32 -- 4 bytes.
+                                                               //        LOG(info) << "ADC raw data written is digitmcmdata size=" << sizeof(DigitMCMData) << "  actually 0x"<< std::hex<< ((DigitMCMData*)mRawDataPtr)->word;
+      LOG(info) << " x:" << ((DigitMCMData*)mRawDataPtr)->x << " y:" << ((DigitMCMData*)mRawDataPtr)->y << " z:" << ((DigitMCMData*)mRawDataPtr)->z;
+      //        LOG(info) << "adc mask is now : " << std::hex << adcmaskptr->adcmask;
+      mRawDataPtr += sizeof(DigitMCMData);
       digitwordswritten++;
     }
-    LOG(info) << "DDD Adding Digit to raw stream rob:mcm:channel " << d->getROB() <<":" << d->getMCM() << ":" << d->getChannel() << " adcmask is now :" << adcmaskptr->adcmask;
-    LOG(info) << "DDDD " << d->getDetector()<<":"<<d->getROB() <<":" <<d->getMCM() << ":" << d->getChannel()<<":" << d->getADCsum()<< ":"<< d->getADC()[0] << ":"<< d->getADC()[1] << ":"<< d->getADC()[2]<< "::"<< d->getADC()[27] << ":"<< d->getADC()[28] << ":"<< d->getADC()[29];
-    if(d->getMCM() != startmcm){
+    LOG(info) << "DDD Adding Digit to raw stream rob:mcm:channel " << d->getROB() << ":" << d->getMCM() << ":" << d->getChannel() << " adcmask is now :" << adcmaskptr->adcmask;
+    LOG(info) << "DDDD " << d->getDetector() << ":" << d->getROB() << ":" << d->getMCM() << ":" << d->getChannel() << ":" << d->getADCsum() << ":" << d->getADC()[0] << ":" << d->getADC()[1] << ":" << d->getADC()[2] << "::" << d->getADC()[27] << ":" << d->getADC()[28] << ":" << d->getADC()[29];
+    if (d->getMCM() != startmcm) {
       LOG(fatal) << "digit getmcm = " << d->getMCM() << " while startmcm=" << startmcm;
     }
     digitswritten++;
   }
-  if(digitswritten!=digitendindex-digitstartindex){
+  if (digitswritten != digitendindex - digitstartindex) {
     LOG(error) << " something wrong the number of digitswritten does not correspond to the the loop count";
   }
   LOG(info) << "raw pointer at end : " << (void*)mRawDataPtr;
   LOG(info) << __func__ << " leaving with digitswritten of: " << digitwordswritten << " for det:rob:mcm of " << startdet << ":" << startrob << ":" << startmcm;
-  if (digitwordswritten != (digitswritten * 10 + 2) ) {
-    LOG(error) << "something wrong with writing the digits the following should be equal " << digitwordswritten << "==" << (digitswritten * 10 + 2)  << " with digitswritten=" << digitswritten;
-    LOG(error) << "digit start index distance to digit end index :" << digitendindex-digitstartindex;
+  if (digitwordswritten != (digitswritten * 10 + 2)) {
+    LOG(error) << "something wrong with writing the digits the following should be equal " << digitwordswritten << "==" << (digitswritten * 10 + 2) << " with digitswritten=" << digitswritten;
+    LOG(error) << "digit start index distance to digit end index :" << digitendindex - digitstartindex;
   }
   return digitwordswritten;
 }
@@ -443,10 +444,9 @@ int Trap2CRU::buildTrackletRawData(const int trackletindex, const int linkid)
   std::array<TrackletMCMData, 3> trackletdata;
   int a = 1;
   int d = 1;
-//  while(d==1){
-//    a=sin(rand());
-//  }
-
+  //  while(d==1){
+  //    a=sin(rand());
+  //  }
 
   header.col = mTracklets[trackletindex].getColumn();
   header.padrow = mTracklets[trackletindex].getPadRow();
@@ -459,14 +459,13 @@ int Trap2CRU::buildTrackletRawData(const int trackletindex, const int linkid)
                          mTracklets[trackletindex + trackletcounter].getPosition(), mTracklets[trackletindex + trackletcounter].getQ0(),
                          mTracklets[trackletindex + trackletcounter].getQ1(), mTracklets[trackletindex + trackletcounter].getQ2());
     int headerqpart = ((mTracklets[trackletindex + trackletcounter].getQ2()) << 2) + ((mTracklets[trackletindex + trackletcounter].getQ1()) >> 5);
-    if(headerqpart==0xff){  
-      LOG(info) <<  mTracklets[trackletindex + trackletcounter].getQ2() << 2 +
-        ((mTracklets[trackletindex + trackletcounter].getQ1()) >> 5)
-        << " <--- headerqpart calculation : part 2shit :" << mTracklets[trackletindex + trackletcounter].getQ2() << 2
-        << " part 5 shift : " << ((mTracklets[trackletindex + trackletcounter].getQ1()) >> 5)
-        << " Q0:" << mTracklets[trackletindex+trackletcounter].getQ0()
-        << " Q1:" << mTracklets[trackletindex+trackletcounter].getQ1()
-        << " Q2:" << mTracklets[trackletindex+trackletcounter].getQ2();
+    if (headerqpart == 0xff) {
+      LOG(info) << mTracklets[trackletindex + trackletcounter].getQ2() << 2 + ((mTracklets[trackletindex + trackletcounter].getQ1()) >> 5)
+                << " <--- headerqpart calculation : part 2shit :" << mTracklets[trackletindex + trackletcounter].getQ2() << 2
+                << " part 5 shift : " << ((mTracklets[trackletindex + trackletcounter].getQ1()) >> 5)
+                << " Q0:" << mTracklets[trackletindex + trackletcounter].getQ0()
+                << " Q1:" << mTracklets[trackletindex + trackletcounter].getQ1()
+                << " Q2:" << mTracklets[trackletindex + trackletcounter].getQ2();
       LOG(error) << " header part of pid is 0xff which is a no tracklet definition";
     }
     switch (trackletcounter) {
@@ -475,11 +474,13 @@ int Trap2CRU::buildTrackletRawData(const int trackletindex, const int linkid)
         break;
       case 1:
         header.pid1 = headerqpart;
-        if(header.pid1==0xff ) LOG(warn) << "ZZ we are setting pid1 but pid0 is not set, a second tracklet but no first one?";
+        if (header.pid1 == 0xff)
+          LOG(warn) << "ZZ we are setting pid1 but pid0 is not set, a second tracklet but no first one?";
         break;
       case 2:
         header.pid2 = headerqpart;
-        if(header.pid1==0xff || header.pid0==0xff) LOG(warn) << "ZZ we are setting pid2 but pid0/1 is not set, a second tracklet but no first one?" << header.pid0 << " " << header.pid1;
+        if (header.pid1 == 0xff || header.pid0 == 0xff)
+          LOG(warn) << "ZZ we are setting pid2 but pid0/1 is not set, a second tracklet but no first one?" << header.pid0 << " " << header.pid1;
         break;
       default:
         LOG(warn) << ">3 tracklets when building the Tracklet raw data stream for hcid=" << mTracklets[trackletindex + trackletcounter].getHCID() << " col:" << mTracklets[trackletindex + trackletcounter].getColumn() << " padrow:" << mTracklets[trackletindex + trackletcounter].getPadRow();
@@ -490,22 +491,22 @@ int Trap2CRU::buildTrackletRawData(const int trackletindex, const int linkid)
   }
   //now copy the mcmheader and mcmdata.
   if (!destroytracklets) {
-    setNumberOfTrackletsInHeader(header,trackletcounter);
+    setNumberOfTrackletsInHeader(header, trackletcounter);
     memcpy((char*)mRawDataPtr, (char*)&header, sizeof(TrackletMCMHeader));
     mRawDataPtr += sizeof(TrackletMCMHeader);
     for (int i = 0; i < trackletcounter; ++i) {
       memcpy((char*)mRawDataPtr, (char*)&trackletdata[i], sizeof(TrackletMCMData));
       LOG(info) << "TTT+TTT Adding tracklet to raw stream 0x" << std::hex << trackletdata[i].word << " header:" << header.word;
-//      if(trackletdata[i].word==0x48e05023){
-//        int a=1;
-//        int d=1;
-//        while(d==1){
-//          a=sin(rand());
-//        }
-//      }
+      //      if(trackletdata[i].word==0x48e05023){
+      //        int a=1;
+      //        int d=1;
+      //        while(d==1){
+      //          a=sin(rand());
+      //        }
+      //      }
       mRawDataPtr += sizeof(TrackletMCMData);
     }
-    if(trackletcounter==0){
+    if (trackletcounter == 0) {
       LOG(error) << "we have zero tracklets to go with a tracklet header ?!!??";
     }
   } else {
@@ -552,8 +553,8 @@ int Trap2CRU::writeHCHeader(const int eventcount, const uint32_t linkid)
   int detector = linkid / 2;
   TrackletHCHeader trackletheader;
   trackletheader.supermodule = linkid / 60;
-  trackletheader.stack = linkid;//TODO this is wrong, go back to the ori thing from Guido
-  trackletheader.layer = linkid;//TODO this is wrong.
+  trackletheader.stack = linkid; //TODO this is wrong, go back to the ori thing from Guido
+  trackletheader.layer = linkid; //TODO this is wrong.
   trackletheader.one = 1;
   trackletheader.side = (linkid % 2) ? 1 : 0;
   trackletheader.MCLK = eventcount * 42; // just has to be a consistant increasing number per event.
@@ -604,7 +605,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
   std::vector<char> rawdatavector(1024 * 1024 * 2); // sum of link sizes + padding in units of bytes and some space for the header (512 bytes).
   LOG(debug) << "BUNCH CROSSING : " << triggerrecord.getBCData().bc << " with orbit : " << triggerrecord.getBCData().orbit;
   for (int halfcru = 0; halfcru < o2::trd::constants::NHALFCRU; halfcru++) {
-    LOG(info) << "+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+  ======   start of halfcru : "<< halfcru;
+    LOG(info) << "+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+  ======   start of halfcru : " << halfcru;
     int halfcruwordswritten = 0;
     int supermodule = halfcru / 4; // 2 cru per supermodule.
     int endpoint = halfcru / 2;    // 2 pci end points per cru, 15 links each
@@ -642,7 +643,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
       //we have some data on this link
       int trackletcounter = 0;
       if (mCurrentTracklet < mTracklets.size() || mCurrentDigit < mDigits.size()) {
-        while (isTrackletOnLink(linkid, mCurrentTracklet) && mCurrentTracklet<mTracklets.size()) {
+        while (isTrackletOnLink(linkid, mCurrentTracklet) && mCurrentTracklet < mTracklets.size()) {
           LOG(info) << "tracklet is on link for linkid : " << linkid << " and tracklet index of : " << mCurrentTracklet << " with current digit index : " << mCurrentDigit;
           // still on an mcm on this link
           int tracklets = buildTrackletRawData(mCurrentTracklet, linkid); //returns # of 32 bits, header plus trackletdata words that would have come from the mcm.
@@ -654,7 +655,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
         if (mCurrentTracklet >= mTracklets.size()) {
           LOG(debug) << " finished with tracklets";
         }
-        if (trackletcounter > 0) {// TOOD this if statement givent the lower if statement is to keep the ability to write tracklets with nothing of the digits.
+        if (trackletcounter > 0) { // TOOD this if statement givent the lower if statement is to keep the ability to write tracklets with nothing of the digits.
           //write tracklet end marker
           int trackletendmarker = writeTrackletEndMarker();
           linkwordswritten += trackletendmarker;
@@ -666,14 +667,14 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
         int adccounter = 0;
         int rawwordsbefore = rawwords;
         //LOG(info) << "Checking digit : " << linkid << " m";
-        bool HaveNotAlreadyWrittenThis=true;
-        LOG(info) << "Checking digit : " << linkid << " mCurrentDigit"<<mCurrentDigit << " digit size:" << mDigits.size();
-        LOG(info) << "Is curernt digit on this link: " << isDigitOnLink(linkid,mCurrentDigit);
-        LOG(info) << "calc linkid : "<< mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2<< " actual link="<<  linkid;
+        bool HaveNotAlreadyWrittenThis = true;
+        LOG(info) << "Checking digit : " << linkid << " mCurrentDigit" << mCurrentDigit << " digit size:" << mDigits.size();
+        LOG(info) << "Is curernt digit on this link: " << isDigitOnLink(linkid, mCurrentDigit);
+        LOG(info) << "calc linkid : " << mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2 << " actual link=" << linkid;
 
         if (mCurrentDigit < mDigits.size()) {
-          while (isDigitOnLink(linkid, mCurrentDigit) && mCurrentDigit<mDigits.size()) {
-            LOG(info) << "at top of while loop calc linkid : "<< mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2<< " actual link="<<  linkid;
+          while (isDigitOnLink(linkid, mCurrentDigit) && mCurrentDigit < mDigits.size()) {
+            LOG(info) << "at top of while loop calc linkid : " << mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2 << " actual link=" << linkid;
             LOG(info) << "digit is on link for linkid : " << linkid << " and digit index of : " << mCurrentDigit;
             if (trackletcounter == 0 && HaveNotAlreadyWrittenThis) {
               // we have no tracklets, but we still need the trackletendmarker and the half chamber headers.
@@ -684,7 +685,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
               int hcheaderwords = writeHCHeader(triggercount, linkid);
               linkwordswritten += hcheaderwords;
               rawwords += hcheaderwords;
-              HaveNotAlreadyWrittenThis=false;
+              HaveNotAlreadyWrittenThis = false;
             }
             //while we are on a single mcm, copy the digits timebins to the array.
             int digitcounter = 0;
@@ -693,8 +694,8 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
             int currentDetector = mDigits[mDigitsIndex[mCurrentDigit]].getDetector();
             int startmCurrentDigit = mCurrentDigit;
             while (mDigits[mDigitsIndex[mCurrentDigit]].getMCM() == currentMCM &&
-                mDigits[mDigitsIndex[mCurrentDigit]].getROB() == currentROB &&
-                mDigits[mDigitsIndex[mCurrentDigit]].getDetector() == currentDetector) {
+                   mDigits[mDigitsIndex[mCurrentDigit]].getROB() == currentROB &&
+                   mDigits[mDigitsIndex[mCurrentDigit]].getDetector() == currentDetector) {
               LOG(debug) << " on index of : " << mDigitsIndex[mCurrentDigit] << " wuf channel=" << mDigits[mDigitsIndex[mCurrentDigit]].getChannel();
               mCurrentDigit++;
               digitcounter++;
@@ -713,7 +714,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
             //due to not being zero suppressed, digits returned from buildDigitRawData should *always* be 21.
             ///rawwords += digits * 10 + 1; //10 for the tiembins and 1 for the header.
             linkwordswritten += digitwordswritten;
-            LOG(info) << "at bottom of while loop  loop to continue if calc linkid : "<< mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2<< " actual link="<<  linkid;
+            LOG(info) << "at bottom of while loop  loop to continue if calc linkid : " << mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2 << " actual link=" << linkid;
           }
         }
         LOG(debug) << "we have a  trackletcounter: " << trackletcounter;
@@ -761,7 +762,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
           if ((mRawDataPtr - rawdataptratstart) != (totallinklengths * 32)) {
             bytescopied = mRawDataPtr - rawdataptratstart;
             LOG(debug) << "something wrong with data size in cruheader writing"
-              << "linkwordswriten:" << linkwordswritten << " rawwords:" << rawwords << "bytestocopy : " << bytescopied << " crudatasize:" << crudatasize << " sum of links up to now : " << totallinklengths << " mRawDataPtr:0x" << std::hex << (void*)mRawDataPtr << "  start ptr:" << std::hex << (void*)rawdataptratstart;
+                       << "linkwordswriten:" << linkwordswritten << " rawwords:" << rawwords << "bytestocopy : " << bytescopied << " crudatasize:" << crudatasize << " sum of links up to now : " << totallinklengths << " mRawDataPtr:0x" << std::hex << (void*)mRawDataPtr << "  start ptr:" << std::hex << (void*)rawdataptratstart;
             //something wrong with data size writing padbytes:81 bytestocopy : 3488 crudatasize:81 mRawDataPtr:0x0x7f669acdedf0  start ptr:0x7f669acde050
 
           } else {
@@ -786,7 +787,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
         //LOG(info) << "incrementing halfcruwordswritten : " << halfcruwordswritten << " by linkwordswritten : " << linkwordswritten;
         halfcruwordswritten += linkwordswritten;
         // LOG(info) << "incremented halfcruwordswritten : " << halfcruwordswritten << " by linkwordswritten : " << linkwordswritten;
-      }// if tracklets.size >0
+      } // if tracklets.size >0
       //write the cruhalfheader now that we know the lengths.
       memcpy((char*)halfcruheaderptr, (char*)&halfcruheader, sizeof(halfcruheader));
     }

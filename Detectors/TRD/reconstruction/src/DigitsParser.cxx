@@ -51,7 +51,7 @@ int DigitsParser::Parse(bool verbose)
   mDigitsFound = 0;     // tracklets found in the data block, mostly used for debugging.
   mBufferLocation = 0;
   mPaddingWordsCounter = 0;
-  std::array<uint16_t,constants::TIMEBINS> mADCValues{};
+  std::array<uint16_t, constants::TIMEBINS> mADCValues{};
   if (mVerbose) {
     LOG(info) << "Digit Parser parse of data sitting at :" << std::hex << (void*)mData << " starting at pos " << mStartParse;
     if (mDisableByteOrderFix) {
@@ -135,7 +135,7 @@ int DigitsParser::Parse(bool verbose)
         LOG(info) << "Found digits end marker :" << std::hex << *word << "::" << *nextword;
       }
       //state *should* be StateDigitMCMData check that it is
-      if (mState == StateDigitMCMData || mState == StateDigitEndMarker || mState == StateDigitHCHeader || mState== StateDigitMCMHeader) {
+      if (mState == StateDigitMCMData || mState == StateDigitEndMarker || mState == StateDigitHCHeader || mState == StateDigitMCMHeader) {
       } else {
 
         LOG(fatal) << "Digit end marker found but state is not StateDigitMCMData(" << StateDigitMCMData << ") or StateDigit but rather " << mState;
@@ -155,13 +155,13 @@ int DigitsParser::Parse(bool verbose)
         //we actually have an header word.
         mcmadccount = 0;
         mcmdatacount = 0;
-        mChannel=0;
+        mChannel = 0;
         mDigitMCMHeader = (DigitMCMHeader*)(word);
         if (mVerbose || mHeaderVerbose) {
           LOG(info) << "state mcmheader and word : 0x" << std::hex << *word;
           printDigitMCMHeader(*mDigitMCMHeader);
         }
-        LOG(info) << " Digit Version is " << mDigitHCHeader->major <<"."<<mDigitHCHeader->minor;
+        LOG(info) << " Digit Version is " << mDigitHCHeader->major << "." << mDigitHCHeader->minor;
         if (mDigitHCHeader->major == 4) {
           //zero suppressed
           LOG(info) << "Digit data is zero suppressed, MajorVersion=" << mDigitHCHeader->major;
@@ -170,8 +170,8 @@ int DigitsParser::Parse(bool verbose)
           mDigitMCMADCMask = (DigitMCMADCMask*)(word);
           mADCMask = mDigitMCMADCMask->adcmask;
           //std::advance(word, 1);
-          if(mVerbose || mHeaderVerbose){
-            LOG(info) << "adc mask is " <<std::hex <<mDigitMCMADCMask->adcmask << " raw form : 0x" << std::hex << mDigitMCMADCMask->word;
+          if (mVerbose || mHeaderVerbose) {
+            LOG(info) << "adc mask is " << std::hex << mDigitMCMADCMask->adcmask << " raw form : 0x" << std::hex << mDigitMCMADCMask->word;
           }
           //TODO check for end of loop?
           if (word == mEndParse) {
@@ -213,10 +213,10 @@ int DigitsParser::Parse(bool verbose)
         mROB = mDigitMCMHeader->rob;
         //cru /2 = supermodule
         //link channel == readoutboard as per guido doc.
-        int layer=mDigitHCHeader->layer;
-        int stack=mDigitHCHeader->stack;
-        int sector=mDigitHCHeader->supermodule;
-        mDetector=layer + stack * constants::NLAYER + sector * constants::NLAYER * constants::NSTACK;
+        int layer = mDigitHCHeader->layer;
+        int stack = mDigitHCHeader->stack;
+        int sector = mDigitHCHeader->supermodule;
+        mDetector = layer + stack * constants::NLAYER + sector * constants::NLAYER * constants::NSTACK;
         //TODO check that his matches up with the CRU Link info
         //TOOD does it match the feeid which ncodes this information as well.
         //
@@ -225,7 +225,6 @@ int DigitsParser::Parse(bool verbose)
         if (mDigitHCHeader->major == 4) {
           //zero suppressed digits
           mDataWordsParsed++; // adc mask
-
         }
         mChannel = 0;
         mADCValues.fill(0);
@@ -238,7 +237,7 @@ int DigitsParser::Parse(bool verbose)
         }
         // we dont care about the year flag, we are >2007 already.
       } else {
-        if(mState==StateDigitMCMHeader){
+        if (mState == StateDigitMCMHeader) {
           LOG(warn) << " state is MCMHeader but we have just bypassed it as the bitmask is wrong :" << std::hex << *word;
         }
         if (*word == o2::trd::constants::CRUPADDING32) {
@@ -263,7 +262,7 @@ int DigitsParser::Parse(bool verbose)
               LOG(info) << " digit end marker state ...";
             }
           } else {
-            if(mState != StateDigitMCMData){
+            if (mState != StateDigitMCMData) {
               LOG(warn) << "something is wrong we are in the statement for MCMdata, but the state is : " << mState << " and MCMData state is:" << StateDigitMCMData;
             }
             if (mVerbose || mDataVerbose) {
@@ -282,11 +281,12 @@ int DigitsParser::Parse(bool verbose)
               LOG(info) << "digittimebinoffset = " << digittimebinoffset;
             }
             mADCValues[digittimebinoffset++] = mDigitMCMData->x;
-//            digittimebinoffset+=1;
+            //            digittimebinoffset+=1;
             mADCValues[digittimebinoffset++] = mDigitMCMData->y;
             mADCValues[digittimebinoffset++] = mDigitMCMData->z;
-            if(digittimebinoffset==30) digittimebinoffset=29;
-            if(digittimebinoffset > constants::TIMEBINS){
+            if (digittimebinoffset == 30)
+              digittimebinoffset = 29;
+            if (digittimebinoffset > constants::TIMEBINS) {
               LOG(fatal) << "too many timebins to insert into mADCValues digittimebinoffset:" << digittimebinoffset;
             }
             if (mVerbose || mDataVerbose) {
@@ -302,47 +302,46 @@ int DigitsParser::Parse(bool verbose)
               //zero digittimebinoffset
               if (mDigitHCHeader->major == 4) {
                 //zero suppressed, so channel must be extracted from next available bit in adcmask
-                LOG(info) << "adcmask: 0x" <<std::hex<< mADCMask << " and channel : " << std::dec<<mChannel;
-                mChannel=nextmcmadc(mADCMask,mChannel);
-                LOG(info) << "after mask check adcmask: 0x" <<std::hex<< mADCMask << " and channel : " << std::dec<<mChannel;
+                LOG(info) << "adcmask: 0x" << std::hex << mADCMask << " and channel : " << std::dec << mChannel;
+                mChannel = nextmcmadc(mADCMask, mChannel);
+                LOG(info) << "after mask check adcmask: 0x" << std::hex << mADCMask << " and channel : " << std::dec << mChannel;
                 LOG(info) << "the above is the preceding digit above us not the one below us ";
-                if(mChannel==22){
+                if (mChannel == 22) {
                   LOG(error) << "invalid bitpattern for this mcm";
                 }
                 //set that bit to zero
-                if(mADCMask==0) {
+                if (mADCMask == 0) {
                   //no more adc for zero suppression.
                   LOG(info) << "ADCMask is zero, we should change state to something useful";
                   //now we should either have another MCMHeader, or End marker
-                  if(word!=0 && std::next(word) != 0){ // end marker is a sequence of 32 bit 2 zeros.
-                    mState=StateDigitMCMHeader;
-                  LOG(info) << "ADCMask is zero, changing state to MCMHeader";
-                  }
-                  else{
-                    mState=StateDigitEndMarker;
-                  LOG(info) << "ADCMask is zero, changing state to Endmarker";
+                  if (word != 0 && std::next(word) != 0) { // end marker is a sequence of 32 bit 2 zeros.
+                    mState = StateDigitMCMHeader;
+                    LOG(info) << "ADCMask is zero, changing state to MCMHeader";
+                  } else {
+                    mState = StateDigitEndMarker;
+                    LOG(info) << "ADCMask is zero, changing state to Endmarker";
                   }
                 }
               }
               mDigits.emplace_back(mDetector, mROB, mMCM, mChannel, mADCValues); // outgoing parsed digits
-             // if(mDataVerbose){
-            //    CompressedDigit t = mDigits.back();
+                                                                                 // if(mDataVerbose){
+                                                                                 //    CompressedDigit t = mDigits.back();
               // LOG(info) << " DDD "<< mDigitMCMHeader->eventcount << " Digit " << mDetector << " -" << mROB << "-" << mMCM <<"-" <<  mChannel;
-              uint32_t adcsum=0;
-              for(auto adc : mADCValues){
-                adcsum+=adc;
-
+              uint32_t adcsum = 0;
+              for (auto adc : mADCValues) {
+                adcsum += adc;
               }
-             LOG(info) << "DDDD " << mDetector<<":"<<mROB <<":" <<mMCM << ":" << mChannel<<":" <<adcsum <<":"<<  mADCValues[0] << ":" << mADCValues[1] << ":" << mADCValues[2]<< "::" << mADCValues[27]<< ":" << mADCValues[28]<< ":" << mADCValues[29];
-               // LOG(info) << "     "<< mDigitMCMHeader->eventcount << " header:"<< mDigitHCHeader->supermodule << "-" << mDigitHCHeader->layer << "-" << mDigitHCHeader->stack << "=" << mDigitHCHeader->side;
-   /*       LOG(info) << "Digit "  
+              LOG(info) << "DDDD " << mDetector << ":" << mROB << ":" << mMCM << ":" << mChannel << ":" << adcsum << ":" << mADCValues[0] << ":" << mADCValues[1] << ":" << mADCValues[2] << "::" << mADCValues[27] << ":" << mADCValues[28] << ":" << mADCValues[29];
+              // LOG(info) << "     "<< mDigitMCMHeader->eventcount << " header:"<< mDigitHCHeader->supermodule << "-" << mDigitHCHeader->layer << "-" << mDigitHCHeader->stack << "=" << mDigitHCHeader->side;
+              /*       LOG(info) << "Digit "  
                     << " calculated hcid=" << t.getDetector() * 2 + t.getROB() % 2
                     << " det=" << t.getDetector()
                     << " mcm=" << t.getMCM()
                     << " rob=" << t.getROB()
          //           << " adcsum=" << t.getADCsum()
                     << " channel=" << t.getChannel();
-           */ //  }
+           */
+              //  }
               mDigitsFound++;
               digittimebinoffset = 0;
               digitwordcount = 0; // end of the digit.
