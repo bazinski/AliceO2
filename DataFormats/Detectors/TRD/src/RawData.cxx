@@ -359,73 +359,78 @@ DigitMCMADCMask buildBlankADCMask()
 
 int getNumberofTracklets(o2::trd::TrackletMCMHeader& header)
 {
- int headertrackletcount=0;
- if(header.pid0==0xff){
-   LOG(warn) << "! we have an MCM Tracklet Header with the first pid zero implying no tracklets! header to follow:";
-   LOG(warn) << header;
-   return 0;
- }
- else{
-   if(header.pid2!=0xff){
-     // 3 tracklets
-     headertrackletcount=3;
-     if(header.pid1==0xff || header.pid0==0xff){
-       LOG(warn) << "! we have an MCM Tracklet Header with the pid2!=0 but pid1 or pid0 is ! header to follow:";
-       LOG(warn) << header;
-     }
-   }
-   else{
-     if(header.pid1!=0xff){
-       // 2 tracklets
-       headertrackletcount=2;
-       if(header.pid0==0xff){
-         LOG(warn) << "! we have an MCM Tracklet Header with the pid1!=0 but pid0 is ! header to follow:";
-         LOG(warn) << header;
-       }
-     }
-     else{
-       if(header.pid0!=0xff){
-         // 1 tracklet
-         headertrackletcount=1;
-       }
-       else{
-         LOG(warn) << "! we have an MCM Tracklet Header with the pidx==0xff  we should not be here due to first if statement though! header to follow:";
-         LOG(warn) << header;
-       }
-     }
-   }
- }
- return headertrackletcount;
+  int headertrackletcount = 0;
+  if (header.pid0 == 0xff) {
+    LOG(warn) << "! we have an MCM Tracklet Header with the first pid zero implying no tracklets! header to follow:";
+    LOG(warn) << header;
+    return 0;
+  } else {
+    if (header.pid2 != 0xff) {
+      // 3 tracklets
+      headertrackletcount = 3;
+      if (header.pid1 == 0xff || header.pid0 == 0xff) {
+        LOG(warn) << "! we have an MCM Tracklet Header with the pid2!=0 but pid1 or pid0 is ! header to follow:";
+        LOG(warn) << header;
+      }
+    } else {
+      if (header.pid1 != 0xff) {
+        // 2 tracklets
+        headertrackletcount = 2;
+        if (header.pid0 == 0xff) {
+          LOG(warn) << "! we have an MCM Tracklet Header with the pid1!=0 but pid0 is ! header to follow:";
+          LOG(warn) << header;
+        }
+      } else {
+        if (header.pid0 != 0xff) {
+          // 1 tracklet
+          headertrackletcount = 1;
+        } else {
+          LOG(warn) << "! we have an MCM Tracklet Header with the pidx==0xff  we should not be here due to first if statement though! header to follow:";
+          LOG(warn) << header;
+        }
+      }
+    }
+  }
+  return headertrackletcount;
 }
 
 void setNumberOfTrackletsInHeader(o2::trd::TrackletMCMHeader& header, int numberoftracklets)
 {
 
   //header.word |= 0xff<< (1+numberoftracklets*8);
-  switch(numberoftracklets){
-    case 0 : LOG(error) <<" tracklet header but no tracklets???";
-             header.pid0=0xff;header.pid1=0xff;header.pid2=0xff;
-             break;
-    case 1 : header.pid1=0xff;header.pid2=0xff; break;
-    case 2 : header.pid2=0xff; break;
-    case 3 : break;
-    default : LOG(error) << "we have more than 3 tracklets for an mcm. This should never happen: tracklet count=" << numberoftracklets;
+  switch (numberoftracklets) {
+    case 0:
+      LOG(error) << " tracklet header but no tracklets???";
+      header.pid0 = 0xff;
+      header.pid1 = 0xff;
+      header.pid2 = 0xff;
+      break;
+    case 1:
+      header.pid1 = 0xff;
+      header.pid2 = 0xff;
+      break;
+    case 2:
+      header.pid2 = 0xff;
+      break;
+    case 3:
+      break;
+    default:
+      LOG(error) << "we have more than 3 tracklets for an mcm. This should never happen: tracklet count=" << numberoftracklets;
   }
-LOG(info) << " setting header tracklet number " << numberoftracklets << " header pid0 pid1 pid2 :"<< std::hex << header.word<< " " << header.pid0 << " " << header.pid1 << " " <<header.pid2;
+  LOG(info) << " setting header tracklet number " << numberoftracklets << " header pid0 pid1 pid2 :" << std::hex << header.word << " " << header.pid0 << " " << header.pid1 << " " << header.pid2;
 }
-
 
 int nextmcmadc(unsigned int& bp, int channel)
 {
   //given a bitpattern (adcmask) find next channel with in the mask starting from the current channel;
-  while((bp & (1<<channel)) ==0){
+  while ((bp & (1 << channel)) == 0) {
     channel++;
-    if(channel==21)break;
+    if (channel == 21)
+      break;
   }
   bp &= ~(1UL << (channel));
   return channel; // zero based
 }
 
-
-}// namespace trd
+} // namespace trd
 } // namespace o2

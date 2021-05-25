@@ -65,7 +65,7 @@ class DigitsParser
 
   inline void swapByteOrder(unsigned int& word);
 
-  int getDigitsFound(){return mDigitsFound;}
+  int getDigitsFound() { return mDigitsFound; }
   bool getVerbose() { return mVerbose; }
   void setVerbose(bool value, bool header, bool data)
   {
