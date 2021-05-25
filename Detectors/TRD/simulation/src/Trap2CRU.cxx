@@ -632,7 +632,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
     for (int halfcrulink = 0; halfcrulink < o2::trd::constants::NLINKSPERHALFCRU; halfcrulink++) {
       //links run from 0 to 14, so linkid offset is halfcru*15;
       int linkid = halfcrulink + halfcru * o2::trd::constants::NLINKSPERHALFCRU;
-      LOG(debug) << __func__ << " " << __LINE__ << " linkid : " << linkid << " with link " << halfcrulink << "  of halfcru " << halfcru;
+      LOG(info) << __func__ << " " << __LINE__ << " linkid : " << linkid << " with link " << halfcrulink << "  of halfcru " << halfcru << " tracklet is on link for linkid : " << linkid << " and tracklet index of : " << mCurrentTracklet << " with current digit index : " << mCurrentDigit;
       int linkwordswritten = 0;
       int errors = 0;           // put no errors in for now.
       int size = 0;             // in 32 bit words
@@ -641,9 +641,9 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
       //loop over tracklets for mcm's that match
       //we have some data on this link
       int trackletcounter = 0;
-      if (mCurrentTracklet < mTracklets.size()) {
-        while (isTrackletOnLink(linkid, mCurrentTracklet)) {
-          LOG(debug) << "tracklet is on link for linkid : " << linkid << " and tracklet index of : " << mCurrentTracklet << " with current digit index : " << mCurrentDigit;
+      if (mCurrentTracklet < mTracklets.size() || mCurrentDigit < mDigits.size()) {
+        while (isTrackletOnLink(linkid, mCurrentTracklet) && mCurrentTracklet<mTracklets.size()) {
+          LOG(info) << "tracklet is on link for linkid : " << linkid << " and tracklet index of : " << mCurrentTracklet << " with current digit index : " << mCurrentDigit;
           // still on an mcm on this link
           int tracklets = buildTrackletRawData(mCurrentTracklet, linkid); //returns # of 32 bits, header plus trackletdata words that would have come from the mcm.
           mCurrentTracklet += tracklets;
@@ -668,8 +668,12 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
         //LOG(info) << "Checking digit : " << linkid << " m";
         bool HaveNotAlreadyWrittenThis=true;
         LOG(info) << "Checking digit : " << linkid << " mCurrentDigit"<<mCurrentDigit << " digit size:" << mDigits.size();
+        LOG(info) << "Is curernt digit on this link: " << isDigitOnLink(linkid,mCurrentDigit);
+        LOG(info) << "calc linkid : "<< mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2<< " actual link="<<  linkid;
+
         if (mCurrentDigit < mDigits.size()) {
-          while (isDigitOnLink(linkid, mCurrentDigit)) {
+          while (isDigitOnLink(linkid, mCurrentDigit) && mCurrentDigit<mDigits.size()) {
+            LOG(info) << "at top of while loop calc linkid : "<< mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2<< " actual link="<<  linkid;
             LOG(info) << "digit is on link for linkid : " << linkid << " and digit index of : " << mCurrentDigit;
             if (trackletcounter == 0 && HaveNotAlreadyWrittenThis) {
               // we have no tracklets, but we still need the trackletendmarker and the half chamber headers.
@@ -709,6 +713,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
             //due to not being zero suppressed, digits returned from buildDigitRawData should *always* be 21.
             ///rawwords += digits * 10 + 1; //10 for the tiembins and 1 for the header.
             linkwordswritten += digitwordswritten;
+            LOG(info) << "at bottom of while loop  loop to continue if calc linkid : "<< mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2<< " actual link="<<  linkid;
           }
         }
         LOG(debug) << "we have a  trackletcounter: " << trackletcounter;
@@ -781,7 +786,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
         //LOG(info) << "incrementing halfcruwordswritten : " << halfcruwordswritten << " by linkwordswritten : " << linkwordswritten;
         halfcruwordswritten += linkwordswritten;
         // LOG(info) << "incremented halfcruwordswritten : " << halfcruwordswritten << " by linkwordswritten : " << linkwordswritten;
-      }
+      }// if tracklets.size >0
       //write the cruhalfheader now that we know the lengths.
       memcpy((char*)halfcruheaderptr, (char*)&halfcruheader, sizeof(halfcruheader));
     }
