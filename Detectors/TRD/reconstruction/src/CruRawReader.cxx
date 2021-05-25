@@ -71,10 +71,13 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
   mState = CRUStateHalfCRUHeader;
   uint32_t currentsaveddatacount = 0;
   mTotalHBFPayLoad = 0;
+  int loopcount=0;
   // loop until RDH stop header
   while (!o2::raw::RDHUtils::getStop(rdh)) { // carry on till the end of the event.
     if (mVerbose) {
-      LOG(info) << "--- RDH open/continue detected";
+      LOG(info) << "--- RDH open/continue detected loopcount :" << loopcount;
+      LOG(info)  << " rdh first word 0x" << std::hex << (uint32_t)*mDataPointer;
+
       o2::raw::RDHUtils::printRDH(rdh);
       for (int i = 0; i < 64; ++i) {
         LOG(info) << std::hex << " 0x" << *(mDataPointer + i);
@@ -114,8 +117,18 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     if ((char*)(rdh) < (char*)&mHBFPayload[0] + mDataBufferSize) {
       //if (reinterpret_cast<const o2::header::RDHAny*>(rdh) < (char*)&mHBFPayload[0] + mDataBufferSize) {
       if (mVerbose) {
+        LOG(info) << __func__ << " " <<  __LINE__ ;
         LOG(info) << "rdh position is still inside the buffer";
-        o2::raw::RDHUtils::printRDH(rdh);
+        LOG(info) << __func__ << " " <<  __LINE__ ;
+        LOG(info) << "0x;" << std::hex << (void*)rdh;
+        LOG(info) << "0x;" << std::hex << (void*)rdh;
+        LOG(info) << "0x;" << std::hex << (void*)rdh;
+        LOG(info) << "0x;" << std::hex << (void*)rdh;
+        LOG(info) << "0x;" << std::hex << (void*)rdh;
+        LOG(info) << "0x;" << std::hex << (void*)rdh;
+        LOG(info) << "0x;" << std::hex << (void*)rdh;
+//        o2::raw::RDHUtils::printRDH(rdh);
+        LOG(info) << __func__ << " " <<  __LINE__ ;
       }
       // we can still copy into this buffer.
     } else {

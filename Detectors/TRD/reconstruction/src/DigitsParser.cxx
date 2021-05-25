@@ -51,6 +51,7 @@ int DigitsParser::Parse(bool verbose)
   mDigitsFound = 0;     // tracklets found in the data block, mostly used for debugging.
   mBufferLocation = 0;
   mPaddingWordsCounter = 0;
+  std::array<uint16_t,constants::TIMEBINS> mADCValues{};
   if (mVerbose) {
     LOG(info) << "Digit Parser parse of data sitting at :" << std::hex << (void*)mData << " starting at pos " << mStartParse;
     if (mDisableByteOrderFix) {
@@ -280,11 +281,16 @@ int DigitsParser::Parse(bool verbose)
               LOG(info) << "adc values : " << mDigitMCMData->x << "::" << mDigitMCMData->y << "::" << mDigitMCMData->z;
               LOG(info) << "digittimebinoffset = " << digittimebinoffset;
             }
-            mADCValues[digittimebinoffset] = mDigitMCMData->x;
+            mADCValues[digittimebinoffset++] = mDigitMCMData->x;
+//            digittimebinoffset+=1;
             mADCValues[digittimebinoffset++] = mDigitMCMData->y;
             mADCValues[digittimebinoffset++] = mDigitMCMData->z;
+            if(digittimebinoffset==30) digittimebinoffset=29;
+            if(digittimebinoffset > constants::TIMEBINS){
+              LOG(fatal) << "too many timebins to insert into mADCValues digittimebinoffset:" << digittimebinoffset;
+            }
             if (mVerbose || mDataVerbose) {
-              LOG(info) << "digit word count is : " << digitwordcount;
+              LOG(info) << "digit word count is : " << digitwordcount << " digittimebinoffset = " << digittimebinoffset;
             }
             if (digitwordcount == constants::TIMEBINS / 3) {
               //sanity check, next word shouldbe either a. end of digit marker, digitMCMHeader,or padding.
