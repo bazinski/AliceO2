@@ -333,7 +333,7 @@ int DigitsParser::Parse(bool verbose)
               }
               LOG(info) << "DDDD " << mDetector << ":" << mROB << ":" << mMCM << ":" << mChannel << ":" << adcsum << ":" << mADCValues[0] << ":" << mADCValues[1] << ":" << mADCValues[2] << "::" << mADCValues[27] << ":" << mADCValues[28] << ":" << mADCValues[29];
               // LOG(info) << "     "<< mDigitMCMHeader->eventcount << " header:"<< mDigitHCHeader->supermodule << "-" << mDigitHCHeader->layer << "-" << mDigitHCHeader->stack << "=" << mDigitHCHeader->side;
-              /*       LOG(info) << "Digit "  
+              /*       LOG(info) << "Digit "
                     << " calculated hcid=" << t.getDetector() * 2 + t.getROB() % 2
                     << " det=" << t.getDetector()
                     << " mcm=" << t.getMCM()
