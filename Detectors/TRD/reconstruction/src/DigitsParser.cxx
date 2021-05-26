@@ -161,10 +161,8 @@ int DigitsParser::Parse(bool verbose)
           LOG(info) << "state mcmheader and word : 0x" << std::hex << *word;
           printDigitMCMHeader(*mDigitMCMHeader);
         }
-        LOG(info) << " Digit Version is " << mDigitHCHeader->major << "." << mDigitHCHeader->minor;
         if (mDigitHCHeader->major == 4) {
           //zero suppressed
-          LOG(info) << "Digit data is zero suppressed, MajorVersion=" << mDigitHCHeader->major;
           //so we have an adcmask next
           std::advance(word, 1);
           mDigitMCMADCMask = (DigitMCMADCMask*)(word);
@@ -266,7 +264,7 @@ int DigitsParser::Parse(bool verbose)
               LOG(warn) << "something is wrong we are in the statement for MCMdata, but the state is : " << mState << " and MCMData state is:" << StateDigitMCMData;
             }
             if (mVerbose || mDataVerbose) {
-              LOG(info) << "mDigitMCMData with state=" << mState << " is at " << mBufferLocation << " had value 0x" << std::hex << *word << " mcmdatacount of : " << mcmdatacount << " adc#" << mcmadccount;
+              //LOG(info) << "mDigitMCMData with state=" << mState << " is at " << mBufferLocation << " had value 0x" << std::hex << *word << " mcmdatacount of : " << mcmdatacount << " adc#" << mcmadccount;
             }
             //for the case of on flp build a vector of tracklets, then pack them into a data stream with a header.
             //for dpl build a vector and connect it with a triggerrecord.
@@ -284,6 +282,10 @@ int DigitsParser::Parse(bool verbose)
             //            digittimebinoffset+=1;
             mADCValues[digittimebinoffset++] = mDigitMCMData->y;
             mADCValues[digittimebinoffset++] = mDigitMCMData->z;
+            
+         //   if(mcmadccount==0){
+         //     startmcmdataindex=word;
+         //   }
             if (digittimebinoffset == 30)
               digittimebinoffset = 29;
             if (digittimebinoffset > constants::TIMEBINS) {
@@ -302,46 +304,43 @@ int DigitsParser::Parse(bool verbose)
               //zero digittimebinoffset
               if (mDigitHCHeader->major == 4) {
                 //zero suppressed, so channel must be extracted from next available bit in adcmask
-                LOG(info) << "adcmask: 0x" << std::hex << mADCMask << " and channel : " << std::dec << mChannel;
+                if(mDataVerbose){
+                  LOG(info) << "adcmask: 0x" << std::hex << mADCMask << " and channel : " << std::dec << mChannel;
+                }
                 mChannel = nextmcmadc(mADCMask, mChannel);
-                LOG(info) << "after mask check adcmask: 0x" << std::hex << mADCMask << " and channel : " << std::dec << mChannel;
-                LOG(info) << "the above is the preceding digit above us not the one below us ";
+                if(mDataVerbose){
+                  LOG(info) << "after mask check adcmask: 0x" << std::hex << mADCMask << " and channel : " << std::dec << mChannel;
+                  LOG(info) << "the above is the preceding digit above us not the one below us ";
+                }
                 if (mChannel == 22) {
                   LOG(error) << "invalid bitpattern for this mcm";
                 }
                 //set that bit to zero
                 if (mADCMask == 0) {
                   //no more adc for zero suppression.
-                  LOG(info) << "ADCMask is zero, we should change state to something useful";
+                 // LOG(info) << "ADCMask is zero, we should change state to something useful";
                   //now we should either have another MCMHeader, or End marker
                   if (word != 0 && std::next(word) != 0) { // end marker is a sequence of 32 bit 2 zeros.
                     mState = StateDigitMCMHeader;
-                    LOG(info) << "ADCMask is zero, changing state to MCMHeader";
+                  //  LOG(info) << "ADCMask is zero, changing state to MCMHeader";
                   } else {
                     mState = StateDigitEndMarker;
-                    LOG(info) << "ADCMask is zero, changing state to Endmarker";
+                   // LOG(info) << "ADCMask is zero, changing state to Endmarker";
                   }
                 }
               }
-              mDigits.emplace_back(mDetector, mROB, mMCM, mChannel, mADCValues); // outgoing parsed digits
+              mDigits.emplace_back(mDetector, mROB, mMCM, mChannel);//, mADCValues); // outgoing parsed digits
                                                                                  // if(mDataVerbose){
                                                                                  //    CompressedDigit t = mDigits.back();
+              //now fill in the adc values --- here because in commented code above if all 3 increments were there then it froze
               // LOG(info) << " DDD "<< mDigitMCMHeader->eventcount << " Digit " << mDetector << " -" << mROB << "-" << mMCM <<"-" <<  mChannel;
-              uint32_t adcsum = 0;
-              for (auto adc : mADCValues) {
-                adcsum += adc;
+              if(mDataVerbose){
+                uint32_t adcsum = 0;
+                for (auto adc : mADCValues) {
+                  adcsum += adc;
+                }
+                LOG(info) << "DDDD " << mDetector << ":" << mROB << ":" << mMCM << ":" << mChannel << ":" << adcsum << ":" << mADCValues[0] << ":" << mADCValues[1] << ":" << mADCValues[2] << "::" << mADCValues[27] << ":" << mADCValues[28] << ":" << mADCValues[29];
               }
-              LOG(info) << "DDDD " << mDetector << ":" << mROB << ":" << mMCM << ":" << mChannel << ":" << adcsum << ":" << mADCValues[0] << ":" << mADCValues[1] << ":" << mADCValues[2] << "::" << mADCValues[27] << ":" << mADCValues[28] << ":" << mADCValues[29];
-              // LOG(info) << "     "<< mDigitMCMHeader->eventcount << " header:"<< mDigitHCHeader->supermodule << "-" << mDigitHCHeader->layer << "-" << mDigitHCHeader->stack << "=" << mDigitHCHeader->side;
-              /*       LOG(info) << "Digit "
-                    << " calculated hcid=" << t.getDetector() * 2 + t.getROB() % 2
-                    << " det=" << t.getDetector()
-                    << " mcm=" << t.getMCM()
-                    << " rob=" << t.getROB()
-         //           << " adcsum=" << t.getADCsum()
-                    << " channel=" << t.getChannel();
-           */
-              //  }
               mDigitsFound++;
               digittimebinoffset = 0;
               digitwordcount = 0; // end of the digit.

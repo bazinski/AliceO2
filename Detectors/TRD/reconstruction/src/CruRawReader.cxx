@@ -78,7 +78,7 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
       LOG(info) << "--- RDH open/continue detected loopcount :" << loopcount;
       LOG(info) << " rdh first word 0x" << std::hex << (uint32_t)*mDataPointer;
 
-      o2::raw::RDHUtils::printRDH(rdh);
+//      o2::raw::RDHUtils::printRDH(rdh);
       for (int i = 0; i < 64; ++i) {
         LOG(info) << std::hex << " 0x" << *(mDataPointer + i);
       }
@@ -146,12 +146,10 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
   int counthalfcru = 0;
   mHBFoffset32 = 0;
 
-  LOG(info) << "while loop over cruheaders in HBF, loop count " << counthalfcru << " current offset is" << mHBFoffset32 << " total payload is " << mTotalHBFPayLoad / 4 << "  raw :" << mTotalHBFPayLoad;
   while ((mHBFoffset32 < ((mTotalHBFPayLoad) / 4))) { //} && mTotalHBFPayLoad>0) { // need at least a complete half cru header else we are in an error condition any case.
     if (mVerbose) {
       LOG(info) << "Looping over cruheaders in HBF, loop count " << counthalfcru << " current offset is" << mHBFoffset32 << " total payload is " << mTotalHBFPayLoad / 4 << "  raw :" << mTotalHBFPayLoad;
     }
-    LOG(info) << "calling process HalfCRU with " << mHBFoffset32 << " and supposed to halt at : " << mTotalHBFPayLoad / 4 << " actual payload size is:" << mTotalHBFPayLoad;
     int halfcruprocess = processHalfCRU(mHBFoffset32);
     if (mVerbose) {
       switch (halfcruprocess) {
@@ -256,16 +254,13 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       if (mVerbose) {
         LOG(info) << "mem copy with offset of : " << cruhbfstartoffset << " parsing tracklets with linkstart: " << linkstart << " ending at : " << linkend;
       }
-      LOG(info) << "FFF Tracklet Parse Start";
       trackletwordsread = mTrackletsParser.Parse(&mHBFPayload, linkstart, linkend, currentdetector, cleardigits, mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose); // this will read up to the tracnklet end marker.
       if (mVerbose) {
         LOG(info) << "trackletwordsread:" << trackletwordsread << "  mem copy with offset of : " << cruhbfstartoffset << " parsing with linkstart: " << linkstart << " ending at : " << linkend;
       }
-      LOG(info) << "FFF Tracklet Parse end";
       linkstart += trackletwordsread;
       //now we have a tracklethcheader and a digithcheader.
       mHBFoffset32 += trackletwordsread;
-      LOG(info) << " incrementing total found tracklets by : " << mTrackletsParser.getTrackletsFound() << " and trackletwordsread : " << trackletwordsread;
       mTotalTrackletsFound += mTrackletsParser.getTrackletsFound();
       digitwordsread = 0;
       if (mVerbose) {

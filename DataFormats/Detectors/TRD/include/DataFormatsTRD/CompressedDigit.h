@@ -68,6 +68,11 @@ class CompressedDigit
       mADC[adcindex / 3] |= (adcs[adcindex++] << (rem * 10));
     }
   }
+  void setADCi(int index, uint16_t adcvalue){
+    int rem = index%3;
+      mADC[index / 3] &= ~((0x3ff) << (rem * 10));
+      mADC[index / 3] |= (adcvalue << (rem * 10));
+  }
   // Get methods
   int getChannel() const { return mHeader & 0x3f; }
   int getMCM() const { return (mHeader & 0x3c0) >> 6; }
