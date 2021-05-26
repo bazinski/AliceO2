@@ -328,7 +328,7 @@ int DigitsParser::Parse(bool verbose)
                 }
               }
               //LOG(info) << " before insert: mDigits.size " << mDigits.size() ;
-              mDigits.emplace_back(mDetector, mROB, mMCM, mChannel);//, mADCValues); // outgoing parsed digits
+              mDigits.emplace_back(mDetector, mROB, mMCM, mChannel); //, mADCValues); // outgoing parsed digits
                                                                      // if(mDataVerbose){
                                                                      //    CompressedDigit t = mDigits.back();
               //now fill in the adc values --- here because in commented code above if all 3 increments were there then it froze
