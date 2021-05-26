@@ -87,26 +87,20 @@ void DataReaderTask::run(ProcessingContext& pc)
         mReader.setDataBufferSize(payloadInSize);
         mReader.configure(mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
         if (mVerbose) {
-          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%% about to run " << loopcounter << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
+          LOG(info) << "%%% about to run " << loopcounter << " %%%";
         }
         mReader.run();
         if (mVerbose) {
-          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%% finished running " << loopcounter << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
-          LOG(info) << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%";
+          LOG(info) << "%%% finished running " << loopcounter << " %%%";
         }
         loopcounter++;
-        mTracklets = mReader.getTracklets();
-        mCompressedDigits = mReader.getCompressedDigits();
-        //        if (mVerbose) {
-        LOG(info) << "from parsing received: " << mTracklets.size() << " tracklets and " << mCompressedDigits.size() << " compressed digits";
-        //       }
+        mTracklets.insert(std::end(mTracklets),std::begin(mReader.getTracklets()), std::end(mReader.getTracklets()));
+        mCompressedDigits.insert(std::end(mCompressedDigits),std::begin(mReader.getCompressedDigits()),std::end(mReader.getCompressedDigits()));
+        mReader.clearall();
+        if (mVerbose) {
+          LOG(info) << "from parsing received: " << mTracklets.size() << " tracklets and " << mCompressedDigits.size() << " compressed digits";
+          LOG(info) << "relevant vectors to read : " << mReader.getTracklets().size() << " tracklets and " << mReader.getCompressedDigits().size() << " compressed digits";
+        }
         mTriggers = mReader.getIR();
         //get the payload of trigger and digits out.
       } else { // we have compressed data coming in.
@@ -128,7 +122,10 @@ void DataReaderTask::run(ProcessingContext& pc)
   LOG(info) << "Processing time for Data reading  " << std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count() << "ms";
   if (!mCompressedData) {
     LOG(info) << "Digits found : " << mReader.getDigitsFound();
+    LOG(info) << "Digits returned : " << mCompressedDigits.size();
+
     LOG(info) << "Tracklets found : " << mReader.getTrackletsFound();
+    LOG(info) << "Tracklets returned : " << mTracklets.size();
   }
 }
 

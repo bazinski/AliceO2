@@ -93,7 +93,19 @@ class CruRawReader
   std::vector<CompressedDigit>& getCompressedDigits() { return mEventCompressedDigits; };
   int getDigitsFound() { return mTotalDigitsFound; }
   int getTrackletsFound() { return mTotalTrackletsFound; }
-
+  void clearall(){
+    LOG(info) << "sizes before clear " << mEventTriggers.size() << " : " << mEventTriggers.size() << " : " << mEventCompressedDigits.size() << " : " << mEventDigits.size();
+    mEventTracklets.clear(); // when this runs properly it will only 6 for the flp its runnung on.
+    mEventTriggers.clear();
+    mEventCompressedDigits.clear();
+    mEventDigits.clear();
+    clear();
+    LOG(info) << "sizes after clear " << mEventTriggers.size() << " : " << mEventTriggers.size() << " : " << mEventCompressedDigits.size() << " : " << mEventDigits.size();
+  }
+  void clear(){
+    mTrackletsParser.clear();
+    mDigitsParser.clear();
+  }
  protected:
   bool processHBFs(int datasizealreadyread = 0, bool verbose = false);
   bool processHBFsa(int datasizealreadyread = 0, bool verbose = false);

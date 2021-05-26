@@ -245,6 +245,7 @@ int TrackletsParser::Parse()
           int detector = layer + stack * constants::NLAYER + sector * constants::NLAYER * constants::NSTACK;
           int hcid = detector * 2 + mTrackletHCHeader->side;
           mTracklets.emplace_back((int)mTrackletHCHeader->format, hcid, padrow, col, pos, slope, q0, q1, q2); // our format is always 4
+          LOG(info) << "TTT Trackletsize:"<<mTracklets.size()<< " trackletsfound already:" << mTrackletsFound << " Tracklet :" << mTrackletHCHeader->format << "-" << hcid << "-" << padrow << "-" << col << "-" << pos << "-" << slope << "-" << q0 << ":" << q1 << ":" << q2;
           if (mDataVerbose) {
             LOG(info) << "TTT Tracklet :" << mTrackletHCHeader->format << "-" << hcid << "-" << padrow << "-" << col << "-" << pos << "-" << slope << "-" << q0 << ":" << q1 << ":" << q2;
             LOG(info) << "emplace tracklet";

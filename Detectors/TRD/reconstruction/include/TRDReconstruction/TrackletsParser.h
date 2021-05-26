@@ -47,7 +47,7 @@ class TrackletsParser
     mDataWordsParsed = 0;
     mTrackletsFound = 0;
     mPaddingWordsCounter = 0;
-    mTracklets.clear();
+//    mTracklets.clear();
     return Parse();
   };
   void setVerbose(bool verbose, bool header = false, bool data = false)
@@ -69,6 +69,9 @@ class TrackletsParser
                              StateFinished };
   std::vector<Tracklet64>& getTracklets() { return mTracklets; }
   inline void swapByteOrder(unsigned int& ui);
+  void clear(){
+    mTracklets.clear();
+  }
 
  private:
   std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* mData;

@@ -76,6 +76,7 @@ class DigitsParser
   void setDisableByteSwap(bool disablebyteswap) { mDisableByteOrderFix = disablebyteswap; }
   std::vector<CompressedDigit>& getDigits() { return mDigits; }
   void clearDigits() { mDigits.clear(); }
+  void clear() { mDigits.clear(); }
 
  private:
   int mState;
