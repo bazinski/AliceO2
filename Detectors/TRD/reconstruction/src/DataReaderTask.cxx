@@ -104,9 +104,9 @@ void DataReaderTask::run(ProcessingContext& pc)
         loopcounter++;
         mTracklets = mReader.getTracklets();
         mCompressedDigits = mReader.getCompressedDigits();
-        if (mVerbose) {
+//        if (mVerbose) {
           LOG(info) << "from parsing received: " << mTracklets.size() << " tracklets and " << mCompressedDigits.size() << " compressed digits";
-        }
+ //       }
         mTriggers = mReader.getIR();
         //get the payload of trigger and digits out.
       } else { // we have compressed data coming in.

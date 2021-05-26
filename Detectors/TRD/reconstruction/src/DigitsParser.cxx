@@ -286,8 +286,6 @@ int DigitsParser::Parse(bool verbose)
             //   if(mcmadccount==0){
             //     startmcmdataindex=word;
             //   }
-            if (digittimebinoffset == 30)
-              digittimebinoffset = 29;
             if (digittimebinoffset > constants::TIMEBINS) {
               LOG(fatal) << "too many timebins to insert into mADCValues digittimebinoffset:" << digittimebinoffset;
             }
@@ -344,8 +342,9 @@ int DigitsParser::Parse(bool verbose)
               mDigitsFound++;
               digittimebinoffset = 0;
               digitwordcount = 0; // end of the digit.
-              if (mDigitHCHeader->major == 5)
+              if (mDigitHCHeader->major == 5){
                 mChannel++; // we count channels as all 21 channels are present, no way to check this.
+              }
             }
 
           } //end state endmarker
