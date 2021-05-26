@@ -417,7 +417,7 @@ void setNumberOfTrackletsInHeader(o2::trd::TrackletMCMHeader& header, int number
     default:
       LOG(error) << "we have more than 3 tracklets for an mcm. This should never happen: tracklet count=" << numberoftracklets;
   }
-//  LOG(info) << " setting header tracklet number " << numberoftracklets << " header pid0 pid1 pid2 :" << std::hex << header.word << " " << header.pid0 << " " << header.pid1 << " " << header.pid2;
+  //  LOG(info) << " setting header tracklet number " << numberoftracklets << " header pid0 pid1 pid2 :" << std::hex << header.word << " " << header.pid0 << " " << header.pid1 << " " << header.pid2;
 }
 
 int nextmcmadc(unsigned int& bp, int channel)

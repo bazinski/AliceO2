@@ -78,7 +78,7 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
       LOG(info) << "--- RDH open/continue detected loopcount :" << loopcount;
       LOG(info) << " rdh first word 0x" << std::hex << (uint32_t)*mDataPointer;
 
-//      o2::raw::RDHUtils::printRDH(rdh);
+      //      o2::raw::RDHUtils::printRDH(rdh);
       for (int i = 0; i < 64; ++i) {
         LOG(info) << std::hex << " 0x" << *(mDataPointer + i);
       }

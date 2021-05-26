@@ -207,7 +207,7 @@ int TrackletsParser::Parse()
           //for the case of on flp build a vector of tracklets, then pack them into a data stream with a header.
           //for dpl build a vector and connect it with a triggerrecord.
           mTrackletMCMData = (TrackletMCMData*)&(*word);
-          if(mDataVerbose){
+          if (mDataVerbose) {
             LOG(info) << "TTT+TTT read a raw tracklet from the raw stream mcmheader ";
             LOG(info) << std::hex << *word << " TTT+TTT";
             printTrackletMCMData(*mTrackletMCMData);
@@ -258,12 +258,12 @@ int TrackletsParser::Parse()
             auto nextdataword = std::next(word, 1);
             // the check is unambigous between trackletendmarker and mcmheader
             if ((*nextdataword) == constants::TRACKLETENDMARKER) {
-          //    LOG(info) << "Next up we should be finished parsing next line should say found tracklet end markers ";
-           //   LOG(info) << "changing state to Trackletendmarker from mcmdata";
+              //    LOG(info) << "Next up we should be finished parsing next line should say found tracklet end markers ";
+              //   LOG(info) << "changing state to Trackletendmarker from mcmdata";
               mState = StateTrackletEndMarker;
             } else {
               mState = StateTrackletMCMHeader;
-           //   LOG(info) << "changing state to TrackletMCmheader from mcmdata";
+              //   LOG(info) << "changing state to TrackletMCmheader from mcmdata";
             }
           }
           if (mcmtrackletcount > 3) {
@@ -285,6 +285,6 @@ int TrackletsParser::Parse()
   //sanity check, we should now see a digit Half Chamber Header in the following 2 32bit words.
   LOG(warn) << " end of Trackelt parsing but we are exiting with out a tracklet end marker with " << mWordsRead << " 32bit words read";
   return mWordsRead;
-  }
+}
 
 } // namespace o2::trd

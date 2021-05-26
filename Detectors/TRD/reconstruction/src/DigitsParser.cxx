@@ -282,10 +282,10 @@ int DigitsParser::Parse(bool verbose)
             //            digittimebinoffset+=1;
             mADCValues[digittimebinoffset++] = mDigitMCMData->y;
             mADCValues[digittimebinoffset++] = mDigitMCMData->z;
-            
-         //   if(mcmadccount==0){
-         //     startmcmdataindex=word;
-         //   }
+
+            //   if(mcmadccount==0){
+            //     startmcmdataindex=word;
+            //   }
             if (digittimebinoffset == 30)
               digittimebinoffset = 29;
             if (digittimebinoffset > constants::TIMEBINS) {
@@ -304,11 +304,11 @@ int DigitsParser::Parse(bool verbose)
               //zero digittimebinoffset
               if (mDigitHCHeader->major == 4) {
                 //zero suppressed, so channel must be extracted from next available bit in adcmask
-                if(mDataVerbose){
+                if (mDataVerbose) {
                   LOG(info) << "adcmask: 0x" << std::hex << mADCMask << " and channel : " << std::dec << mChannel;
                 }
                 mChannel = nextmcmadc(mADCMask, mChannel);
-                if(mDataVerbose){
+                if (mDataVerbose) {
                   LOG(info) << "after mask check adcmask: 0x" << std::hex << mADCMask << " and channel : " << std::dec << mChannel;
                   LOG(info) << "the above is the preceding digit above us not the one below us ";
                 }
@@ -318,23 +318,23 @@ int DigitsParser::Parse(bool verbose)
                 //set that bit to zero
                 if (mADCMask == 0) {
                   //no more adc for zero suppression.
-                 // LOG(info) << "ADCMask is zero, we should change state to something useful";
+                  // LOG(info) << "ADCMask is zero, we should change state to something useful";
                   //now we should either have another MCMHeader, or End marker
                   if (word != 0 && std::next(word) != 0) { // end marker is a sequence of 32 bit 2 zeros.
                     mState = StateDigitMCMHeader;
-                  //  LOG(info) << "ADCMask is zero, changing state to MCMHeader";
+                    //  LOG(info) << "ADCMask is zero, changing state to MCMHeader";
                   } else {
                     mState = StateDigitEndMarker;
-                   // LOG(info) << "ADCMask is zero, changing state to Endmarker";
+                    // LOG(info) << "ADCMask is zero, changing state to Endmarker";
                   }
                 }
               }
-              mDigits.emplace_back(mDetector, mROB, mMCM, mChannel);//, mADCValues); // outgoing parsed digits
-                                                                                 // if(mDataVerbose){
-                                                                                 //    CompressedDigit t = mDigits.back();
+              mDigits.emplace_back(mDetector, mROB, mMCM, mChannel); //, mADCValues); // outgoing parsed digits
+                                                                     // if(mDataVerbose){
+                                                                     //    CompressedDigit t = mDigits.back();
               //now fill in the adc values --- here because in commented code above if all 3 increments were there then it froze
               // LOG(info) << " DDD "<< mDigitMCMHeader->eventcount << " Digit " << mDetector << " -" << mROB << "-" << mMCM <<"-" <<  mChannel;
-              if(mDataVerbose){
+              if (mDataVerbose) {
                 uint32_t adcsum = 0;
                 for (auto adc : mADCValues) {
                   adcsum += adc;
