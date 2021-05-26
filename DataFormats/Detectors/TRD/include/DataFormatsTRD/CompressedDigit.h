@@ -65,11 +65,11 @@ class CompressedDigit
     int adcindex = 0;
     for (auto adc : adcs) {
       int rem = adcindex % 3;
-  //    LOG(info) << "adc index :" << adcindex << " rem:" << rem << " adcindex/3=" << adcindex/3;
+      //    LOG(info) << "adc index :" << adcindex << " rem:" << rem << " adcindex/3=" << adcindex/3;
       mADC[adcindex / 3] &= ~((0x3ff) << (rem * 10));
- //     LOG(info) << "mADC[adcindex/3] after &= :" << std::hex << mADC[adcindex/3] << rem;
+      //     LOG(info) << "mADC[adcindex/3] after &= :" << std::hex << mADC[adcindex/3] << rem;
       mADC[adcindex / 3] |= (adcs[adcindex] << (rem * 10));
- //     LOG(info) << "mADC[adcindex/3] after  != :" << std::hex << mADC[adcindex/3] << rem;
+      //     LOG(info) << "mADC[adcindex/3] after  != :" << std::hex << mADC[adcindex/3] << rem;
       adcindex++;
     }
   }

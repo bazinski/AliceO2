@@ -303,12 +303,12 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   //extract the vectors and copy them to tracklets and digits here, building the indexing(triggerrecords)
   //TODO version 2 remove the tracklet and digit class and write directly the binary format.
   mEventTracklets.insert(std::end(mEventTracklets), std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
-  if(mVerbose){
+  if (mVerbose) {
     LOG(info) << "inserting tracklets from parser of size : " << mTrackletsParser.getTracklets().size() << " mEventTracklets is now :" << mEventTracklets.size();
   }
   mTrackletsParser.clear();
   mEventCompressedDigits.insert(std::end(mEventCompressedDigits), std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
-  if(mVerbose){
+  if (mVerbose) {
     LOG(info) << "inserting digits from parser of size : " << mDigitsParser.getDigits().size();
   }
   mDigitsParser.clear();
