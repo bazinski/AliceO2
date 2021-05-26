@@ -425,7 +425,7 @@ int nextmcmadc(unsigned int& bp, int channel)
   //given a bitpattern (adcmask) find next channel with in the mask starting from the current channel;
   while ((bp & (1 << channel)) == 0) {
     channel++;
-    if (channel == 21){
+    if (channel == 21) {
       break;
     }
   }

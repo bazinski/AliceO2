@@ -342,7 +342,7 @@ int DigitsParser::Parse(bool verbose)
               mDigitsFound++;
               digittimebinoffset = 0;
               digitwordcount = 0; // end of the digit.
-              if (mDigitHCHeader->major == 5){
+              if (mDigitHCHeader->major == 5) {
                 mChannel++; // we count channels as all 21 channels are present, no way to check this.
               }
             }
