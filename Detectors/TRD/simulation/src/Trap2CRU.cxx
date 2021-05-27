@@ -120,7 +120,7 @@ void Trap2CRU::sortDataToLinks()
 
   std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - sortstart;
   LOG(debug) << "TRD Digit/Tracklet Sorting took " << duration.count() << " s";
-  int Verbose = 0;
+  int Verbose = 1;
   if (Verbose) {
     LOG(info) << "@@@@@@@@@@@@@@@@@ pre sort tracklets then digits @@@@@@@@@@@@@@@@@@@@@@@@@@@";
     int triggercount = 0;
@@ -262,7 +262,7 @@ void Trap2CRU::readTrapData()
     totaltracklets += mTracklets.size();
     totaldigits += mDigits.size();
     //migrate digit trigger information into the tracklettrigger (historical)
-    mergetriggerDigitRanges(); // merge data (if needed) from the digits trigger record to the tracklets trigger record (different files)
+    // mergetriggerDigitRanges(); // merge data (if needed) from the digits trigger record to the tracklets trigger record (different files)
 
     //TODO figure out if want to care about unaligned trees.
     sortDataToLinks();
@@ -595,7 +595,15 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
   int rawwords = 0;
   char* rawdataptratstart;
   std::vector<char> rawdatavector(1024 * 1024 * 2); // sum of link sizes + padding in units of bytes and some space for the header (512 bytes).
-  LOG(debug) << "BUNCH CROSSING : " << triggerrecord.getBCData().bc << " with orbit : " << triggerrecord.getBCData().orbit;
+  LOG(info) << "BUNCH CROSSING : " << triggerrecord.getBCData().bc << " with orbit : " << triggerrecord.getBCData().orbit;
+
+  //set startdigit and starttracklet relative to the trigger.
+  //
+  int starttrackletindex = triggerrecord.getFirstTracklet();
+  int endtrackletindex = triggerrecord.getFirstTracklet() + triggerrecord.getNumberOfTracklets();
+  int startdigitindex = mDigitTriggerRecords[triggercount].getFirstDigit();
+  int enddigitindex = mDigitTriggerRecords[triggercount].getFirstDigit() + mDigitTriggerRecords[triggercount].getNumberOfDigits();
+
   for (int halfcru = 0; halfcru < o2::trd::constants::NHALFCRU; halfcru++) {
     // LOG(info) << "+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+  ======   start of halfcru : " << halfcru;
     int halfcruwordswritten = 0;
@@ -634,8 +642,9 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
       //loop over tracklets for mcm's that match
       //we have some data on this link
       int trackletcounter = 0;
-      if (mCurrentTracklet < mTracklets.size() || mCurrentDigit < mDigits.size()) {
-        while (isTrackletOnLink(linkid, mCurrentTracklet) && mCurrentTracklet < mTracklets.size()) {
+      if (mCurrentTracklet < endtrackletindex && mCurrentTracklet >= starttrackletindex && mCurrentDigit > startdigitindex && mCurrentDigit <= enddigitindex) {
+        //if (mCurrentTracklet < endtrackletindex && mCurrentTracklet>=starttrackletindex mTracklets.size() || mCurrentDigit < mDigits.size()) {
+        while (isTrackletOnLink(linkid, mCurrentTracklet) && mCurrentTracklet < endtrackletindex) { //}&& triggerrecord.getNumberOfTracklets()>0) {
           // still on an mcm on this link
           int tracklets = buildTrackletRawData(mCurrentTracklet, linkid); //returns # of 32 bits, header plus trackletdata words that would have come from the mcm.
           mCurrentTracklet += tracklets;
@@ -664,7 +673,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
         //LOG(info) << "calc linkid : " << mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2 << " actual link=" << linkid;
 
         if (mCurrentDigit < mDigits.size()) {
-          while (isDigitOnLink(linkid, mCurrentDigit) && mCurrentDigit < mDigits.size()) {
+          while (isDigitOnLink(linkid, mCurrentDigit) && mCurrentDigit < enddigitindex) {
             //   LOG(info) << "at top of while loop calc linkid : " << mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2 << " actual link=" << linkid;
             //  LOG(info) << "digit is on link for linkid : " << linkid << " and digit index of : " << mCurrentDigit;
             if (trackletcounter == 0 && HaveNotAlreadyWrittenThis) {
@@ -708,11 +717,10 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
             //LOG(info) << "at bottom of while loop  loop to continue if calc linkid : " << mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2 << " actual link=" << linkid;
           }
         }
-        LOG(debug) << "we have a  trackletcounter: " << trackletcounter;
-        LOG(debug) << "we have a adccounter :" << adccounter;
-        LOG(debug) << "we have a rawwords written for digits of: " << rawwords - rawwordsbefore << " calced at : " << ((float)rawwords - (float)rawwordsbefore - 1.0) / 10.0;
+        LOG(info) << "link:" << linkid << " trackletcounter: " << trackletcounter << "  currenttracklet: " << mCurrentTracklet << " adccounter :" << adccounter << " current digit : " << mCurrentDigit;
+        //       LOG(info) << "we have a rawwords written for digits of: " << rawwords - rawwordsbefore << " calced at : " << ((float)rawwords - (float)rawwordsbefore - 1.0) / 10.0;
         int counter = 0;
-        if (trackletcounter > 0 && adccounter == 0) {
+        if (trackletcounter > 0 && adccounter == 0) { //}&& triggerrecord.getNumberOfTracklets()!=0) {
           LOG(fatal) << " we have tracklets but no digits, this is not possible";
         }
         if (adccounter > 0 || trackletcounter > 0) {
