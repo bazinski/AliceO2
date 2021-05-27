@@ -742,8 +742,9 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
           if ((linkwordswritten % 8) != 0) {
             LOG(error) << "linkwordswritten is not 256 bit aligned " << linkwordswritten << " %8 = " << linkwordswritten % 8 << " and a padding size of : " << paddingsize << " or padbytes of : " << padbytes;
           }
-          //fix the halfcruheader for the length of this link.
-          if (crudatasize > 100) {
+          //set the halfcruheader for the length of this link.
+          //but first a sanity check.
+          if (crudatasize > constants::MAXDATAPERLINK256) {
             LOG(error) << " linksize is huge : " << crudatasize;
           }
           LOG(debug) << " setting halfcrulink " << halfcrulink << " linksize to : " << crudatasize << " with a linkwordswrittern=" << linkwordswritten;
