@@ -93,7 +93,9 @@ void Trap2CRU::sortDataToLinks()
 
   for (auto& trig : mTrackletTriggerRecords) {
     if (trig.getNumberOfTracklets() > 0) {
-      LOG(debug) << " sorting digits from : " << trig.getFirstTracklet() << " till " << trig.getFirstTracklet() + trig.getNumberOfTracklets();
+      if (mVerbosity) {
+        LOG(debug) << " sorting digits from : " << trig.getFirstTracklet() << " till " << trig.getFirstTracklet() + trig.getNumberOfTracklets();
+      }
       std::stable_sort(std::begin(mTracklets) + trig.getFirstTracklet(), std::begin(mTracklets) + trig.getNumberOfTracklets() + trig.getFirstTracklet(),
                        [this](auto&& t1, auto&& t2) {
                          if (t1.getHCID() != t2.getHCID()) {
@@ -106,7 +108,9 @@ void Trap2CRU::sortDataToLinks()
                        });
     }
     if (trig.getNumberOfDigits() != 0) {
-      LOG(debug) << " sorting digits from : " << trig.getFirstDigit() << " till " << trig.getFirstDigit() + trig.getNumberOfDigits();
+      if (mVerbosity) {
+        LOG(debug) << " sorting digits from : " << trig.getFirstDigit() << " till " << trig.getFirstDigit() + trig.getNumberOfDigits();
+      }
       std::stable_sort(mDigitsIndex.begin() + trig.getFirstDigit(), mDigitsIndex.begin() + trig.getNumberOfDigits() + trig.getFirstDigit(), //,digitcompare);
                        [this](const uint32_t i, const uint32_t j) {
              uint32_t hcida = mDigits[i].getDetector() * 2 + (mDigits[i].getROB() % 2);
@@ -119,9 +123,10 @@ void Trap2CRU::sortDataToLinks()
   }
 
   std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - sortstart;
-  LOG(debug) << "TRD Digit/Tracklet Sorting took " << duration.count() << " s";
-  int Verbose = 1;
-  if (Verbose) {
+  if (mVerbosity) {
+    LOG(info) << "TRD Digit/Tracklet Sorting took " << duration.count() << " s";
+  }
+  if (mVerbosity) {
     LOG(info) << "@@@@@@@@@@@@@@@@@ pre sort tracklets then digits @@@@@@@@@@@@@@@@@@@@@@@@@@@";
     int triggercount = 0;
     for (auto& trig : mTrackletTriggerRecords) {
@@ -199,7 +204,9 @@ void Trap2CRU::readTrapData()
   //set things up, read the file and then deligate to convertTrapdata to do the conversion.
   //
   mRawData.reserve(1024 * 1024); //TODO take out the hardcoded 1MB its supposed to come in from the options
-  LOG(debug) << "Trap2CRU::readTrapData";
+  if (mVerbosity) {
+    LOG(info) << "Trap2CRU::readTrapData";
+  }
   // data comes in index by event (triggerrecord)
   // first 15 links go to cru0a, second 15 links go to cru0b, 3rd 15 links go to cru1a ... first 90 links to flp0 and then repeat for 12 flp
   // then do next event
@@ -296,14 +303,20 @@ void Trap2CRU::linkSizePadding(uint32_t linksize, uint32_t& crudatasize, uint32_
       crudatasize = linksize / 8; // 32 bit word to 256 bit word.
       padding = 0;
     }
-    LOG(debug) << "We have data with linkdatasize=" << linksize << " with size number in header of:" << crudatasize << " padded with " << padding << " 32bit words";
+    if (mVerbosity) {
+      LOG(info) << "We have data with linkdatasize=" << linksize << " with size number in header of:" << crudatasize << " padded with " << padding << " 32bit words";
+    }
   } else {
     //linksize is zero so no data, pad fully.
     crudatasize = 1;
     padding = 8;
-    LOG(debug) << "We have data with linkdatasize=" << linksize << " with size number in header of:" << crudatasize << " padded with " << padding << " 32bit words";
+    if (mVerbosity) {
+      LOG(info) << "We have data with linkdatasize=" << linksize << " with size number in header of:" << crudatasize << " padded with " << padding << " 32bit words";
+    }
   }
-  LOG(debug) << __func__ << " leaving linkSizePadding : CRUDATASIZE : " << crudatasize;
+  if (mVerbosity) {
+    LOG(debug) << __func__ << " leaving linkSizePadding : CRUDATASIZE : " << crudatasize;
+  }
 }
 
 uint32_t Trap2CRU::buildHalfCRUHeader(HalfCRUHeader& header, const uint32_t bc, const uint32_t halfcru)
@@ -414,7 +427,9 @@ int Trap2CRU::buildDigitRawData(const int digitstartindex, const int digitendind
       digitwordswritten++;
     }
     //LOG(info) << "DDD Adding Digit to raw stream rob:mcm:channel " << d->getROB() << ":" << d->getMCM() << ":" << d->getChannel() << " adcmask is now :" << adcmaskptr->adcmask;
-    //LOG(info) << "DDDD " << d->getDetector() << ":" << d->getROB() << ":" << d->getMCM() << ":" << d->getChannel() << ":" << d->getADCsum() << ":" << d->getADC()[0] << ":" << d->getADC()[1] << ":" << d->getADC()[2] << "::" << d->getADC()[27] << ":" << d->getADC()[28] << ":" << d->getADC()[29];
+    if (mVerbosity) {
+      LOG(info) << "DDDD " << d->getDetector() << ":" << d->getROB() << ":" << d->getMCM() << ":" << d->getChannel() << ":" << d->getADCsum() << ":" << d->getADC()[0] << ":" << d->getADC()[1] << ":" << d->getADC()[2] << "::" << d->getADC()[27] << ":" << d->getADC()[28] << ":" << d->getADC()[29];
+    }
     if (d->getMCM() != startmcm) {
       LOG(fatal) << "digit getmcm = " << d->getMCM() << " while startmcm=" << startmcm;
     }
@@ -443,7 +458,9 @@ int Trap2CRU::buildTrackletRawData(const int trackletindex, const int linkid)
   header.onea = 1;
   header.oneb = 1;
   int trackletcounter = 0;
-  LOG(debug) << header;
+  if (mVerbosity) {
+    LOG(info) << header;
+  }
   while (linkid == mTracklets[trackletindex + trackletcounter].getHCID() && header.col == mTracklets[trackletindex + trackletcounter].getColumn() && header.padrow == mTracklets[trackletindex + trackletcounter].getPadRow()) {
     buildTrackletMCMData(trackletdata[trackletcounter], mTracklets[trackletindex + trackletcounter].getSlope(),
                          mTracklets[trackletindex + trackletcounter].getPosition(), mTracklets[trackletindex + trackletcounter].getQ0(),
@@ -595,7 +612,9 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
   int rawwords = 0;
   char* rawdataptratstart;
   std::vector<char> rawdatavector(1024 * 1024 * 2); // sum of link sizes + padding in units of bytes and some space for the header (512 bytes).
-  LOG(info) << "BUNCH CROSSING : " << triggerrecord.getBCData().bc << " with orbit : " << triggerrecord.getBCData().orbit;
+  if (mVerbosity) {
+    LOG(info) << "BUNCH CROSSING : " << triggerrecord.getBCData().bc << " with orbit : " << triggerrecord.getBCData().orbit;
+  }
 
   //set startdigit and starttracklet relative to the trigger.
   //
@@ -731,7 +750,9 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
         }
         //pad up to a whole 256 bit word size
         if (linkwordswritten != 0) {
-          LOG(debug) << "linkwordswritten is non zero : " << linkwordswritten;
+          if (mVerbosity) {
+            LOG(info) << "linkwordswritten is non zero : " << linkwordswritten;
+          }
           crudatasize = linkwordswritten / 8;
           linkSizePadding(linkwordswritten, crudatasize, paddingsize);
 
@@ -761,12 +782,16 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
           totallinklengths += crudatasize;
           if ((mRawDataPtr - rawdataptratstart) != (totallinklengths * 32)) {
             bytescopied = mRawDataPtr - rawdataptratstart;
-            LOG(debug) << "something wrong with data size in cruheader writing"
-                       << "linkwordswriten:" << linkwordswritten << " rawwords:" << rawwords << "bytestocopy : " << bytescopied << " crudatasize:" << crudatasize << " sum of links up to now : " << totallinklengths << " mRawDataPtr:0x" << std::hex << (void*)mRawDataPtr << "  start ptr:" << std::hex << (void*)rawdataptratstart;
+            if (mVerbosity) {
+              LOG(info) << "something wrong with data size in cruheader writing"
+                        << "linkwordswriten:" << linkwordswritten << " rawwords:" << rawwords << "bytestocopy : " << bytescopied << " crudatasize:" << crudatasize << " sum of links up to now : " << totallinklengths << " mRawDataPtr:0x" << std::hex << (void*)mRawDataPtr << "  start ptr:" << std::hex << (void*)rawdataptratstart;
+            }
             //something wrong with data size writing padbytes:81 bytestocopy : 3488 crudatasize:81 mRawDataPtr:0x0x7f669acdedf0  start ptr:0x7f669acde050
 
           } else {
-            LOG(debug) << "all fine with data size writing padbytes:" << paddingsize << " linkwordswriten:" << linkwordswritten << " bytestocopy : " << bytescopied << " crudatasize:" << crudatasize << " mRawDataPtr:0x" << std::hex << (void*)mRawDataPtr << "  start ptr:" << std::hex << (void*)rawdataptratstart;
+            if (mVerbosity) {
+              LOG(debug) << "all fine with data size writing padbytes:" << paddingsize << " linkwordswriten:" << linkwordswritten << " bytestocopy : " << bytescopied << " crudatasize:" << crudatasize << " mRawDataPtr:0x" << std::hex << (void*)mRawDataPtr << "  start ptr:" << std::hex << (void*)rawdataptratstart;
+            }
           }
           //sanity check for now:
           if (crudatasize != o2::trd::getlinkdatasize(halfcruheader, halfcrulink)) {
@@ -794,16 +819,20 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
     memcpy(feeidpayload.data(), &rawdatavector[0], halfcruwordswritten * 4);
     assert(halfcruwordswritten % 8 == 0);
     mWriter.addData(mFeeID, mCruID, mLinkID, mEndPointID, triggerrecord.getBCData(), feeidpayload, false, triggercount);
-    LOG(debug) << "written file for trigger : " << triggercount << " feeid of 0x" << std::hex << mFeeID << " cruid : " << mCruID << " and linkid: " << mLinkID << " and EndPoint: " << mEndPointID << " orbit :0x" << std::hex << triggerrecord.getBCData().orbit << " bc:0x" << std::hex << triggerrecord.getBCData().bc << " and payload size of : " << halfcruwordswritten << " with  a half cru of: ";
+    if (mVerbosity) {
+      LOG(info) << "written file for trigger : " << triggercount << " feeid of 0x" << std::hex << mFeeID << " cruid : " << mCruID << " and linkid: " << mLinkID << " and EndPoint: " << mEndPointID << " orbit :0x" << std::hex << triggerrecord.getBCData().orbit << " bc:0x" << std::hex << triggerrecord.getBCData().bc << " and payload size of : " << halfcruwordswritten << " with  a half cru of: ";
+    }
     //printHalfCRUHeader(halfcruheader);
     //for (int a = 0; a < halfcruwordswritten; ++a) {
     //  LOG(info) << std::hex << " 0x" << (unsigned int)feeidpayload[a * 4] << " 0x" << (unsigned int)feeidpayload[a * 4 + 1] << " 0x" << (unsigned int)feeidpayload[a * 4 + 2] << " 0x" << (unsigned int)feeidpayload[a * 4 + 3];
     //}
-    // HalfCRUHeader* h;
-    //h = (HalfCRUHeader*)feeidpayload.data();
-    //HalfCRUHeader h1 = *h;
-    //printHalfCRUHeader(h1);
-    LOG(debug) << "+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+  ======   end of writing";
+    if (mVerbosity) {
+      HalfCRUHeader* h;
+      h = (HalfCRUHeader*)feeidpayload.data();
+      HalfCRUHeader h1 = *h;
+      printHalfCRUHeader(h1);
+      LOG(info) << "+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+  ======   end of writing";
+    }
   }
 }
 } // end namespace trd
