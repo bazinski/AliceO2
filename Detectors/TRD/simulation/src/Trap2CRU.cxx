@@ -843,7 +843,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
       printHalfCRUHeader(h1);
       LOG(info) << "+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+  ======   end of writing";
     }
-    }
+  }
   }
 } // end namespace trd
 } // end namespace o2
