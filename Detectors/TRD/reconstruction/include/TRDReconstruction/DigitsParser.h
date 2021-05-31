@@ -85,8 +85,8 @@ class DigitsParser
   int mBufferLocation;
   int mPaddingWordsCounter;
   bool mSanityCheck{true};
-  bool mByteOrderFix{false};        // simulated data is not byteswapped, real is, so deal with it accodringly.
-  bool mReturnVector{true};         // whether we are returing a vector or the raw data buffer.
+  bool mByteOrderFix{false}; // simulated data is not byteswapped, real is, so deal with it accodringly.
+  bool mReturnVector{true};  // whether we are returing a vector or the raw data buffer.
   // yes this is terrible design but it works,
   int mReturnVectorPos;
 
