@@ -96,15 +96,16 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     auto packetCount = o2::raw::RDHUtils::getPacketCounter(rdh);
     o2::InteractionRecord a = o2::raw::RDHUtils::getTriggerIR(rdh);
     //check this triggerrecord is the same as the last loop.
-  //  if (mVerbose) {
-      if (mIR != a) {
-        LOG(warn) << "Interaction records are not consistant across rdh in the data readout loop";
-        o2::raw::RDHUtils::printRDH(rdh);
-        LOG(warn) << "current IR " << a;
-        LOG(warn) << "previous IR " << mIR;
-        LOG(warn) << "end Interaction records are not consistant across rdh in the data readout loop";
+    //  if (mVerbose) {
+    if (mIR != a) {
+      LOG(warn) << "Interaction records are not consistant across rdh in the data readout loop";
+      o2::raw::RDHUtils::printRDH(rdh);
+      LOG(warn) << "current IR " << a;
+      LOG(warn) << "previous IR " << mIR;
+      LOG(warn) << "end Interaction records are not consistant across rdh in the data readout loop";
       }
-   /lgetCompressedDigits().size()/ }
+      / lgetCompressedDigits().size() /
+  }
     mIR = a;
     //mDataPointer += headerSize/4;
     mDataEndPointer = (const uint32_t*)((char*)rdh + offsetToNext);
@@ -206,8 +207,8 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   memcpy((char*)&mCurrentHalfCRUHeader, (void*)(&mHBFPayload[cruhbfstartoffset]), sizeof(mCurrentHalfCRUHeader)); //TODO remove the copy just use pointer dereferencing, doubt it will improve the speed much though.
 
   //check the bunch crossings match
-  if(mCurrentHalfCRUHeader.BunchCrossing!=mIR.bc ){
-    LOG(warn) << " BC mismatch "<< mIR.bc <<" != " << mCurrentHalfCRUHeader.BunchCrossing;
+  if (mCurrentHalfCRUHeader.BunchCrossing != mIR.bc) {
+    LOG(warn) << " BC mismatch " << mIR.bc << " != " << mCurrentHalfCRUHeader.BunchCrossing;
     printHalfCRUHeader(mCurrentHalfCRUHeader);
   }
   o2::trd::getlinkdatasizes(mCurrentHalfCRUHeader, mCurrentHalfCRULinkLengths);
@@ -325,7 +326,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   //digits and tracklets are sitting inside the parsing classes.
   //extract the vectors and copy them to tracklets and digits here, building the indexing(triggerrecords)
   //as this is for a single cru half chamber header all the tracklets and digits are for the same trigger defined by the bc and orbit in the rdh which we hold in mIR
-  mEventRecords.addTracklets(mIR,std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
+  mEventRecords.addTracklets(mIR, std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
   if (mVerbose) {
     LOG(info) << "inserting tracklets from parser of size : " << mTrackletsParser.getTracklets().size() << " mEventRecordsTracklets is now :" << mEventRecords.sumTracklets();
   }
@@ -336,7 +337,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   }
   mDigitsParser.clear();
   if (mVerbose) {
-    LOG(info) << "Event digits after eventi # : " << mEventRecords.sumDigits() << " having added : via sum=" << mDigitsParser.getDigits().size() << " digitsfound is "<< mDigitsParser.getDigitsFound();
+    LOG(info) << "Event digits after eventi # : " << mEventRecords.sumDigits() << " having added : via sum=" << mDigitsParser.getDigits().size() << " digitsfound is " << mDigitsParser.getDigitsFound();
   }
   int lasttrigger = 0, lastdigit = 0, lasttracklet = 0;
   /*if (mEventTriggers.size() != 0) {
@@ -346,7 +347,8 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   }
   LOG(info) << mIR << " digits : " << mEventDigits.size() << " tracklets : " << mEventTracklets.size();
   mEventTriggers.emplace_back(mIR, lastdigit, mEventDigits.size(), lasttracklet, mEventTracklets.size());
-  */ // now handled internall in mEventRecords
+  */
+  // now handled internall in mEventRecords
   //if we get here all is ok.
   return 1;
 }
@@ -410,11 +412,11 @@ bool CruRawReader::run()
   return false;
 };
 
-void CruRawReader::getParsedObjects(std::vector<Tracklet64>& tracklets, std::vector<CompressedDigit>& cdigits,std::vector<TriggerRecord>& triggers )
+void CruRawReader::getParsedObjects(std::vector<Tracklet64>& tracklets, std::vector<CompressedDigit>& cdigits, std::vector<TriggerRecord>& triggers)
 {
-  int digitcountsum=0;
-  int trackletcountsum=0;
-  mEventRecords.unpackDataForSending(triggers,tracklets,cdigits);
+  int digitcountsum = 0;
+  int trackletcountsum = 0;
+  mEventRecords.unpackDataForSending(triggers, tracklets, cdigits);
   /*for(auto eventrecord: mEventRecords)//loop over triggers incase they have already been done.
   {
   int digitcount=0;

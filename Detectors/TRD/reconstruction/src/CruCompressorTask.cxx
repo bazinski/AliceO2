@@ -63,11 +63,11 @@ uint64_t CruCompressorTask::buildEventOutput()
   std::vector<o2::trd::TriggerRecord> ir;
   std::vector<o2::trd::Tracklet64> tracklets;
   std::vector<o2::trd::CompressedDigit> digits;
-  mReader.getParsedObjects(tracklets,digits,ir);
+  mReader.getParsedObjects(tracklets, digits, ir);
   trackletheader->bc = ir[0].getBCData().bc;
   trackletheader->orbit = ir[0].getBCData().orbit;
   trackletheader->padding = 0xeeee;
-  trackletheader->size = mReader.sumTrackletsFound() * 8; // to get to bytes. TODO compare to getTrackletsFound 
+  trackletheader->size = mReader.sumTrackletsFound() * 8; // to get to bytes. TODO compare to getTrackletsFound
   for (auto tracklet : mReader.getTracklets(ir[0].getBCData())) {
     //convert tracklet to 64 bit and add to blob
     mOutBuffer[currentpos++] = tracklet.getTrackletWord();
