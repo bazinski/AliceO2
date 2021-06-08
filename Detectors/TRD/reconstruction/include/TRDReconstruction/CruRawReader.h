@@ -30,7 +30,6 @@
 #include "TRDReconstruction/DigitsParser.h"
 #include "TRDReconstruction/TrackletsParser.h"
 #include "DataFormatsTRD/Constants.h"
-#include "DataFormatsTRD/EventStorage.h"
 #include "TRDBase/Digit.h"
 #include "CommonDataFormat/InteractionRecord.h"
 #include "DataFormatsTRD/EventRecord.h"

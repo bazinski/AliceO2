@@ -21,8 +21,8 @@
 #include "TRDReconstruction/DigitsParser.h"
 #include "TRDReconstruction/TrackletsParser.h"
 #include "DataFormatsTRD/Constants.h"
-//#include "DataFormatsTRD/CompressedDigit.h"
-
+//#inaclude "DataFormatsTRD/CompressedDigit.h"
+ 
 #include <cstring>
 #include <string>
 #include <vector>
@@ -97,15 +97,15 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     o2::InteractionRecord a = o2::raw::RDHUtils::getTriggerIR(rdh);
     //check this triggerrecord is the same as the last loop.
     //  if (mVerbose) {
-    if (mIR != a) {
-      LOG(warn) << "Interaction records are not consistant across rdh in the data readout loop";
-      o2::raw::RDHUtils::printRDH(rdh);
-      LOG(warn) << "current IR " << a;
-      LOG(warn) << "previous IR " << mIR;
-      LOG(warn) << "end Interaction records are not consistant across rdh in the data readout loop";
-    }
+//    if (mIR != a) {
+ //     LOG(warn) << "Interaction records are not consistant across rdh in the data readout loop";
+  //      o2::raw::RDHUtils::printRDH(rdh);
+ //        LOG(warn) << "current IR " << a;
+ //     LOG(warn) << "previous IR " << mIR;
+//      LOG(warn) << "end Interaction records are not consistant across rdh in the data readout loop";
+//    }
     //getCompressedDigits().size()
-    //}
+  //}
     mIR = a;
     //mDataPointer += headerSize/4;
     mDataEndPointer = (const uint32_t*)((char*)rdh + offsetToNext);
@@ -206,11 +206,11 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   // well then read the halfcruheader.
   memcpy((char*)&mCurrentHalfCRUHeader, (void*)(&mHBFPayload[cruhbfstartoffset]), sizeof(mCurrentHalfCRUHeader)); //TODO remove the copy just use pointer dereferencing, doubt it will improve the speed much though.
 
-  //check the bunch crossings match
-  if (mCurrentHalfCRUHeader.BunchCrossing != mIR.bc) {
-    LOG(warn) << " BC mismatch rdh!=cru1/2header : " << mIR.bc << " != " << mCurrentHalfCRUHeader.BunchCrossing;
-    printHalfCRUHeader(mCurrentHalfCRUHeader);
-  }
+  //check the bunch crossings match .... they dont!
+  //if (mCurrentHalfCRUHeader.BunchCrossing != mIR.bc) {
+  //  LOG(warn) << " BC mismatch rdh!=cru1/2header : " << mIR.bc << " != " << mCurrentHalfCRUHeader.BunchCrossing;
+  //  printHalfCRUHeader(mCurrentHalfCRUHeader);
+  // }
   o2::trd::getlinkdatasizes(mCurrentHalfCRUHeader, mCurrentHalfCRULinkLengths);
   o2::trd::getlinkerrorflags(mCurrentHalfCRUHeader, mCurrentHalfCRULinkErrorFlags);
   mTotalHalfCRUDataLength256 = std::accumulate(mCurrentHalfCRULinkLengths.begin(),
@@ -326,6 +326,8 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   //digits and tracklets are sitting inside the parsing classes.
   //extract the vectors and copy them to tracklets and digits here, building the indexing(triggerrecords)
   //as this is for a single cru half chamber header all the tracklets and digits are for the same trigger defined by the bc and orbit in the rdh which we hold in mIR
+  mIR.bc=mCurrentHalfCRUHeader.BunchCrossing; // correct mIR to have the event bunccrossing *NOT* the heartbeat trigger bunch crossing.
+
   mEventRecords.addTracklets(mIR, std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
   if (mVerbose) {
     LOG(info) << "inserting tracklets from parser of size : " << mTrackletsParser.getTracklets().size() << " mEventRecordsTracklets is now :" << mEventRecords.sumTracklets();
@@ -426,7 +428,7 @@ void CruRawReader::getParsedObjects(std::vector<Tracklet64>& tracklets, std::vec
               << cdigits.size()<< " trackletv size:"<< mEventRecords.getTracklets(ir.getBCData());
     for(auto trackletv: mEventStores.getTracklets(ir.getBCData())){
       //loop through the vector of ranges
-      start=trackletv.getFirstEntry() ;
+      start=trackletv.getFirstEntry();
       end= start+trackletv.getEntries();
       LOG(info) << "insert tracklets from " << start<< "  " << end;
       tracklets.insert(tracklets.end(),mEventTracklets.begin()+start, mEventTracklets.begin()+end);
