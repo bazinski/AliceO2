@@ -103,8 +103,8 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
       LOG(warn) << "current IR " << a;
       LOG(warn) << "previous IR " << mIR;
       LOG(warn) << "end Interaction records are not consistant across rdh in the data readout loop";
-      }
-      / lgetCompressedDigits().size() /
+    }
+    / lgetCompressedDigits().size() /
   }
     mIR = a;
     //mDataPointer += headerSize/4;
