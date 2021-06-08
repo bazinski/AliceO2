@@ -104,7 +104,7 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
       LOG(warn) << "previous IR " << mIR;
       LOG(warn) << "end Interaction records are not consistant across rdh in the data readout loop";
     }
-    //getCompressedDigits().size() 
+    //getCompressedDigits().size()
   //}
     mIR = a;
     //mDataPointer += headerSize/4;
@@ -208,7 +208,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
 
   //check the bunch crossings match
   if (mCurrentHalfCRUHeader.BunchCrossing != mIR.bc) {
-    LOG(warn) << " BC mismatch " << mIR.bc << " != " << mCurrentHalfCRUHeader.BunchCrossing;
+    LOG(warn) << " BC mismatch rdh!=cru1/2header : " << mIR.bc << " != " << mCurrentHalfCRUHeader.BunchCrossing;
     printHalfCRUHeader(mCurrentHalfCRUHeader);
   }
   o2::trd::getlinkdatasizes(mCurrentHalfCRUHeader, mCurrentHalfCRULinkLengths);
@@ -426,7 +426,7 @@ void CruRawReader::getParsedObjects(std::vector<Tracklet64>& tracklets, std::vec
               << cdigits.size()<< " trackletv size:"<< mEventRecords.getTracklets(ir.getBCData());
     for(auto trackletv: mEventStores.getTracklets(ir.getBCData())){
       //loop through the vector of ranges
-      start=trackletv.getFirstEntry(); 
+      start=trackletv.getFirstEntry() ;
       end= start+trackletv.getEntries();
       LOG(info) << "insert tracklets from " << start<< "  " << end;
       tracklets.insert(tracklets.end(),mEventTracklets.begin()+start, mEventTracklets.begin()+end);
