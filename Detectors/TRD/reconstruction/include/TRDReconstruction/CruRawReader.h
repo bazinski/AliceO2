@@ -202,8 +202,8 @@ class CruRawReader
   //std::vector<Digit> mEventDigits;
   //  EventStorage mEventStores; // store data range indexes into the above vectors.
   EventStorage mEventRecords; // store data range indexes into the above vectors.
-  bool mReturnBlob{0};       // whether to return blobs or vectors;
-  struct TRDDataCounters_t { //thisis on a per event basis
+  bool mReturnBlob{0};        // whether to return blobs or vectors;
+  struct TRDDataCounters_t {  //thisis on a per event basis
     //TODO this should go into a dpl message for catching by qc ?? I think.
     std::array<uint32_t, 1080> LinkWordCounts;    //units of 256bits "cru word"
     std::array<uint32_t, 1080> LinkPadWordCounts; // units of 32 bits the data pad word size.
