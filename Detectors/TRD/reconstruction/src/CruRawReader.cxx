@@ -22,7 +22,7 @@
 #include "TRDReconstruction/TrackletsParser.h"
 #include "DataFormatsTRD/Constants.h"
 //#inaclude "DataFormatsTRD/CompressedDigit.h"
- 
+
 #include <cstring>
 #include <string>
 #include <vector>
@@ -97,15 +97,15 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     o2::InteractionRecord a = o2::raw::RDHUtils::getTriggerIR(rdh);
     //check this triggerrecord is the same as the last loop.
     //  if (mVerbose) {
-//    if (mIR != a) {
- //     LOG(warn) << "Interaction records are not consistant across rdh in the data readout loop";
-  //      o2::raw::RDHUtils::printRDH(rdh);
- //        LOG(warn) << "current IR " << a;
- //     LOG(warn) << "previous IR " << mIR;
-//      LOG(warn) << "end Interaction records are not consistant across rdh in the data readout loop";
-//    }
+    //    if (mIR != a) {
+    //     LOG(warn) << "Interaction records are not consistant across rdh in the data readout loop";
+    //      o2::raw::RDHUtils::printRDH(rdh);
+    //        LOG(warn) << "current IR " << a;
+    //     LOG(warn) << "previous IR " << mIR;
+    //      LOG(warn) << "end Interaction records are not consistant across rdh in the data readout loop";
+    //    }
     //getCompressedDigits().size()
-  //}
+    //}
     mIR = a;
     //mDataPointer += headerSize/4;
     mDataEndPointer = (const uint32_t*)((char*)rdh + offsetToNext);
@@ -326,7 +326,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   //digits and tracklets are sitting inside the parsing classes.
   //extract the vectors and copy them to tracklets and digits here, building the indexing(triggerrecords)
   //as this is for a single cru half chamber header all the tracklets and digits are for the same trigger defined by the bc and orbit in the rdh which we hold in mIR
-  mIR.bc=mCurrentHalfCRUHeader.BunchCrossing; // correct mIR to have the event bunccrossing *NOT* the heartbeat trigger bunch crossing.
+  mIR.bc = mCurrentHalfCRUHeader.BunchCrossing; // correct mIR to have the event bunccrossing *NOT* the heartbeat trigger bunch crossing.
 
   mEventRecords.addTracklets(mIR, std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
   if (mVerbose) {
