@@ -24,6 +24,7 @@
 #include "DataFormatsTRD/RawData.h"
 #include "DataFormatsTRD/Tracklet64.h"
 #include "DataFormatsTRD/Digit.h"
+#include "DataFormatsTRD/EventStorage.h"
 //#include "DetectorsRaw/HBFUtils.h"
 #include "DetectorsRaw/RawFileWriter.h"
 
@@ -106,7 +107,6 @@ class Trap2CRU
   std::vector<uint32_t> mTrackletsIndex;
   std::vector<o2::trd::TriggerRecord> mTrackletTriggerRecords;
   std::vector<o2::trd::TriggerRecord>* mTrackletTriggerRecordsPtr = &mTrackletTriggerRecords;
-
   uint64_t mCurrentTracklet{0}; //the tracklet we are currently busy adding
   uint64_t mCurrentDigit{0};    //the digit we are currently busy adding
 

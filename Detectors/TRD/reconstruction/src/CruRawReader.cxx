@@ -96,7 +96,7 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     auto packetCount = o2::raw::RDHUtils::getPacketCounter(rdh);
     o2::InteractionRecord a = o2::raw::RDHUtils::getTriggerIR(rdh);
     //check this triggerrecord is the same as the last loop.
-    if (mVerbose) {
+  //  if (mVerbose) {
       if (mIR != a) {
         LOG(warn) << "Interaction records are not consistant across rdh in the data readout loop";
         o2::raw::RDHUtils::printRDH(rdh);
@@ -104,7 +104,7 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
         LOG(warn) << "previous IR " << mIR;
         LOG(warn) << "end Interaction records are not consistant across rdh in the data readout loop";
       }
-    }
+   /lgetCompressedDigits().size()/ }
     mIR = a;
     //mDataPointer += headerSize/4;
     mDataEndPointer = (const uint32_t*)((char*)rdh + offsetToNext);
@@ -204,6 +204,12 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   }
   // well then read the halfcruheader.
   memcpy((char*)&mCurrentHalfCRUHeader, (void*)(&mHBFPayload[cruhbfstartoffset]), sizeof(mCurrentHalfCRUHeader)); //TODO remove the copy just use pointer dereferencing, doubt it will improve the speed much though.
+
+  //check the bunch crossings match
+  if(mCurrentHalfCRUHeader.BunchCrossing!=mIR.bc ){
+    LOG(warn) << " BC mismatch "<< mIR.bc <<" != " << mCurrentHalfCRUHeader.BunchCrossing;
+    printHalfCRUHeader(mCurrentHalfCRUHeader);
+  }
   o2::trd::getlinkdatasizes(mCurrentHalfCRUHeader, mCurrentHalfCRULinkLengths);
   o2::trd::getlinkerrorflags(mCurrentHalfCRUHeader, mCurrentHalfCRULinkErrorFlags);
   mTotalHalfCRUDataLength256 = std::accumulate(mCurrentHalfCRULinkLengths.begin(),
@@ -318,27 +324,29 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   // we have read in all the digits and tracklets for this event.
   //digits and tracklets are sitting inside the parsing classes.
   //extract the vectors and copy them to tracklets and digits here, building the indexing(triggerrecords)
-  //TODO version 2 remove the tracklet and digit class and write directly the binary format.
-  mEventTracklets.insert(std::end(mEventTracklets), std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
+  //as this is for a single cru half chamber header all the tracklets and digits are for the same trigger defined by the bc and orbit in the rdh which we hold in mIR
+  mEventRecords.addTracklets(mIR,std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
   if (mVerbose) {
-    LOG(info) << "inserting tracklets from parser of size : " << mTrackletsParser.getTracklets().size() << " mEventTracklets is now :" << mEventTracklets.size();
+    LOG(info) << "inserting tracklets from parser of size : " << mTrackletsParser.getTracklets().size() << " mEventRecordsTracklets is now :" << mEventRecords.sumTracklets();
   }
   mTrackletsParser.clear();
-  mEventCompressedDigits.insert(std::end(mEventCompressedDigits), std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
+  mEventRecords.addCompressedDigits(mIR, std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
   if (mVerbose) {
     LOG(info) << "inserting digits from parser of size : " << mDigitsParser.getDigits().size();
   }
   mDigitsParser.clear();
   if (mVerbose) {
-    LOG(info) << "Event digits after eventi # : " << mEventCompressedDigits.size() << " having added : " << mDigitsParser.getDigits().size();
+    LOG(info) << "Event digits after eventi # : " << mEventRecords.sumDigits() << " having added : via sum=" << mDigitsParser.getDigits().size() << " digitsfound is "<< mDigitsParser.getDigitsFound();
   }
   int lasttrigger = 0, lastdigit = 0, lasttracklet = 0;
-  if (mEventTriggers.size() != 0) {
+  /*if (mEventTriggers.size() != 0) {
     lasttrigger = mEventTriggers.size() - 1;
     lastdigit = mEventTriggers[lasttrigger].getFirstDigit() + mEventTriggers[lasttrigger].getNumberOfDigits();
     lasttracklet = mEventTriggers[lasttrigger].getFirstTracklet() + mEventTriggers[lasttrigger].getNumberOfTracklets();
   }
-  mEventTriggers.emplace_back(mIR, lastdigit, mDigitsParser.getDigits().size(), lasttracklet, mTrackletsParser.getTracklets().size());
+  LOG(info) << mIR << " digits : " << mEventDigits.size() << " tracklets : " << mEventTracklets.size();
+  mEventTriggers.emplace_back(mIR, lastdigit, mEventDigits.size(), lasttracklet, mEventTracklets.size());
+  */ // now handled internall in mEventRecords
   //if we get here all is ok.
   return 1;
 }
@@ -402,6 +410,36 @@ bool CruRawReader::run()
   return false;
 };
 
-void checkSummary();
-
+void CruRawReader::getParsedObjects(std::vector<Tracklet64>& tracklets, std::vector<CompressedDigit>& cdigits,std::vector<TriggerRecord>& triggers )
+{
+  int digitcountsum=0;
+  int trackletcountsum=0;
+  mEventRecords.unpackDataForSending(triggers,tracklets,cdigits);
+  /*for(auto eventrecord: mEventRecords)//loop over triggers incase they have already been done.
+  {
+  int digitcount=0;
+  int trackletcount=0;
+    int start,end;
+    LOG(info) << __func__ << " " << tracklets.size() << " "
+              << cdigits.size()<< " trackletv size:"<< mEventRecords.getTracklets(ir.getBCData());
+    for(auto trackletv: mEventStores.getTracklets(ir.getBCData())){
+      //loop through the vector of ranges
+      start=trackletv.getFirstEntry(); 
+      end= start+trackletv.getEntries();
+      LOG(info) << "insert tracklets from " << start<< "  " << end;
+      tracklets.insert(tracklets.end(),mEventTracklets.begin()+start, mEventTracklets.begin()+end);
+      trackletcount+=trackletv.getEntries();
+    }
+    for(auto digitv: mEventStores.getDigits(ir.getBCData())){
+      start=digitv.getFirstEntry();
+      end= start+digitv.getEntries();
+      LOG(info) << "insert digits from " << start<< "  " << end;
+      cdigits.insert(cdigits.end(),mEventCompressedDigits.begin()+start , mEventCompressedDigits.begin()+end);
+      digitcount+=digitv.getEntries();
+    }
+    triggers.emplace_back(ir.getBCData(),digitcountsum,digitcount,trackletcountsum,trackletcount);
+    digitcountsum+=digitcount;
+    trackletcountsum+=trackletcount;
+  }*/
+}
 } // namespace o2::trd
