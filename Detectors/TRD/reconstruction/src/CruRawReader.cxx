@@ -328,14 +328,30 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   //as this is for a single cru half chamber header all the tracklets and digits are for the same trigger defined by the bc and orbit in the rdh which we hold in mIR
   mIR.bc = mCurrentHalfCRUHeader.BunchCrossing; // correct mIR to have the physics trigger bunchcrossing *NOT* the heartbeat trigger bunch crossing.
 
+  LOG(info) << "test before querying get tracklets";
+  std::vector<Tracklet64> ta;
+  ta=mTrackletsParser.getTracklets();
+
+  LOG(info) << "test before querying get tracklets  "<< ta.size();
+
+/*  if(ta.size()==17){
+    int a=1;
+    int d=0;
+    while(d==0){
+      a=sin(rand());
+    }
+    if(a<23) LOG(info)<< "a is less than 23";
+  }*/
   LOG(info) << "adding tracklets from trackletparser with a size of:" << mTrackletsParser.getTracklets().size();
-  mEventRecords.addTracklets(mIR, std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
+  //mEventRecords.addTracklets(mIR, mTrackletsParser.getTrackletsbegin(), mTrackletsParser.getTrackletsend());
+  //mEventRecords.addTracklets(mIR, std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
+  mEventRecords.addTracklets(mIR, mTrackletsParser.getTracklets());
   if (mVerbose) {
     LOG(info) << "inserting tracklets from parser of size : " << mTrackletsParser.getTracklets().size() << " mEventRecordsTracklets is now :" << mEventRecords.sumTracklets();
   }
-  LOG(info) << "adding tracklets from trackletparser with a size of:" << mTrackletsParser.getTracklets().size();
+  LOG(info) << "added tracklets from trackletparser with a size of:" << mTrackletsParser.getTracklets().size();
   mTrackletsParser.clear();
-  mEventRecords.addCompressedDigits(mIR, std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
+  //  mEventRecords.addCompressedDigits(mIR, std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
   if (mVerbose) {
     LOG(info) << "inserting digits from parser of size : " << mDigitsParser.getDigits().size();
   }

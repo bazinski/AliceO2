@@ -21,6 +21,7 @@ namespace o2::trd
 class Digit;
 class Tracklet64;
 class CompressedDigit;
+class TriggerRecord;
 
 /// \class EventRecord
 /// \brief Stores a TRD event
@@ -52,6 +53,7 @@ class EventRecord
   std::vector<Tracklet64>& getTracklets() { return mTracklets; }
   void addTracklet(Tracklet64& tracklet) { mTracklets.push_back(tracklet); }
   void addTracklets(std::vector<Tracklet64>::iterator& start, std::vector<Tracklet64>::iterator& end) { mTracklets.insert(mTracklets.end(), start, end); }
+  void addTracklets(std::vector<Tracklet64>& tracklets) { mTracklets.insert(mTracklets.end(), tracklets.begin(),tracklets.end()); }
 
   void printStream(std::ostream& stream) const;
 
@@ -161,7 +163,23 @@ class EventStorage
       mEventRecords.end()->addTracklet(tracklet);
     }
   }
-  void addTracklets(InteractionRecord& ir, std::vector<Tracklet64>::iterator start, std::vector<Tracklet64>::iterator end)
+  void addTracklets(InteractionRecord& ir, std::vector<Tracklet64>& tracklets)
+  {
+    bool added = false;
+    for (auto eventrecord : mEventRecords) {
+      if (ir == eventrecord.getBCData()) {
+        //TODO replace this with a hash/map not a vector
+        eventrecord.addTracklets(tracklets); //mTracklets.insert(mTracklets.end(),start,end);
+        added = true;
+      }
+    }
+    if (!added) {
+      // unseen ir so add it
+      mEventRecords.push_back(ir);
+      mEventRecords.end()->addTracklets(tracklets);
+    }
+  }
+  void addTracklets(InteractionRecord& ir, std::vector<Tracklet64>::iterator& start, std::vector<Tracklet64>::iterator& end)
   {
     bool added = false;
     for (auto eventrecord : mEventRecords) {
@@ -239,7 +257,7 @@ class EventStorage
         return event.getDigits();
       }
     }
-    LOG(fatal) << "attempted to get digits from IR: " << ir << " total digits of:" << sumDigits();
+    LOG(warn) << "attempted to get digits from IR: " << ir << " total digits of:" << sumDigits();
     printIR();
     return mDummyDigits;
   }
@@ -253,7 +271,7 @@ class EventStorage
         return event.getCompressedDigits();
       }
     }
-    LOG(fatal) << "attempted to get digits from IR: " << ir << " total digits of:" << sumDigits();
+    LOG(warn) << "attempted to get digits from IR: " << ir << " total digits of:" << sumDigits();
     printIR();
     return mDummyCompressedDigits;
   }
