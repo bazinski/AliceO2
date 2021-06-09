@@ -326,12 +326,14 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   //digits and tracklets are sitting inside the parsing classes.
   //extract the vectors and copy them to tracklets and digits here, building the indexing(triggerrecords)
   //as this is for a single cru half chamber header all the tracklets and digits are for the same trigger defined by the bc and orbit in the rdh which we hold in mIR
-  mIR.bc = mCurrentHalfCRUHeader.BunchCrossing; // correct mIR to have the event bunccrossing *NOT* the heartbeat trigger bunch crossing.
+  mIR.bc = mCurrentHalfCRUHeader.BunchCrossing; // correct mIR to have the physics trigger bunchcrossing *NOT* the heartbeat trigger bunch crossing.
 
+  LOG(info) << "adding tracklets from trackletparser with a size of:"<< mTrackletsParser.getTracklets().size();
   mEventRecords.addTracklets(mIR, std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
   if (mVerbose) {
     LOG(info) << "inserting tracklets from parser of size : " << mTrackletsParser.getTracklets().size() << " mEventRecordsTracklets is now :" << mEventRecords.sumTracklets();
   }
+  LOG(info) << "adding tracklets from trackletparser with a size of:"<< mTrackletsParser.getTracklets().size();
   mTrackletsParser.clear();
   mEventRecords.addCompressedDigits(mIR, std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
   if (mVerbose) {
