@@ -45,13 +45,13 @@ class EventRecord
   std::vector<CompressedDigit>& getCompressedDigits() { return mCompressedDigits; }
   void addDigits(Digit& digit) { mDigits.push_back(digit); }
   void addCompressedDigits(CompressedDigit& digit) { mCompressedDigits.push_back(digit); }
-  void addDigits(std::vector<Digit>::iterator start, std::vector<Digit>::iterator end) { mDigits.insert(mDigits.end(), start, end); }
-  void addCompressedDigits(std::vector<CompressedDigit>::iterator start, std::vector<CompressedDigit>::iterator end) { mCompressedDigits.insert(mCompressedDigits.end(), start, end); }
+  void addDigits(std::vector<Digit>::iterator& start, std::vector<Digit>::iterator& end) { mDigits.insert(mDigits.end(), start, end); }
+  void addCompressedDigits(std::vector<CompressedDigit>::iterator& start, std::vector<CompressedDigit>::iterator& end) { mCompressedDigits.insert(mCompressedDigits.end(), start, end); }
 
   //tracklet information
   std::vector<Tracklet64>& getTracklets() { return mTracklets; }
   void addTracklet(Tracklet64& tracklet) { mTracklets.push_back(tracklet); }
-  void addTracklets(std::vector<Tracklet64>::iterator start, std::vector<Tracklet64>::iterator end) { mTracklets.insert(mTracklets.end(), start, end); }
+  void addTracklets(std::vector<Tracklet64>::iterator& start, std::vector<Tracklet64>::iterator& end) { mTracklets.insert(mTracklets.end(), start, end); }
 
   void printStream(std::ostream& stream) const;
 

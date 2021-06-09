@@ -24,7 +24,6 @@
 #include "DataFormatsTRD/RawData.h"
 #include "DataFormatsTRD/Tracklet64.h"
 #include "DataFormatsTRD/Digit.h"
-#include "DataFormatsTRD/EventStorage.h"
 //#include "DetectorsRaw/HBFUtils.h"
 #include "DetectorsRaw/RawFileWriter.h"
 
