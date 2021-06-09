@@ -97,8 +97,8 @@ void DataReaderTask::run(ProcessingContext& pc)
           LOG(info) << "%%% finished running " << loopcounter << " %%%";
         }
         loopcounter++;
-        //mTracklets.insert(std::end(mTracklets), std::begin(mReader.getTracklets()), std::end(mReader.getTracklets()));
-        //mCompressedDigits.insert(std::end(mCompressedDigits), std::begin(mReader.getCompressedDigits()), std::end(mReader.getCompressedDigits()));
+        // mTracklets.insert(std::end(mTracklets), std::begin(mReader.getTracklets()), std::end(mReader.getTracklets()));
+        // mCompressedDigits.insert(std::end(mCompressedDigits), std::begin(mReader.getCompressedDigits()), std::end(mReader.getCompressedDigits()));
         //mReader.clearall();
         if (mVerbose) {
           LOG(info) << "from parsing received: " << mTracklets.size() << " tracklets and " << mCompressedDigits.size() << " compressed digits";
