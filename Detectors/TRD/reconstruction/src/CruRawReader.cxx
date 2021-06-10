@@ -318,7 +318,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   mIR.bc = mCurrentHalfCRUHeader.BunchCrossing; // correct mIR to have the physics trigger bunchcrossing *NOT* the heartbeat trigger bunch crossing.
 
   std::vector<Tracklet64> ta;
-  ta=mTrackletsParser.getTracklets();
+  ta = mTrackletsParser.getTracklets();
 
   LOG(info) << "adding tracklets from trackletparser with a size of:" << mTrackletsParser.getTracklets().size();
   //mEventRecords.addTracklets(mIR, mTrackletsParser.getTrackletsbegin(), mTrackletsParser.getTrackletsend());

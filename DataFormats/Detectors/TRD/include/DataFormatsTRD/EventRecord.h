@@ -35,7 +35,12 @@ class EventRecord
 
  public:
   EventRecord() = default;
-  EventRecord(const BCData& bunchcrossing) : mBCData(bunchcrossing) {mTracklets.reserve(30);mDigits.reserve(20); mCompressedDigits.reserve(30);}
+  EventRecord(const BCData& bunchcrossing) : mBCData(bunchcrossing)
+  {
+    mTracklets.reserve(30);
+    mDigits.reserve(20);
+    mCompressedDigits.reserve(30);
+  }
   ~EventRecord() = default;
 
   void setBCData(const BCData& data) { mBCData = data; }
@@ -70,7 +75,7 @@ class EventRecord
   }
 
  private:
-  BCData mBCData;                                 /// orbit and Bunch crossing data of the physics trigger
+  BCData mBCData;                                   /// orbit and Bunch crossing data of the physics trigger
   std::vector<Digit> mDigits{};                     /// digit data, for this event
   std::vector<Tracklet64> mTracklets{};             /// tracklet data, for this event
   std::vector<CompressedDigit> mCompressedDigits{}; /// compressed digit data,for this event
