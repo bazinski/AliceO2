@@ -206,9 +206,9 @@ void EventStorage::unpackDataForSending(std::vector<TriggerRecord>& triggers, st
     triggers.emplace_back(event.getBCData(), digitcount, event.getDigits().size(), trackletcount, event.getTracklets().size());
     digitcount += event.getDigits().size();
     trackletcount += event.getTracklets().size();
-    LOG(info) << "For IR::"<< event.getBCData();
-    LOG(info) << "tracklets to add : "<< event.getTracklets().size() << " trackletcout:"<<trackletcount;
-    LOG(info) << "digits to add : "<< event.getDigits().size() << " digitcount "<< digitcount;
+    LOG(info) << "For IR::" << event.getBCData();
+    LOG(info) << "tracklets to add : " << event.getTracklets().size() << " trackletcout:" << trackletcount;
+    LOG(info) << "digits to add : " << event.getDigits().size() << " digitcount " << digitcount;
   }
 }
 int EventStorage::sumTracklets()
