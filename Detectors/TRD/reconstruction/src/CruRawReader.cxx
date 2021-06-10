@@ -329,7 +329,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   }
   //LOG(info) << "added tracklets from trackletparser with a size of:" << mTrackletsParser.getTracklets().size();
   mTrackletsParser.clear();
-  //  mEventRecords.addCompressedDigits(mIR, std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
+  mEventRecords.addCompressedDigits(mIR, std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
   if (mVerbose) {
     LOG(info) << "inserting digits from parser of size : " << mDigitsParser.getDigits().size();
   }
