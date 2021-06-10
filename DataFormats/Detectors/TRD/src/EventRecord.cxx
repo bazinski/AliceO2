@@ -46,25 +46,17 @@ namespace o2::trd
   void EventRecord::addCompressedDigits(std::vector<CompressedDigit>::iterator& start, std::vector<CompressedDigit>::iterator& end) { mCompressedDigits.insert(std::end(mCompressedDigits), start, end); }
 
   //tracklet information
-  std::vector<Tracklet64>& EventRecord::getTracklets() { LOG(info)<<"mtracklets in get tracklets base ptr:"<< &mTracklets[0];return mTracklets; }
+  std::vector<Tracklet64>& EventRecord::getTracklets() { return mTracklets; }
   void EventRecord::addTracklet(Tracklet64& tracklet) { mTracklets.push_back(tracklet); }
   void EventRecord::addTracklets(std::vector<Tracklet64>::iterator& start, std::vector<Tracklet64>::iterator& end) {
-    LOG(info) << "inserting tracklets "<< std::distance(end,start);
-    LOG(info) << "event record had tracklets of size:"<< mTracklets.size();
-    LOG(info) << "!@!@!@!@!@!@!@!@!@!@!@!@!@@!@!@!@@!@ and we will crash here! ";
-    LOG(info) << "insterting at : "<< &mTracklets[0] << " with data from :" << *start << " till " << *end;
-    LOG(info) << "!@!@!@!@!@!@!@!@!@!@!@!@!@@!@!@!@@!@ and we will crash here! ";
     mTracklets.insert(std::end(mTracklets), start, end);
   }
   void EventRecord::addTracklets(std::vector<Tracklet64>& tracklets) 
   {
-    LOG(info)<<"mtracklets in addtraclets base ptr:"<< &mTracklets[0];
-    LOG(info) << "event record had tracklets of size:"<< mTracklets.size();
-    LOG(info) << "!@!@!@!@!@!@!@!@!@!@!@!@!@@!@!@!@@!@ and we will crash here! ";
     for(auto tracklet : tracklets){
       mTracklets.push_back(tracklet);
     }
-    //mTracklets.insert(mTracklets.end(), tracklets.begin(),tracklets.end()); 
+    //mTracklets.insert(mTracklets.back(), tracklets.begin(),tracklets.back()); 
   
   }
 
@@ -82,7 +74,7 @@ namespace o2::trd
     if (!added) {
       // unseen ir so add it
       mEventRecords.push_back(ir);
-      mEventRecords.end()->addDigits(digit);
+      mEventRecords.back().addDigits(digit);
     }
   }
   void EventStorage::addCompressedDigits(InteractionRecord& ir, CompressedDigit& digit)
@@ -98,7 +90,7 @@ namespace o2::trd
     if (!added) {
       // unseen ir so add it
       mEventRecords.push_back(ir);
-      mEventRecords.end()->addCompressedDigits(digit);
+      mEventRecords.back().addCompressedDigits(digit);
     }
   }
   void EventStorage::addDigits(InteractionRecord& ir, std::vector<Digit>::iterator start, std::vector<Digit>::iterator end)
@@ -114,7 +106,7 @@ namespace o2::trd
     if (!added) {
       // unseen ir so add it
       mEventRecords.push_back(ir);
-      mEventRecords.end()->addDigits(start, end);
+      mEventRecords.back().addDigits(start, end);
     }
   }
   void EventStorage::addCompressedDigits(InteractionRecord& ir, std::vector<CompressedDigit>::iterator start, std::vector<CompressedDigit>::iterator end)
@@ -130,7 +122,7 @@ namespace o2::trd
     if (!added) {
       // unseen ir so add it
       mEventRecords.push_back(ir);
-      mEventRecords.end()->addCompressedDigits(start, end);
+      mEventRecords.back().addCompressedDigits(start, end);
     }
   }
   void EventStorage::addTracklet(InteractionRecord& ir, Tracklet64& tracklet)
@@ -146,7 +138,7 @@ namespace o2::trd
     if (!added) {
       // unseen ir so add it
       mEventRecords.push_back(ir);
-      mEventRecords.end()->addTracklet(tracklet);
+      mEventRecords.back().addTracklet(tracklet);
     }
   }
   void EventStorage::addTracklets(InteractionRecord& ir, std::vector<Tracklet64>& tracklets)
@@ -155,19 +147,14 @@ namespace o2::trd
     for (auto eventrecord : mEventRecords) {
       if (ir == eventrecord.getBCData()) {
         //TODO replace this with a hash/map not a vector
-        eventrecord.addTracklets(tracklets); //mTracklets.insert(mTracklets.end(),start,end);
+        eventrecord.addTracklets(tracklets); //mTracklets.insert(mTracklets.back(),start,end);
         added = true;
       }
     }
     if (!added) {
       // unseen ir so add it
       mEventRecords.push_back(ir);
-      LOG(info) << "added a  new IR:" << ir;
-      LOG(info) << "incoming tracklets have size:"<< tracklets.size();
-      LOG(info)<<"mtracklets in addtraclets base ptr:"<< &(mEventRecords.back().getTracklets()[0]);
-      LOG(info) << "event record had tracklets of size:"<< mEventRecords.back().getTracklets().size();
-      LOG(info) << "now to actually add the tracklet";
-      mEventRecords.end()->addTracklets(tracklets);
+      mEventRecords.back().addTracklets(tracklets);
     }
   }
   void EventStorage::addTracklets(InteractionRecord& ir, std::vector<Tracklet64>::iterator& start, std::vector<Tracklet64>::iterator& end)
@@ -176,15 +163,14 @@ namespace o2::trd
     for (auto eventrecord : mEventRecords) {
       if (ir == eventrecord.getBCData()) {
         //TODO replace this with a hash/map not a vector
-        eventrecord.addTracklets(start, end); //mTracklets.insert(mTracklets.end(),start,end);
+        eventrecord.addTracklets(start, end); //mTracklets.insert(mTracklets.back(),start,end);
         added = true;
       }
     }
     if (!added) {
       // unseen ir so add it
-      LOG(info)<<"adding tracklets";
       mEventRecords.push_back(ir);
-      mEventRecords.end()->addTracklets(start, end);
+      mEventRecords.back().addTracklets(start, end);
     }
   }
   void EventStorage::unpackDataForSending(std::vector<TriggerRecord>& triggers, std::vector<Tracklet64>& tracklets, std::vector<Digit>& digits)

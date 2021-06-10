@@ -95,17 +95,6 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     mCRUID = o2::raw::RDHUtils::getCRUID(rdh);
     auto packetCount = o2::raw::RDHUtils::getPacketCounter(rdh);
     o2::InteractionRecord a = o2::raw::RDHUtils::getTriggerIR(rdh);
-    //check this triggerrecord is the same as the last loop.
-    //  if (mVerbose) {
-    //    if (mIR != a) {
-    //     LOG(warn) << "Interaction records are not consistant across rdh in the data readout loop";
-    //      o2::raw::RDHUtils::printRDH(rdh);
-    //        LOG(warn) << "current IR " << a;
-    //     LOG(warn) << "previous IR " << mIR;
-    //      LOG(warn) << "end Interaction records are not consistant across rdh in the data readout loop";
-    //    }
-    //getCompressedDigits().size()
-    //}
     mIR = a;
     //mDataPointer += headerSize/4;
     mDataEndPointer = (const uint32_t*)((char*)rdh + offsetToNext);
@@ -328,20 +317,9 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   //as this is for a single cru half chamber header all the tracklets and digits are for the same trigger defined by the bc and orbit in the rdh which we hold in mIR
   mIR.bc = mCurrentHalfCRUHeader.BunchCrossing; // correct mIR to have the physics trigger bunchcrossing *NOT* the heartbeat trigger bunch crossing.
 
-  LOG(info) << "test before querying get tracklets";
   std::vector<Tracklet64> ta;
   ta=mTrackletsParser.getTracklets();
 
-  LOG(info) << "test before querying get tracklets  "<< ta.size();
-
-  if(ta.size()==17){
-    int a=1;
-    int d=0;
-    while(d==0){
-      a=sin(rand());
-    }
-    if(a<23) LOG(info)<< "a is less than 23";
-  }
   LOG(info) << "adding tracklets from trackletparser with a size of:" << mTrackletsParser.getTracklets().size();
   //mEventRecords.addTracklets(mIR, mTrackletsParser.getTrackletsbegin(), mTrackletsParser.getTrackletsend());
   //mEventRecords.addTracklets(mIR, std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
