@@ -1,4 +1,3 @@
-
 // Copyright CERN and copyright holders of ALICE O2. This software is
 // distributed under the terms of the GNU General Public License v3 (GPL
 // Version 3), copied verbatim in the file "COPYING".
@@ -9,12 +8,9 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-///////////////////////////////////////////////////////////////////////////////
-//                                                                           //
 //  Event Record                                                              //
-//  Stor the tracklets and digits for a single trigger
+//  Store the tracklets and digits for a single trigger
 //  used temporarily for raw data
-///////////////////////////////////////////////////////////////////////////////
 
 #include <string>
 
