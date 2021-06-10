@@ -11,9 +11,9 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-//  TRD Trap2CRU class                                                       //
-//  Class to take the trap output that arrives at the cru and produce        //
-//  the cru output. A data mapping more than a cru simulator                 //
+//  Event Record                                                              //
+//  Stor the tracklets and digits for a single trigger
+//  used temporarily for raw data
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <string>
