@@ -136,7 +136,7 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     } else {
       LOG(warn) << "next rdh exceeds the bounds of the cru payload buffer";
       if (mVerbose) {
-        LOG(info) << "rdh position is out of bounds of the buffer";
+        LOG(info) << "rdh position  is out of bounds of the buffer";
         o2::raw::RDHUtils::printRDH(rdh);
       }
       return false; //-1;
@@ -334,14 +334,14 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
 
   LOG(info) << "test before querying get tracklets  "<< ta.size();
 
-/*  if(ta.size()==17){
+  if(ta.size()==17){
     int a=1;
     int d=0;
     while(d==0){
       a=sin(rand());
     }
     if(a<23) LOG(info)<< "a is less than 23";
-  }*/
+  }
   LOG(info) << "adding tracklets from trackletparser with a size of:" << mTrackletsParser.getTracklets().size();
   //mEventRecords.addTracklets(mIR, mTrackletsParser.getTrackletsbegin(), mTrackletsParser.getTrackletsend());
   //mEventRecords.addTracklets(mIR, std::begin(mTrackletsParser.getTracklets()), std::end(mTrackletsParser.getTracklets()));
