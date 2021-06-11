@@ -70,9 +70,9 @@ class EventRecord
   }
 
  private:
-  BCData mBCData;                                   /// orbit and Bunch crossing data of the physics trigger
-  std::vector<Digit> mDigits{};                     /// digit data, for this event
-  std::vector<Tracklet64> mTracklets{};             /// tracklet data, for this event
+  BCData mBCData;                       /// orbit and Bunch crossing data of the physics trigger
+  std::vector<Digit> mDigits{};         /// digit data, for this event
+  std::vector<Tracklet64> mTracklets{}; /// tracklet data, for this event
 
   ClassDefNV(EventRecord, 1);
 };
