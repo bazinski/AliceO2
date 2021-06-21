@@ -123,7 +123,6 @@ void CruCompressorTask::run(ProcessingContext& pc)
     if (!iit.isValid()) {
       continue;
     }
-    //LOG(info) << "iit.mInputs  " << iit.mInputs.
     /* prepare output parts */
     FairMQParts parts;
 
@@ -139,12 +138,10 @@ void CruCompressorTask::run(ProcessingContext& pc)
       std::cout << "payload In size is : " << std::dec << payloadInSize << std::endl;
       mReader.setDataBuffer(payloadIn);
       mReader.setDataBufferSize(payloadInSize);
-      mReader.setVerbose(mVerbose);
-      mReader.setDataVerbose(mDataVerbose);
-      mReader.setHeaderVerbose(mHeaderVerbose);
+      mReader.configure(mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
       /* run */
       mReader.run();
-
+      //raw data is now sitting in a vector of eventrecords.
       auto payloadOutSize = buildEventOutput();
 
       auto payloadOutSizeBytes = payloadOutSize * 8; // payloadoutsize in bytes.

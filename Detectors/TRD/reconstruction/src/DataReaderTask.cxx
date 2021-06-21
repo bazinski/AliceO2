@@ -40,7 +40,6 @@ void DataReaderTask::init(InitContext& ic)
 
 void DataReaderTask::sendData(ProcessingContext& pc)
 {
-  // mReader.getParsedObjects(mTracklets,mDigits,mTriggers);
   mReader.getParsedObjects(mTracklets, mCompressedDigits, mTriggers);
 
   LOG(info) << "Sending data onwards with " << mCompressedDigits.size() << " Digits and " << mTracklets.size() << " Tracklets and " << mTriggers.size() << " Triggers";
@@ -77,12 +76,6 @@ void DataReaderTask::run(ProcessingContext& pc)
           LOG(info) << " parsing non compressed data in the data reader task";
         }
 
-        int a = 1;
-        int d = 1;
-        //        while(d==1){
-        //          a=sin(rand());
-        //        }
-
         mReader.setDataBuffer(payloadIn);
         mReader.setDataBufferSize(payloadInSize);
         mReader.configure(mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
@@ -94,15 +87,10 @@ void DataReaderTask::run(ProcessingContext& pc)
           LOG(info) << "%%% finished running " << loopcounter << " %%%";
         }
         loopcounter++;
-        // mTracklets.insert(std::end(mTracklets), std::begin(mReader.getTracklets()), std::end(mReader.getTracklets()));
-        // mCompressedDigits.insert(std::end(mCompressedDigits), std::begin(mReader.getCompressedDigits()), std::end(mReader.getCompressedDigits()));
-        //mReader.clearall();
         if (mVerbose) {
           LOG(info) << "from parsing received: " << mTracklets.size() << " tracklets and " << mCompressedDigits.size() << " compressed digits";
           LOG(info) << "relevant vectors to read : " << mReader.sumTrackletsFound() << " tracklets and " << mReader.sumDigitsFound() << " compressed digits";
         }
-        //  mTriggers = mReader.getIR();
-        //get the payload of trigger and digits out.
       } else { // we have compressed data coming in.
         mCompressedReader.setDataBuffer(payloadIn);
         mCompressedReader.setDataBufferSize(payloadInSize);
@@ -113,9 +101,8 @@ void DataReaderTask::run(ProcessingContext& pc)
         mTriggers = mCompressedReader.getIR();
         //get the payload of trigger and digits out.
       }
-      /* output */
-      //sendData(pc); //TODO do we ever have to not post the data. i.e. can we get here mid event? I dont think so.
     }
+    /* output */
     sendData(pc); //TODO do we ever have to not post the data. i.e. can we get here mid event? I dont think so.
   }
 
