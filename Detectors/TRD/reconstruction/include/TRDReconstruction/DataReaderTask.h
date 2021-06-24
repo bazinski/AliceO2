@@ -38,7 +38,7 @@ class DataReaderTask : public Task
   DataReaderTask(bool compresseddata, bool byteswap, bool verbose, bool headerverbose, bool dataverbose) : mCompressedData(compresseddata), mByteSwap(byteswap), mVerbose(verbose), mHeaderVerbose(headerverbose), mDataVerbose(dataverbose) {}
   ~DataReaderTask() override = default;
   void init(InitContext& ic) final;
-  void sendData(ProcessingContext& pc);
+  void sendData(ProcessingContext& pc, bool blankframe=false);
   void run(ProcessingContext& pc) final;
 
  private:

@@ -43,12 +43,14 @@ void DataReaderTask::init(InitContext& ic)
   ic.services().get<CallbackService>().set(CallbackService::Id::Stop, finishFunction);
 }
 
-void DataReaderTask::sendData(ProcessingContext& pc)
+void DataReaderTask::sendData(ProcessingContext& pc, bool blankframe)
 {
   // mReader.getParsedObjects(mTracklets,mDigits,mTriggers);
-  mReader.getParsedObjects(mTracklets, mDigits, mTriggers);
+  if(!blankframe) {
+    mReader.getParsedObjects(mTracklets, mDigits, mTriggers);
+  }
 
-  LOG(info) << "Sending data onwards with " << mDigits.size() << " Digits and " << mTracklets.size() << " Tracklets and " << mTriggers.size() << " Triggers";
+  LOG(info) << "Sending data onwards with " << mDigits.size() << " Digits and " << mTracklets.size() << " Tracklets and " << mTriggers.size() << " Triggers and blankframe:"<< blankframe;
   pc.outputs().snapshot(Output{o2::header::gDataOriginTRD, "DIGITS", 0, Lifetime::Timeframe}, mDigits);
   pc.outputs().snapshot(Output{o2::header::gDataOriginTRD, "TRACKLETS", 0, Lifetime::Timeframe}, mTracklets);
   pc.outputs().snapshot(Output{o2::header::gDataOriginTRD, "TRKTRGRD", 0, Lifetime::Timeframe}, mTriggers);
@@ -72,10 +74,10 @@ void DataReaderTask::run(ProcessingContext& pc)
 
   for (const auto& ref : InputRecordWalker(pc.inputs(), dummy)) {
     const auto dh = o2::framework::DataRefUtils::getHeader<o2::header::DataHeader*>(ref);
-    if (dh->payloadSize == 16) {
+    if (dh->payloadSize == 16 || dh->payloadSize==0) {
       LOGP(WARNING, "Found input [{}/{}/{:#x}] TF#{} 1st_orbit:{} Payload {} : assuming no payload for all links in this TF",
            dh->dataOrigin.str, dh->dataDescription.str, dh->subSpecification, dh->tfCounter, dh->firstTForbit, dh->payloadSize);
-      sendData(pc); //send the empty tf data.
+      sendData(pc,true); //send the empty tf data.
       return;
     }
     LOG(info) << " matched DEADBEEF";
@@ -84,7 +86,6 @@ void DataReaderTask::run(ProcessingContext& pc)
   int inputcounts = 0;
   /* loop over inputs routes */
   for (auto iit = pc.inputs().begin(), iend = pc.inputs().end(); iit != iend; ++iit) {
-    LOG(info) << " looping over inputs " << inputcounts;
     inputcounts++;
     if (!iit.isValid()) {
       continue;
@@ -92,7 +93,6 @@ void DataReaderTask::run(ProcessingContext& pc)
     /* loop over input parts */
     int inputpartscount = 0;
     for (auto const& ref : iit) {
-      LOG(info) << " looping over parts " << inputpartscount;
       if (mVerbose) {
         const auto dh = DataRefUtils::getHeader<o2::header::DataHeader*>(ref);
         LOGP(info, "Found input [{}/{}/{:#x}] TF#{} 1st_orbit:{} Payload {} : assuming no payload for all links in this TF",
@@ -138,7 +138,8 @@ void DataReaderTask::run(ProcessingContext& pc)
       /* output */
       //sendData(pc); //TODO do we ever have to not post the data. i.e. can we get here mid event? I dont think so.
     }
-    sendData(pc); //TODO do we ever have to not post the data. i.e. can we get here mid event? I dont think so.
+    sendData(pc,false); //TODO do we ever have to not post the data. i.e. can we get here mid event? I dont think so.
+      LOG(info) << " looping over parts " << inputpartscount;
   }
 
   auto dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;
