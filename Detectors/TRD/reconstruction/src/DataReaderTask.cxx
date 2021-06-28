@@ -67,8 +67,9 @@ void DataReaderTask::run(ProcessingContext& pc)
   auto device = pc.services().get<o2::framework::RawDeviceService>().device();
   auto outputRoutes = pc.services().get<o2::framework::RawDeviceService>().spec().outputs;
   auto fairMQChannel = outputRoutes.at(0).channel;
-  int inputcount = 0;
-  std::vector<InputSpec> dummy{InputSpec{"filter", ConcreteDataTypeMatcher{"FLP", "DISTSUBTIMEFRAME"}, Lifetime::Timeframe}};
+  mDataSpec=o2::header::gDataDescriptionRawData;
+
+  std::vector<InputSpec> dummy{InputSpec{"dummy", ConcreteDataMatcher{"TRD", mDataSpec,0xDEADBEEF}}};
   // if we see requested data type input with 0xDEADBEEF subspec and 0 payload this means that the "delayed message"
   //   // mechanism created it in absence of real data from upstream. Processor should send empty output to not block the workflow
 
@@ -83,10 +84,8 @@ void DataReaderTask::run(ProcessingContext& pc)
     LOG(info) << " matched DEADBEEF";
   }
   //TODO combine the previous and subsequent loops.
-  int inputcounts = 0;
   /* loop over inputs routes */
   for (auto iit = pc.inputs().begin(), iend = pc.inputs().end(); iit != iend; ++iit) {
-    inputcounts++;
     if (!iit.isValid()) {
       continue;
     }
@@ -135,11 +134,9 @@ void DataReaderTask::run(ProcessingContext& pc)
         mTriggers = mCompressedReader.getIR();
         //get the payload of trigger and digits out.
       }
-      /* output */
-      //sendData(pc); //TODO do we ever have to not post the data. i.e. can we get here mid event? I dont think so.
     }
+      /* output */
     sendData(pc,false); //TODO do we ever have to not post the data. i.e. can we get here mid event? I dont think so.
-      LOG(info) << " looping over parts " << inputpartscount;
   }
 
   auto dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;

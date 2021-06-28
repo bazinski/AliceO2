@@ -57,6 +57,7 @@ class DataReaderTask : public Task
   bool mHeaderVerbose{false};  // verbose output of headers
   bool mCompressedData{false}; // are we dealing with the compressed data from the flp (send via option)
   bool mByteSwap{true};        // whether we are to byteswap the incoming data, mc is not byteswapped, raw data is (too be changed in cru at some point)
+  o2::header::DataDescription mDataSpec;    // input spec of th raw incoming data
 };
 
 } // namespace o2::trd
