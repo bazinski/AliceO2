@@ -69,7 +69,7 @@ void DataReaderTask::run(ProcessingContext& pc)
   auto outputRoutes = pc.services().get<o2::framework::RawDeviceService>().spec().outputs;
   auto fairMQChannel = outputRoutes.at(0).channel;
 
-  std::vector<InputSpec> dummy{InputSpec{"dummy", ConcreteDataMatcher{"TRD","RAWDATA", 0xDEADBEEF}}};
+  std::vector<InputSpec> dummy{InputSpec{"dummy", ConcreteDataMatcher{"TRD", "RAWDATA", 0xDEADBEEF}}};
   //std::vector<InputSpec> dummy{InputSpec{"dummy", ConcreteDataMatcher{"TRD","RAWDATA"/* mDataDesc.c_str()*/, 0xDEADBEEF}}};
   // if we see requested data type input with 0xDEADBEEF subspec and 0 payload this mecans that the "delayed message"
   //   // mechanism created it in absence of real data from upstream. Processor should send empty output to not block the workflow
