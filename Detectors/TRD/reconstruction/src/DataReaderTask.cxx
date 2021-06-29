@@ -68,10 +68,9 @@ void DataReaderTask::run(ProcessingContext& pc)
   auto device = pc.services().get<o2::framework::RawDeviceService>().device();
   auto outputRoutes = pc.services().get<o2::framework::RawDeviceService>().spec().outputs;
   auto fairMQChannel = outputRoutes.at(0).channel;
-  mDataSpec = o2::header::gDataDescriptionRawData;
 
-  std::vector<InputSpec> dummy{InputSpec{"dummy", ConcreteDataMatcher{"TRD", mDataSpec, 0xDEADBEEF}}};
-  // if we see requested data type input with 0xDEADBEEF subspec and 0 payload this means that the "delayed message"
+  std::vector<InputSpec> dummy{InputSpec{"dummy", ConcreteDataMatcher{"TRD", mDataDesc, 0xDEADBEEF}}};
+  // if we see requested data type input with 0xDEADBEEF subspec and 0 payload this mecans that the "delayed message"
   //   // mechanism created it in absence of real data from upstream. Processor should send empty output to not block the workflow
 
   for (const auto& ref : InputRecordWalker(pc.inputs(), dummy)) {
@@ -93,11 +92,11 @@ void DataReaderTask::run(ProcessingContext& pc)
     /* loop over input parts */
     int inputpartscount = 0;
     for (auto const& ref : iit) {
-      //      if (mVerbose) {
-      const auto dh = DataRefUtils::getHeader<o2::header::DataHeader*>(ref);
-      LOGP(info, "Found input [{}/{}/{:#x}] TF#{} 1st_orbit:{} Payload {} : ",
+      if (mVerbose) {
+        const auto dh = DataRefUtils::getHeader<o2::header::DataHeader*>(ref);
+         LOGP(info, "Found input [{}/{}/{:#x}] TF#{} 1st_orbit:{} Payload {} : ",
            dh->dataOrigin.str, dh->dataDescription.str, dh->subSpecification, dh->tfCounter, dh->firstTForbit, dh->payloadSize);
-      //     }
+      }
       const auto* headerIn = DataRefUtils::getHeader<o2::header::DataHeader*>(ref);
       auto payloadIn = ref.payload;
       auto payloadInSize = headerIn->payloadSize;

@@ -72,7 +72,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
   LOG(info) << "input spec is:" << inputspec;
   LOG(info) << "enablebyteswap :" << byteswap;
   AlgorithmSpec algoSpec;
-  algoSpec = AlgorithmSpec{adaptFromTask<o2::trd::DataReaderTask>(compresseddata, byteswap, verbose, headerverbose, dataverbose)};
+  algoSpec = AlgorithmSpec{adaptFromTask<o2::trd::DataReaderTask>(compresseddata, byteswap, verbose, inputspec, headerverbose, dataverbose)};
 
   WorkflowSpec workflow;
 
