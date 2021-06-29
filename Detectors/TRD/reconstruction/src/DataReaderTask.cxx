@@ -94,8 +94,8 @@ void DataReaderTask::run(ProcessingContext& pc)
     for (auto const& ref : iit) {
       if (mVerbose) {
         const auto dh = DataRefUtils::getHeader<o2::header::DataHeader*>(ref);
-         LOGP(info, "Found input [{}/{}/{:#x}] TF#{} 1st_orbit:{} Payload {} : ",
-           dh->dataOrigin.str, dh->dataDescription.str, dh->subSpecification, dh->tfCounter, dh->firstTForbit, dh->payloadSize);
+        LOGP(info, "Found input [{}/{}/{:#x}] TF#{} 1st_orbit:{} Payload {} : ",
+             dh->dataOrigin.str, dh->dataDescription.str, dh->subSpecification, dh->tfCounter, dh->firstTForbit, dh->payloadSize);
       }
       const auto* headerIn = DataRefUtils::getHeader<o2::header::DataHeader*>(ref);
       auto payloadIn = ref.payload;
