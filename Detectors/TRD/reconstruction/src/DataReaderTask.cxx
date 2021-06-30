@@ -86,7 +86,7 @@ void DataReaderTask::run(ProcessingContext& pc)
 
         mReader.setDataBuffer(payloadIn);
         mReader.setDataBufferSize(payloadInSize);
-        mReader.configure(mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
+        mReader.configure(mByteSwap, mFixDigitEndCorruption, mVerbose, mHeaderVerbose, mDataVerbose);
         if (mVerbose) {
           LOG(info) << "%%% about to run " << loopcounter << " %%%";
         }
