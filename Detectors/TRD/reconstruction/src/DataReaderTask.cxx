@@ -41,7 +41,7 @@ void DataReaderTask::init(InitContext& ic)
   };
 
   ic.services().get<CallbackService>().set(CallbackService::Id::Stop, finishFunction);
-  mDataDesc= ic.options().get<std::string>("trd-datareader-inputspec");
+  mDataDesc = ic.options().get<std::string>("trd-datareader-inputspec");
 }
 
 void DataReaderTask::sendData(ProcessingContext& pc, bool blankframe)
