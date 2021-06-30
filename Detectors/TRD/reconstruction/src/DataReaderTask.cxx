@@ -41,6 +41,7 @@ void DataReaderTask::init(InitContext& ic)
   };
 
   ic.services().get<CallbackService>().set(CallbackService::Id::Stop, finishFunction);
+  mDataDesc= ic.options().get<std::string>("trd-datareader-inputspec");
 }
 
 void DataReaderTask::sendData(ProcessingContext& pc, bool blankframe)
@@ -68,11 +69,11 @@ void DataReaderTask::run(ProcessingContext& pc)
   auto device = pc.services().get<o2::framework::RawDeviceService>().device();
   auto outputRoutes = pc.services().get<o2::framework::RawDeviceService>().spec().outputs;
   auto fairMQChannel = outputRoutes.at(0).channel;
-
-  std::vector<InputSpec> dummy{InputSpec{"dummy", ConcreteDataMatcher{"TRD", "RAWDATA", 0xDEADBEEF}}};
-  //std::vector<InputSpec> dummy{InputSpec{"dummy", ConcreteDataMatcher{"TRD","RAWDATA"/* mDataDesc.c_str()*/, 0xDEADBEEF}}};
+  //auto datadesc = (mUserDataDescription == o2::header::gDataDescriptionInvalid) ? o2::header::gDataDescriptionRawData : mUserDataDescription;
+  auto datadesc = (mDataDesc == o2::header::gDataDescriptionInvalid.str) ? o2::header::gDataDescriptionRawData : mUserDataDescription;
+  std::vector<InputSpec> dummy{InputSpec{"dummy", ConcreteDataMatcher{o2::header::gDataOriginTRD, datadesc, 0xDEADBEEF}}};
   // if we see requested data type input with 0xDEADBEEF subspec and 0 payload this mecans that the "delayed message"
-  //   // mechanism created it in absence of real data from upstream. Processor should send empty output to not block the workflow
+  // mechanism created it in absence of real data from upstream. Processor should send empty output to not block the workflow
 
   for (const auto& ref : InputRecordWalker(pc.inputs(), dummy)) {
     const auto dh = o2::framework::DataRefUtils::getHeader<o2::header::DataHeader*>(ref);
