@@ -21,7 +21,7 @@
 
 namespace o2::framework
 {
-  class ProcessingContext;
+class ProcessingContext;
 }
 
 namespace o2::trd
