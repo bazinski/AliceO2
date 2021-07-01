@@ -555,7 +555,33 @@ int Trap2CRU::writeTrackletEndMarker()
   return wordswritten;
 }
 
-int Trap2CRU::writeHCHeader(const int eventcount, const uint32_t linkid)
+int Trap2CRU::writeTrackletHCHeader(const int eventcount, const uint32_t linkid)
+{
+      LOG(info) << __func__ << " " << __LINE__;
+  int wordswritten = 0;
+  //from linkid we can get supermodule, stack, layer, side
+  int detector = linkid / 2;
+  TrackletHCHeader trackletheader;
+  trackletheader.supermodule = linkid / 60;
+  trackletheader.stack = linkid; //TODO this is wrong, go back to the ori thing from Guido
+  trackletheader.layer = linkid; //TODO this is wrong.
+  trackletheader.one = 1;
+  trackletheader.side = (linkid % 2) ? 1 : 0;
+  trackletheader.MCLK = eventcount * 42; // just has to be a consistant increasing number per event.
+  trackletheader.format = 12;
+  if (mUseTrackletHCHeader) { // run 3 we also have a TrackletHalfChamber, that comes after thetracklet endmarker.
+      LOG(info) << __func__ << " " << __LINE__;
+    memcpy(mRawDataPtr, (char*)&trackletheader, sizeof(TrackletHCHeader));
+    //LOG(info) << "Wrote tracklet HC : 0x" << std::hex << trackletheader.word;
+    mRawDataPtr += 4;
+    wordswritten++;
+  }
+      LOG(info) << __func__ << " " << __LINE__;
+return wordswritten;
+
+}
+
+int Trap2CRU::writeDigitHCHeader(const int eventcount, const uint32_t linkid)
 { // we have 2 HCHeaders defined Tracklet and Digit in Rawdata.h
   //TODO is it a case of run2 and run3 ? for digithcheader and tracklethcheader?
   //The parsing I am doing of CRU raw data only has a DigitHCHeader in it after the TrackletEndMarker ... confusion?
@@ -586,12 +612,6 @@ int Trap2CRU::writeHCHeader(const int eventcount, const uint32_t linkid)
   digitheader.ptrigphase = 1;             //TODO put something more real in here?
   digitheader.bunchcrossing = eventcount; //NB this is not the same as the bunchcrossing the rdh.
   digitheader.numtimebins = 30;
-  if (mUseTrackletHCHeader) { // run 3 we also have a TrackletHalfChamber, that comes after thetracklet endmarker.
-    memcpy(mRawDataPtr, (char*)&trackletheader, sizeof(TrackletHCHeader));
-    //LOG(info) << "Wrote tracklet HC : 0x" << std::hex << trackletheader.word;
-    mRawDataPtr += 4;
-    wordswritten++;
-  }
   memcpy(mRawDataPtr, (char*)&digitheader, 8); // 8 because we are only using the first 2 32bit words of the header, the rest are optional.
   //LOG(info) << "Wrote tracklet HC : 0x" << std::hex << digitheader.word0 << " 0x" << digitheader.word1;
   mRawDataPtr += 8;
@@ -668,11 +688,23 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
       uint32_t crudatasize = 0; // in 256 bit words.
       //loop over tracklets for mcm's that match
       //we have some data on this link
+      LOG(info) << __func__ << " " << __LINE__;
       int trackletcounter = 0;
+      bool firstTrackletOfLink=true;
       // if (mCurrentTracklet < endtrackletindex && mCurrentTracklet >= starttrackletindex && mCurrentDigit >= startdigitindex && mCurrentDigit < enddigitindex) {
       //if (mCurrentTracklet < endtrackletindex && mCurrentTracklet>=starttrackletindex mTracklets.size() || mCurrentDigit < mDigits.size()) {
       while (isTrackletOnLink(linkid, mCurrentTracklet) && mCurrentTracklet < endtrackletindex) { //}&& triggerrecord.getNumberOfTracklets()>0) {
+      LOG(info) << __func__ << " " << __LINE__;
         // still on an mcm on this link
+        if(firstTrackletOfLink){
+      LOG(info) << __func__ << " " << __LINE__;
+          //only write tracklet half chamber header if we do in fact have some tracklets for this link
+          //TODO does the tracklet half chamber header get written irrespective of there being tracklets or not, like the digit one is written.
+          int hcheaderwords = writeTrackletHCHeader(triggercount, linkid);
+          linkwordswritten += hcheaderwords;
+          rawwords += hcheaderwords;
+          firstTrackletOfLink=false;
+        }
         int tracklets = buildTrackletRawData(mCurrentTracklet, linkid); //returns # of 32 bits, header plus trackletdata words that would have come from the mcm.
         mCurrentTracklet += tracklets;
         trackletcounter += tracklets;
@@ -680,16 +712,15 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
         rawwords += tracklets + 1; //1 to include the header
       }
       if (mCurrentTracklet >= mTracklets.size()) {
+      LOG(info) << __func__ << " " << __LINE__;
         LOG(debug) << " finished with tracklets";
       }
       if (trackletcounter > 0) { // TOOD this if statement givent the lower if statement is to keep the ability to write tracklets with nothing of the digits.
+      LOG(info) << __func__ << " " << __LINE__;
         //write tracklet end marker
         int trackletendmarker = writeTrackletEndMarker();
         linkwordswritten += trackletendmarker;
         rawwords += trackletendmarker;
-        int hcheaderwords = writeHCHeader(triggercount, linkid);
-        linkwordswritten += hcheaderwords;
-        rawwords += hcheaderwords;
       }
       int adccounter = 0;
       int rawwordsbefore = rawwords;
@@ -699,18 +730,22 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
       //LOG(info) << "Is curernt digit on this link: " << isDigitOnLink(linkid, mCurrentDigit);
       //LOG(info) << "calc linkid : " << mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2 << " actual link=" << linkid;
       if (mCurrentDigit < mDigits.size()) {
+      LOG(info) << __func__ << " " << __LINE__;
         while (isDigitOnLink(linkid, mCurrentDigit) && mCurrentDigit < enddigitindex && mEventDigitCount % mDigitRate == 0) {
+      LOG(info) << __func__ << " " << __LINE__;
           if (mVerbosity) {
+      LOG(info) << __func__ << " " << __LINE__;
             LOG(info) << "at top of digit while loop calc linkid :" << linkid << " : " << mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2 << " actual link=" << linkid;
           }
           //  LOG(info) << "digit is on link for linkid : " << linkid << " and digit index of : " << mCurrentDigit;
           if (trackletcounter == 0 && HaveNotAlreadyWrittenThis) {
+      LOG(info) << __func__ << " " << __LINE__;
             // we have no tracklets, but we still need the trackletendmarker and the half chamber headers.
             //
             int trackletendmarker = writeTrackletEndMarker();
             linkwordswritten += trackletendmarker;
             rawwords += trackletendmarker;
-            int hcheaderwords = writeHCHeader(triggercount, linkid);
+            int hcheaderwords = writeDigitHCHeader(triggercount, linkid);
             linkwordswritten += hcheaderwords;
             rawwords += hcheaderwords;
             HaveNotAlreadyWrittenThis = false;
@@ -724,14 +759,17 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
           while (mDigits[mDigitsIndex[mCurrentDigit]].getMCM() == currentMCM &&
                  mDigits[mDigitsIndex[mCurrentDigit]].getROB() == currentROB &&
                  mDigits[mDigitsIndex[mCurrentDigit]].getDetector() == currentDetector) {
+      LOG(info) << __func__ << " " << __LINE__;
             LOG(debug) << " on index of : " << mDigitsIndex[mCurrentDigit] << " wuf channel=" << mDigits[mDigitsIndex[mCurrentDigit]].getChannel();
             mCurrentDigit++;
             digitcounter++;
             adccounter++;
             if (digitcounter > 22) {
+      LOG(info) << __func__ << " " << __LINE__;
               LOG(error) << " we are on the 22nd digit of an mcm ?? This is not possible";
             }
             if (mCurrentDigit >= mDigits.size()) {
+      LOG(info) << __func__ << " " << __LINE__;
               LOG(debug) << " finished with digits";
             }
           }
@@ -746,7 +784,9 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
           //LOG(info) << "at bottom of while loop  loop to continue if calc linkid : " << mDigits[mDigitsIndex[mCurrentDigit]].getDetector() * 2 + mDigits[mDigitsIndex[mCurrentDigit]].getROB() % 2 << " actual link=" << linkid;
         }
       }
+      LOG(info) << __func__ << " " << __LINE__;
       if (mVerbosity) {
+      LOG(info) << __func__ << " " << __LINE__;
         LOG(info) << "link:" << linkid << " trackletcounter: " << trackletcounter << "  currenttracklet: " << mCurrentTracklet << " adccounter :" << adccounter << " current digit : " << mCurrentDigit;
       }
       //       LOG(info) << "we have a rawwords written for digits of: " << rawwords - rawwordsbefore << " calced at : " << ((float)rawwords - (float)rawwordsbefore - 1.0) / 10.0;
@@ -755,6 +795,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
       //  LOG(fatal) << " we have tracklets but no digits, this is not possible";
       //}
       if (adccounter > 0 || trackletcounter > 0) {
+      LOG(info) << __func__ << " " << __LINE__;
         //write the tracklet end marker so long as we have any data (digits or tracklets).
         int digitendmarkerwritten = writeDigitEndMarker();
         linkwordswritten += digitendmarkerwritten;
@@ -762,7 +803,9 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
       }
       //pad up to a whole 256 bit word size
       if (linkwordswritten != 0) {
+      LOG(info) << __func__ << " " << __LINE__;
         if (mVerbosity) {
+      LOG(info) << __func__ << " " << __LINE__;
           LOG(info) << "linkwordswritten is non zero : " << linkwordswritten;
         }
         crudatasize = linkwordswritten / 8;
@@ -774,6 +817,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
         uint16_t padbytes = paddingsize * sizeof(uint32_t);
         uint32_t padword = 0xeeeeeeee;
         for (int i = 0; i < paddingsize; ++i) {
+      LOG(info) << __func__ << " " << __LINE__;
           memcpy(mRawDataPtr, (char*)&padword, 4);
           mRawDataPtr += 4;
           linkwordswritten++;
@@ -781,11 +825,13 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
         }
         crudatasize = linkwordswritten / 8; //convert to 256 bit alignment.
         if ((linkwordswritten % 8) != 0) {
+      LOG(info) << __func__ << " " << __LINE__;
           LOG(error) << "linkwordswritten is not 256 bit aligned " << linkwordswritten << " %8 = " << linkwordswritten % 8 << " and a padding size of : " << paddingsize << " or padbytes of : " << padbytes;
         }
         //set the halfcruheader for the length of this link.
         //but first a sanity check.
         if (crudatasize > constants::MAXDATAPERLINK256) {
+      LOG(info) << __func__ << " " << __LINE__;
           LOG(error) << " linksize is huge : " << crudatasize;
         }
         LOG(debug) << " setting halfcrulink " << halfcrulink << " linksize to : " << crudatasize << " with a linkwordswrittern=" << linkwordswritten;
@@ -793,6 +839,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
         uint32_t bytescopied;
         totallinklengths += crudatasize;
         if ((mRawDataPtr - rawdataptratstart) != (totallinklengths * 32)) {
+      LOG(info) << __func__ << " " << __LINE__;
           bytescopied = mRawDataPtr - rawdataptratstart;
           if (mVerbosity) {
             LOG(info) << "something wrong with data size in cruheader writing"
@@ -801,18 +848,21 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
           //something wrong with data size writing padbytes:81 bytestocopy : 3488 crudatasize:81 mRawDataPtr:0x0x7f669acdedf0  start ptr:0x7f669acde050
 
         } else {
+      LOG(info) << __func__ << " " << __LINE__;
           if (mVerbosity) {
             LOG(debug) << "all fine with data size writing padbytes:" << paddingsize << " linkwordswriten:" << linkwordswritten << " bytestocopy : " << bytescopied << " crudatasize:" << crudatasize << " mRawDataPtr:0x" << std::hex << (void*)mRawDataPtr << "  start ptr:" << std::hex << (void*)rawdataptratstart;
           }
         }
         //sanity check for now:
         if (crudatasize != o2::trd::getlinkdatasize(halfcruheader, halfcrulink)) {
+      LOG(info) << __func__ << " " << __LINE__;
           // we have written the wrong amount of data ....
           LOG(debug) << "crudata is ! = get link data size " << crudatasize << "!=" << o2::trd::getlinkdatasize(halfcruheader, halfcrulink);
         }
         LOG(debug) << "Link words to be written : " << linkwordswritten * 4;
       } // if we have data on link
       else {
+      LOG(info) << __func__ << " " << __LINE__;
         setHalfCRUHeaderLinkData(halfcruheader, halfcrulink, 0, 0);
         LOG(debug) << "linkwordswritten is zero : " << linkwordswritten;
         if (crudatasize != 0) {
@@ -823,14 +873,20 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
       }
       halfcruwordswritten += linkwordswritten;
     } // if tracklets.size >0
+      LOG(info) << __func__ << " " << __LINE__;
     //write the cruhalfheader now that we know the lengths.
     memcpy((char*)halfcruheaderptr, (char*)&halfcruheader, sizeof(halfcruheader));
+      LOG(info) << __func__ << " " << __LINE__;
     //}
     //write halfcru data here.
     std::vector<char> feeidpayload(halfcruwordswritten * 4);
+      LOG(info) << __func__ << " " << __LINE__;
     memcpy(feeidpayload.data(), &rawdatavector[0], halfcruwordswritten * 4);
+      LOG(info) << __func__ << " " << __LINE__;
     assert(halfcruwordswritten % 8 == 0);
+      LOG(info) << __func__ << " " << __LINE__;
     mWriter.addData(mFeeID, mCruID, mLinkID, mEndPointID, triggerrecord.getBCData(), feeidpayload, false, triggercount);
+      LOG(info) << __func__ << " " << __LINE__;
     if (mVerbosity) {
       LOG(info) << "written file for trigger : " << triggercount << " feeid of 0x" << std::hex << mFeeID << " cruid : " << mCruID << " and linkid: " << mLinkID << " and EndPoint: " << mEndPointID << " orbit :0x" << std::hex << triggerrecord.getBCData().orbit << " bc:0x" << std::hex << triggerrecord.getBCData().bc << " and payload size of : " << halfcruwordswritten << " with  a half cru of: ";
       printHalfCRUHeader(halfcruheader);
@@ -845,7 +901,9 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
       printHalfCRUHeader(h1);
       LOG(info) << "+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+!+  ======   end of writing";
     }
+      LOG(info) << __func__ << " " << __LINE__;
   }
+      LOG(info) << __func__ << " " << __LINE__;
 }
 } // end namespace trd
 } // end namespace o2

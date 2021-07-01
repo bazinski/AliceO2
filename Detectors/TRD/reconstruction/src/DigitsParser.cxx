@@ -236,9 +236,9 @@ int DigitsParser::Parse(bool verbose)
         }
         // we dont care about the year flag, we are >2007 already.
       } else {
-        if (mState == StateDigitMCMHeader) {
-          LOG(warn) << " state is MCMHeader but we have just bypassed it as the bitmask is wrong :" << std::hex << *word;
-        }
+        //if (mState == StateDigitMCMHeader && *word!=o2::trd::constants::CRUPADDING32) {
+        //  LOG(warn) << " state is MCMHeader but we have just bypassed it as the bitmask is wrong :" << std::hex << *word;
+        //}
         if (*word == o2::trd::constants::CRUPADDING32) {
           if (mVerbose) {
             LOG(info) << "state padding and word : 0x" << std::hex << *word << "  state is:" << mState;
@@ -261,9 +261,9 @@ int DigitsParser::Parse(bool verbose)
               LOG(info) << " digit end marker state ...";
             }
           } else {
-            if (mState != StateDigitMCMData) {
-              LOG(warn) << "something is wrong we are in the statement for MCMdata, but the state is : " << mState << " and MCMData state is:" << StateDigitMCMData;
-            }
+            //if (mState != StateDigitMCMData) {
+            //  LOG(warn) << "something is wrong we are in the statement for MCMdata, but the state is : " << mState << " and MCMData state is:" << StateDigitMCMData;
+            //}
             if (mVerbose || mDataVerbose) {
               //LOG(info) << "mDigitMCMData with state=" << mState << " is at " << mBufferLocation << " had value 0x" << std::hex << *word << " mcmdatacount of : " << mcmdatacount << " adc#" << mcmadccount;
             }
