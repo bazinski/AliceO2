@@ -9,7 +9,6 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-
 // @file   CruRawReader.h
 // @author Sean Murray
 // @brief  Cru raw data reader, this is the part that parses the raw data
