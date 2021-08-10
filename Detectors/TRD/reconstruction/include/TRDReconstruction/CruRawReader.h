@@ -26,6 +26,7 @@
 #include "Headers/RDHAny.h"
 #include "DetectorsRaw/RDHUtils.h"
 #include "DataFormatsTRD/RawData.h"
+#include "DataFormatsTRD/RawDataStats.h"
 #include "TRDReconstruction/DigitsParser.h"
 #include "TRDReconstruction/TrackletsParser.h"
 #include "DataFormatsTRD/Constants.h"
@@ -207,27 +208,8 @@ class CruRawReader
 
   EventStorage mEventRecords; // store data range indexes into the above vectors.
   bool mReturnBlob{0};        // whether to return blobs or vectors;
-  struct TRDDataCountersPerEvent_t { //thisis on a per event basis
-    //TODO this should go into a dpl message for catching by qc ?? I think.
-    std::array<uint32_t, 1080> mLinkWordCounts;    //units of 256bits "cru word"
-    std::array<uint32_t, 1080> mLinkPadWordCounts; // units of 32 bits the data pad word size.
-    std::array<uint32_t, 1080> mLinkFreq;          //units of 256bits "cru word"
-    std::array<uint8_t, 1080> mLinkErrorFlag;      //units of 256bits "cru word"
-    //from the above you can get the stats for supermodule and detector.
-    std::array<bool, 1080> LinkEmpty; // Link only has padding words only, probably not serious.
-    //maybe change this to actual traps ?? but it will get large.
-    std::array<uint32_t, 1080> mLinkTrackletPerTrap1; // incremented if a trap on this link has 1 tracklet
-    std::array<uint32_t, 1080> mLinkTrackletPerTrap2; // incremented if a trap on this link has 2 tracklet
-    std::array<uint32_t, 1080> mLinkTrackletPerTrap3; // incremented if a trap on this link has 3 tracklet
-    std::array<uint32_t, 1080> mLinkMCMsWithData;
-    std::array<uint16_t, 1080> MCMStatus;
-    std::array<uint16_t, constants::MAXMCMCOUNT> mMCMstats; // bit pattern for errors current event for a given mcm;
-    std::vector<uint32_t> mEmptyTraps;                      // MCM indexes of traps that are empty ?? list might better
-  } TRDStatCountersPerEvent;
-
-  struct TRDDataCountersRunning_t { //those counters that keep counting
-    //??
-  } TRDStatCountersRunning;
+  o2::trd::TRDDataCountersPerEvent mStatCountersPerEvent;
+  o2::trd::TRDDataCountersRunning mStatCountersRunning;
 
   /** summary data **/
 };

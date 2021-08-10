@@ -251,15 +251,15 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
                                                                   //check for cru errors :
                                                                   //  if (mHeaderVerbose) {
   int linkerrorcounter = 0;
-  if (mHeaderVerbose) {
-    LOG(info) << "link errors";
-    for (auto& linkerror : mCurrentHalfCRULinkErrorFlags) {
-      if (linkerror != 0) {
+  for (auto& linkerror : mCurrentHalfCRULinkErrorFlags) {
+    if (linkerror != 0) {
+      if (mHeaderVerbose) {
         LOG(info) << "E link error FEEID:" << mFEEID.word << " CRUID:" << mCRUID << " Endpoint:" << mCRUEndpoint
                   << " on linkcount:" << linkerrorcounter++ << " errorval:0x" << std::hex << linkerror;
       }
     }
   }
+
   std::array<uint32_t, 1024>::iterator currentlinkstart = mHBFPayload.begin() + cruhbfstartoffset;
   if (mHeaderVerbose) { //TODO put the following if statement into a method to simplify reading
     OutputHalfCruRawData();
@@ -285,6 +285,18 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   //loop over links
   for (currentlinkindex = 0; currentlinkindex < constants::NLINKSPERHALFCRU; currentlinkindex++) {
     auto linktimerstart = std::chrono::high_resolution_clock::now(); // measure total processing time
+    int supermodule = mFEEID.supermodule;
+    int endpoint = mFEEID.endpoint;
+    int side = mFEEID.side;
+    //stack layer and side map to ori
+    int stack, layer, halfchamberside;
+    int oriindex = currentlinkindex + constants::NLINKSPERHALFCRU * endpoint; // endpoint denotes the pci side, upper or lower for the pair of 15 fibres.
+    FeeParam::unpackORI(oriindex, side, stack, layer, halfchamberside);
+    int currentdetector = stack * constants::NLAYER + layer + supermodule * constants::NLAYER * constants::NSTACK;
+   
+
+    mStatCountersPerEvent.mLinkErrorFlag[currentdetector]=mCurrentHalfCRULinkErrorFlags[currentlinkindex];
+
     currentlinksize = mCurrentHalfCRULinkLengths[currentlinkindex];
     currentlinksize32 = currentlinksize * 8; //x8 to go from 256 bits to 32 bit;
     linkstart = mHBFPayload.begin() + dataoffsetstart32 + linksizeAccum32;
@@ -299,17 +311,8 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       for (int dumpoffset = dataoffsetstart32 + linksizeAccum32; dumpoffset < dataoffsetstart32 + linksizeAccum32 + currentlinksize32; dumpoffset += 8) {
         LOGP(info, "0x{0:06x} :: {1:08x} {2:08x}  {3:08x} {4:08x} {5:08x} {6:08x} {7:08x} {8:08x} ", dumpoffset, HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 1]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 2]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 3]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 4]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 5]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 6]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 7]));
       }
-      LOG(info) << "Cru link :" << currentlinkindex << " raw dump before processing end";
     }
     linksizeAccum32 += currentlinksize32;
-    int supermodule = mFEEID.supermodule;
-    int endpoint = mFEEID.endpoint;
-    int side = mFEEID.side;
-    //stack layer and side map to ori
-    int stack, layer, halfchamberside;
-    int oriindex = currentlinkindex + constants::NLINKSPERHALFCRU * endpoint; // endpoint denotes the pci side, upper or lower for the pair of 15 fibres.
-    FeeParam::unpackORI(oriindex, side, stack, layer, halfchamberside);
-    int currentdetector = stack * constants::NLAYER + layer + supermodule * constants::NLAYER * constants::NSTACK;
     if (mDataVerbose) {
       LOG(info) << "******* LINK # " << currentlinkindex << " and  starting at " << mHBFoffset32 << " unpackORI(" << oriindex << "," << side << "," << stack << "," << layer << "," << halfchamberside << ") and an FEEID:" << std::hex << mFEEID.word << " det:" << std::dec << currentdetector;
       LOG(info) << "******* LINK # " << currentlinkindex << " an FEEID:" << std::hex << mFEEID.word << " det:" << std::dec << currentdetector << " Error Flags : " << mCurrentHalfCRULinkErrorFlags[currentlinkindex];
@@ -433,7 +436,7 @@ bool CruRawReader::processCRULink()
 
 void CruRawReader::resetCounters()
 {
-  TRDStatCountersPerEvent.mLinkErrorFlag.fill(0);
+  mStatCountersPerEvent.mLinkErrorFlag.fill(0);
   mEventCounter = 0;
   mFatalCounter = 0;
   mErrorCounter = 0;
