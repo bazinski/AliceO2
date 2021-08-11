@@ -18,6 +18,7 @@
 #include "CommonDataFormat/RangeReference.h"
 #include "FairLogger.h"
 #include "DataFormatsTRD/Tracklet64.h"
+#include "DataFormatsTRD/RawDataStats.h"
 
 namespace o2::framework
 {
@@ -80,6 +81,7 @@ class EventRecord
   BCData mBCData;                       /// orbit and Bunch crossing data of the physics trigger
   std::vector<Digit> mDigits{};         /// digit data, for this event
   std::vector<Tracklet64> mTracklets{}; /// tracklet data, for this event
+  o2::trd::TRDDataCountersPerEvent mStats;
 };
 
 class EventStorage

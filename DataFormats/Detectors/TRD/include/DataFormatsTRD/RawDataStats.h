@@ -42,6 +42,8 @@ class TRDDataCountersPerEvent { //thisis on a per event basis
   std::array<uint32_t, 1080> mLinkTrackletPerTrap3; // incremented if a trap on this link has 3 tracklet
   std::array<uint32_t, 1080> mLinkMCMsWithData;
   std::array<uint16_t, 1080> MCMStatus;
+  std::array<std::array<uint16_t,16>, 1080> mMCMsBeforeCorruption;
+  std::array<std::array<uint16_t,16>, 1080> mMCMsOnlyClean;
   std::array<uint32_t, 1080> mLinkMCMCountBeforeCorruption;
   std::array<uint16_t, constants::MAXMCMCOUNT> mMCMstats; // bit pattern for errors current event for a given mcm;
   std::vector<uint32_t> mEmptyTraps;                      // MCM indexes of traps that are empty ?? list might better

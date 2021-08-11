@@ -359,10 +359,12 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
         //linkstart and linkend already have the multiple cruheaderoffsets built in
         mDigitWordsRead = mDigitsParser.Parse(&mHBFPayload, linkstart, linkend, currentdetector, stack, layer, digitHCHeader, mFEEID, currentlinkindex, cleardigits, mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
         mDigitWordsRejected = mDigitsParser.getDumpedDataCount();
-        if (mDigitsParser.getDumpedDataCount() != 0) {
-          LOG(info) << "FEEID: " << mFEEID.word << " LINK #" << oriindex << " bad datacount:" << mDigitsParser.getDataWordsParsed() << "::" << mDigitsParser.getDumpedDataCount();
-        } else {
-          LOG(info) << "FEEID: " << mFEEID.word << " LINK #" << oriindex << " good datacount:" << mDigitsParser.getDataWordsParsed() << "::" << mDigitsParser.getDumpedDataCount();
+        if (mHeaderVerbose){
+          if(mDigitsParser.getDumpedDataCount() != 0) {
+            LOG(info) << "FEEID: " << mFEEID.word << " LINK #" << oriindex << " bad datacount:" << mDigitsParser.getDataWordsParsed() << "::" << mDigitsParser.getDumpedDataCount();
+          } else {
+            LOG(info) << "FEEID: " << mFEEID.word << " LINK #" << oriindex << " good datacount:" << mDigitsParser.getDataWordsParsed() << "::" << mDigitsParser.getDumpedDataCount();
+          }
         }
         if (mDigitWordsRead != std::distance(linkstart, linkend)) {
           //we have the data corruption problem of a pile of stuff at the end of a link, jump over it.
@@ -422,7 +424,7 @@ bool CruRawReader::buildCRUPayLoad()
   int additionalBytes = -1;
   int crudatasize = -1;
   LOG(info) << "--- Build CRU Payload, added " << additionalBytes << " bytes to CRU "
-            << cruid << " with new size " << crudatasize;
+    << cruid << " with new size " << crudatasize;
   return true;
 }
 
@@ -447,8 +449,8 @@ void CruRawReader::checkSummary()
   char chname[2] = {'a', 'b'};
 
   LOG(info) << "--- SUMMARY COUNTERS: " << mEventCounter << " events "
-            << " | " << mFatalCounter << " decode fatals "
-            << " | " << mErrorCounter << " decode errors ";
+    << " | " << mFatalCounter << " decode fatals "
+    << " | " << mErrorCounter << " decode errors ";
 }
 
 bool CruRawReader::run()

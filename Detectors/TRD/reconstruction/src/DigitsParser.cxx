@@ -243,7 +243,7 @@ int DigitsParser::Parse(bool verbose)
             word = mEndParse;
           }
           overchannelcount = 0;
-          //output all the adc data for the described adc mask, i.e 10 32 bit words per bit in mask./
+          //output all the adc data for the described adc mask, i.e 10 32 bit words per bit in mask.
         }
         mBufferLocation++;
         //new header so digit word count becomes zero

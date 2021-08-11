@@ -179,11 +179,14 @@ int TrackletsParser::Parse()
     }
     if (*word == o2::trd::constants::CRUPADDING32) {
       //padding word first as it clashes with the hcheader.
-      LOG(info) << "Padding : 0x" << std::hex << *word << std::distance(mStartParse, word);
-      ;
+      LOG(info) << "Padding : 0x" << std::hex << *word << " at 0x" << std::distance(mStartParse, word);
       mState = StatePadding;
       mWordsRead++;
       LOG(warn) << "CRU Padding word while parsing tracklets. This should *never* happen, this should happen after the tracklet end markers when we are outside the tracklet parsing";
+      //dumping data
+      //mWordsRead+=std::distance(word,mEndParse);
+      //word =mEndParse;
+
     } else {
       //now for Tracklet hc header
       if ((((*word) & (0x1 << 11)) != 0) && !mIgnoreTrackletHCHeader && mState == StateTrackletHCHeader) { //TrackletHCHeader has bit 11 set to 1 always. Check for state because raw data can have bit 11 set!
