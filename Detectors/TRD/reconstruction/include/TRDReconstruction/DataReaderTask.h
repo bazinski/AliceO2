@@ -23,7 +23,7 @@
 #include "DataFormatsTRD/Tracklet64.h"
 #include "DataFormatsTRD/TriggerRecord.h"
 #include "DataFormatsTRD/Digit.h"
-//#include "DataFormatsTRD/FlpStats.h"
+#include "DataFormatsTRD/RawDataStats.h"
 
 #include <fstream>
 
@@ -62,6 +62,7 @@ class DataReaderTask : public Task
   std::string mDataDesc;
   o2::header::DataDescription mUserDataDescription = o2::header::gDataDescriptionInvalid; // alternative user-provided description to pick
   bool mFixDigitEndCorruption{false};                                                     // fix the parsing of corrupt end of digit data. bounce over it.
+  o2::trd::TRDDataCountersPerTimeFrame mTimeFrameCounters; //TODO when this is running on the front end its subtimeframes.
 };
 
 } // namespace o2::trd

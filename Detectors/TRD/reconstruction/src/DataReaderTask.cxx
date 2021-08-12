@@ -152,6 +152,12 @@ void DataReaderTask::run(ProcessingContext& pc)
 
   auto dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;
   LOG(info) << "Processing time for Data reading  " << std::chrono::duration_cast<std::chrono::microseconds>(dataReadTime).count() << "us";
+  mTimeFrameCounters.mTimeTaken=std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count();
+  mTimeFrameCounters.mDigitsFound=  mReader.getDigitsFound();
+  mTimeFrameCounters.mTrackletsFound = mReader.getTrackletsFound();
+  mTimeFrameCounters.mDataWordsRead = mWordsRead*4;
+  mTimeFrameCounters.mDataWordsRejected = mWordsRejected*4;
+
   if (!mCompressedData) {
     LOG(info) << "Digits found : " << mReader.getDigitsFound();
     LOG(info) << "Tracklets found : " << mReader.getTrackletsFound();
