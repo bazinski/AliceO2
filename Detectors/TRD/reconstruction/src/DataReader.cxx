@@ -39,6 +39,7 @@ void customize(std::vector<ConfigParamSpec>& workflowOptions)
     {"ignore-dist-stf", VariantType::Bool, false, {"do not subscribe to FLP/DISTSUBTIMEFRAME/0 message (no lost TF recovery)"}},
     {"trd-datareader-fixdigitcorruptdata", VariantType::Bool, false, {"Fix the erroneous data at the end of digits"}},
     {"enable-time-info", VariantType::Bool, false, {"enable the timing of tracklet, digit, and timeframe processing"}},
+    {"enable-stats", VariantType::Bool, false, {"enable the reader stats"}},
     {"enable-root-output", VariantType::Bool, false, {"Write the data to file"}},
     {"tracklethcheader", VariantType::Int, 0, {"Status of TrackletHalfChamberHeader 0 off always, 1 iff tracklet data, 2 on always"}},
     {"trd-datareader-enablebyteswapdata", VariantType::Bool, false, {"byteswap the incoming data, raw data needs it and simulation does not."}}};
@@ -67,6 +68,8 @@ WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
   auto fixdigitcorruption = cfgc.options().get<bool>("trd-datareader-fixdigitcorruptdata");
   auto tracklethcheader = cfgc.options().get<int>("tracklethcheader");
   auto enabletimeinfo = cfgc.options().get<bool>("enable-time-info");
+  auto enablestats=cfgc.options().get<bool>("enable-stats");
+
   std::vector<OutputSpec> outputs;
   outputs.emplace_back("TRD", "TRACKLETS", 0, Lifetime::Timeframe);
   outputs.emplace_back("TRD", "DIGITS", 0, Lifetime::Timeframe);
