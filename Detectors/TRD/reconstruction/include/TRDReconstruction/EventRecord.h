@@ -19,6 +19,7 @@
 #include "FairLogger.h"
 #include "DataFormatsTRD/Tracklet64.h"
 #include "DataFormatsTRD/RawDataStats.h"
+#include "DataFormatsTRD/Digit.h"
 
 namespace o2::framework
 {
@@ -27,9 +28,6 @@ class ProcessingContext;
 
 namespace o2::trd
 {
-class Digit;
-class Tracklet64;
-class CompressedDigit;
 class TriggerRecord;
 
 /// \class EventRecord
@@ -42,7 +40,7 @@ class EventRecord
 
  public:
   EventRecord() = default;
-  EventRecord(const BCData& bunchcrossing) : mBCData(bunchcrossing)
+  EventRecord(BCData& bunchcrossing) : mBCData(bunchcrossing)
   {
     mTracklets.reserve(30);
     mDigits.reserve(20);
@@ -100,6 +98,7 @@ class EventStorage
   void addTracklets(InteractionRecord& ir, std::vector<Tracklet64>::iterator& start, std::vector<Tracklet64>::iterator& end);
   void unpackData(std::vector<TriggerRecord>& triggers, std::vector<Tracklet64>& tracklets, std::vector<Digit>& digits);
   void sendData(o2::framework::ProcessingContext& pc, bool displaytracklets = false);
+  EventRecord& getEventRecord(InteractionRecord& ir);
   //this could replace by keeing a running total on addition TODO
   void sumTrackletsDigitsTriggers(uint64_t& tracklets, uint64_t& digits, uint64_t& triggers);
   int sumTracklets();

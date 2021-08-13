@@ -29,6 +29,7 @@
 namespace o2::trd
 {
 class Digit;
+class EventRecord;
 // class to Parse a single link of digits data.
 // calling class splits data by link and this gets called per link.
 
@@ -42,7 +43,8 @@ class DigitsParser
   int Parse(bool verbose = false); // presupposes you have set everything up already.
   int Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* data, std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator start,
             std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator end, int detector, int stack, int layer, DigitHCHeader& hcheader,
-            TRDFeeID& feeid, unsigned int linkindex, bool cleardigits = false, bool disablebyteswap = false, bool verbose = false,
+            TRDFeeID& feeid, unsigned int linkindex,EventRecord *eventrecord, bool cleardigits = false, bool disablebyteswap = false, bool verbose = false,
+                         
             bool headerverbose = false, bool dataverbose = false);
   enum DigitParserState { StateDigitHCHeader, // always the start of a half chamber.
                           StateDigitMCMHeader,
@@ -95,6 +97,7 @@ class DigitsParser
   DigitMCMADCMask* mDigitMCMADCMask;
   uint32_t mADCMask;
   DigitMCMData* mDigitMCMData;
+  EventRecord* mEventRecord;
   bool mVerbose{false};
   bool mHeaderVerbose{false};
   bool mDataVerbose{false};

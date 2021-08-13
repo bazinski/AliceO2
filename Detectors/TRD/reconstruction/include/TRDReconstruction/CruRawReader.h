@@ -171,6 +171,7 @@ class CruRawReader
   uint16_t mCRUID;
   uint16_t mHCID;
   TRDFeeID mFEEID; // current Fee ID working on
+  o2::InteractionRecord mIR;
   std::array<uint32_t, 15> mCurrentHalfCRULinkLengths;
   std::array<uint32_t, 15> mCurrentHalfCRULinkErrorFlags;
   uint32_t mCRUState; // the state of what we are expecting to read currently from the data stream, *not* what we have just read.
@@ -188,7 +189,6 @@ class CruRawReader
   uint64_t mTotalDigitWordsRejected = 0;
   //pointers to the data as we read them in, again no point in copying.
   HalfCRUHeader* mhalfcruheader;
-  o2::InteractionRecord mIR;
 
   bool checkerCheck();
   void checkerCheckRDH();
@@ -207,6 +207,7 @@ class CruRawReader
   uint32_t mErrorCounter;
 
   EventStorage mEventRecords; // store data range indexes into the above vectors.
+  EventRecord *mCurrentEvent; // the current event we are looking at, info extracted from cru half chamber header.
   bool mReturnBlob{0};        // whether to return blobs or vectors;
   o2::trd::TRDDataCountersPerEvent mStatCountersPerEvent;
   o2::trd::TRDDataCountersRunning mStatCountersRunning;

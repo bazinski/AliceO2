@@ -17,6 +17,7 @@
 #include "DataFormatsTRD/HelperMethods.h"
 
 #include "TRDReconstruction/TrackletsParser.h"
+#include "TRDReconstruction/EventRecord.h"
 #include "fairlogger/Logger.h"
 
 //TODO come back and figure which of below headers I actually need.
@@ -42,7 +43,7 @@ int TrackletsParser::Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX
                            std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator start,
                            std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator end,
                            TRDFeeID feeid, int robside, int detector, int stack, int layer,
-                           bool cleardigits, bool disablebyteswap, int usetracklethcheader,
+                           EventRecord *eventrecord, bool cleardigits, bool disablebyteswap, int usetracklethcheader,
                            bool verbose, bool headerverbose, bool dataverbose)
 {
   mStartParse = start;
@@ -60,6 +61,7 @@ int TrackletsParser::Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX
   mTrackletsFound = 0;
   mPaddingWordsCounter = 0;
   mTrackletHCHeaderState = usetracklethcheader; //what to with the tracklet half chamber header 0,1,2
+  mEventRecord=eventrecord;
   //    mTracklets.clear();
   return Parse();
 }
@@ -264,7 +266,7 @@ int TrackletsParser::Parse()
           }
           //TODO cross reference hcid to somewhere for a check. mDetector is assigned at the time of parser init.
           //
-          mTracklets.emplace_back(4, hcid, padrow, col, pos, slope, q0, q1, q2); // our format is always 4
+          mEventRecord->getTracklets().emplace_back(4, hcid, padrow, col, pos, slope, q0, q1, q2); // our format is always 4
           if (mDataVerbose) {
             LOG(info) << "Tracklet added:" << 4 << "-" << hcid << "-" << padrow << "-" << col << "-" << pos << "-" << slope << "-" << q0 << ":" << q1 << ":" << q2;
           }

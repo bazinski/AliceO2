@@ -118,6 +118,7 @@ void EventStorage::addTracklet(InteractionRecord& ir, Tracklet64& tracklet)
     mEventRecords.back().addTracklet(tracklet);
   }
 }
+
 void EventStorage::addTracklets(InteractionRecord& ir, std::vector<Tracklet64>& tracklets)
 {
   bool added = false;
@@ -245,6 +246,7 @@ std::vector<Tracklet64>& EventStorage::getTracklets(InteractionRecord& ir)
   printIR();
   return mDummyTracklets;
 }
+
 std::vector<Digit>& EventStorage::getDigits(InteractionRecord& ir)
 {
   bool found = false;
@@ -265,5 +267,20 @@ void EventStorage::printIR()
     LOG(info) << "[" << count << "]" << mEventRecords[count].getBCData() << " ";
   }
 }
+
+
+EventRecord& EventStorage::getEventRecord(InteractionRecord& ir)
+{
+//now find the event record in question
+for(auto& event : mEventRecords){
+  if(event==ir){
+    return event;
+  }
+}
+//oops its new, so add it
+mEventRecords.push_back(EventRecord(ir));
+return mEventRecords.back();
+}
+
 
 } // namespace o2::trd

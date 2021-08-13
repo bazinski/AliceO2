@@ -26,8 +26,8 @@
 
 namespace o2::trd
 {
-//TODO put o2::trd::constants::HBFBUFFERMAX in constants
-//
+class EventRecord;
+
 class TrackletsParser
 {
  public:
@@ -36,7 +36,7 @@ class TrackletsParser
   void setData(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* data) { mData = data; }
   int Parse(); // presupposes you have set everything up already.
   int Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* data, std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator start, std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator end, TRDFeeID feeid, int robside,
-            int detector, int stack, int layer, bool cleardigits = false,
+            int detector, int stack, int layer, EventRecord *eventrecords, bool cleardigits = false,
             bool disablebyteswap = false, int usetracklethcheader = 0, bool verbose = true,
             bool headerverbose = false, bool dataverbose = false);
   void setVerbose(bool verbose, bool header = false, bool data = false)
@@ -90,6 +90,7 @@ class TrackletsParser
   std::chrono::duration<double> mTrackletparsetime;                                        // store the time it takes to parse
   std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator mStartParse, mEndParse; // limits of parsing, effectively the link limits to parse on.
   //uint32_t mCurrentLinkDataPosition256;                // count of data read for current link in units of 256 bits
+  EventRecord *mEventRecord;
 
   uint16_t mCurrentLink; // current link within the halfcru we are parsing 0-14
   uint16_t mCRUEndpoint; // the upper or lower half of the currently parsed cru 0-14 or 15-29

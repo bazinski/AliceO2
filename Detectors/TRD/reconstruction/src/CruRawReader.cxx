@@ -143,9 +143,8 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     mFEEID.word = o2::raw::RDHUtils::getFEEID(rdh);       //TODO change this and just carry around the curreht RDH
     mCRUEndpoint = o2::raw::RDHUtils::getEndPointID(rdh); // the upper or lower half of the currently parsed cru 0-14 or 15-29
     mCRUID = o2::raw::RDHUtils::getCRUID(rdh);
+    mIR = o2::raw::RDHUtils::getTriggerIR(rdh);
     auto packetCount = o2::raw::RDHUtils::getPacketCounter(rdh);
-    o2::InteractionRecord a = o2::raw::RDHUtils::getTriggerIR(rdh);
-    mIR = a;
     mDataEndPointer = (const uint32_t*)((char*)rdh + offsetToNext);
     // copy the contents of the current rdh into the buffer to be parsed
     std::memcpy((char*)&mHBFPayload[0] + currentsaveddatacount, reinterpret_cast<const char*>(rdh) + headerSize, rdhpayload);
@@ -280,6 +279,12 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   //FEEID has supermodule/layer/stack/side in it.
   //CRU has
   mHBFoffset32 += sizeof(mCurrentHalfCRUHeader) / 4;
+
+  //get eventrecord for event we are looking at
+  mIR.bc = mCurrentHalfCRUHeader.BunchCrossing; // correct mIR to have the physics trigger bunchcrossing *NOT* the heartbeat trigger bunch crossing.
+  InteractionRecord trdir(mIR);
+  mCurrentEvent=&mEventRecords.getEventRecord(trdir);
+
   linkstart = mHBFPayload.begin() + dataoffsetstart32;
   linkend = mHBFPayload.begin() + dataoffsetstart32;
   //loop over links
@@ -293,7 +298,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
     int oriindex = currentlinkindex + constants::NLINKSPERHALFCRU * endpoint; // endpoint denotes the pci side, upper or lower for the pair of 15 fibres.
     FeeParam::unpackORI(oriindex, side, stack, layer, halfchamberside);
     int currentdetector = stack * constants::NLAYER + layer + supermodule * constants::NLAYER * constants::NSTACK;
-   
+
 
     mStatCountersPerEvent.mLinkErrorFlag[currentdetector]=mCurrentHalfCRULinkErrorFlags[currentlinkindex];
 
@@ -319,7 +324,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
     }
     if (linkstart != linkend) { // if link is not empty
       bool cleardigits = false; //linkstart and linkend already have the multiple cruheaderoffsets built in
-      trackletwordsread = mTrackletsParser.Parse(&mHBFPayload, linkstart, linkend, mFEEID, halfchamberside, currentdetector, stack, layer, cleardigits, mByteSwap, mTrackletHCHeaderState, mVerbose, mHeaderVerbose, mDataVerbose); // this will read up to the tracklet end marker.
+      trackletwordsread = mTrackletsParser.Parse(&mHBFPayload, linkstart, linkend, mFEEID, halfchamberside, currentdetector, stack, layer, mCurrentEvent, cleardigits, mByteSwap, mTrackletHCHeaderState, mVerbose, mHeaderVerbose, mDataVerbose); // this will read up to the tracklet end marker.
       if (mVerbose) {
         LOG(info) << "trackletwordsread:" << trackletwordsread << "  mem copy with offset of : " << cruhbfstartoffset << " parsing with linkstart: " << linkstart << " ending at : " << linkend;
       }
@@ -355,35 +360,42 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
         linkstart = linkend;
         mHBFoffset32 = dataoffsetstart32 + currentlinksize; // go to the end of the link
       } else {
-        mDigitWordsRead = 0;
-        //linkstart and linkend already have the multiple cruheaderoffsets built in
-        mDigitWordsRead = mDigitsParser.Parse(&mHBFPayload, linkstart, linkend, currentdetector, stack, layer, digitHCHeader, mFEEID, currentlinkindex, cleardigits, mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
-        mDigitWordsRejected = mDigitsParser.getDumpedDataCount();
-        if (mHeaderVerbose){
-          if(mDigitsParser.getDumpedDataCount() != 0) {
-            LOG(info) << "FEEID: " << mFEEID.word << " LINK #" << oriindex << " bad datacount:" << mDigitsParser.getDataWordsParsed() << "::" << mDigitsParser.getDumpedDataCount();
-          } else {
-            LOG(info) << "FEEID: " << mFEEID.word << " LINK #" << oriindex << " good datacount:" << mDigitsParser.getDataWordsParsed() << "::" << mDigitsParser.getDumpedDataCount();
+        if(digitHCHeader.major==0x21){
+          mDigitWordsRead = 0;
+          //linkstart and linkend already have the multiple cruheaderoffsets built in
+          mDigitWordsRead = mDigitsParser.Parse(&mHBFPayload, linkstart, linkend, currentdetector, stack, layer, digitHCHeader, mFEEID, currentlinkindex, mCurrentEvent, cleardigits, mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
+          mDigitWordsRejected = mDigitsParser.getDumpedDataCount();
+          if (mHeaderVerbose){
+            if(mDigitsParser.getDumpedDataCount() != 0) {
+              LOG(info) << "FEEID: " << mFEEID.word << " LINK #" << oriindex << " bad datacount:" << mDigitsParser.getDataWordsParsed() << "::" << mDigitsParser.getDumpedDataCount();
+            } else {
+              LOG(info) << "FEEID: " << mFEEID.word << " LINK #" << oriindex << " good datacount:" << mDigitsParser.getDataWordsParsed() << "::" << mDigitsParser.getDumpedDataCount();
+            }
           }
-        }
-        if (mDigitWordsRead != std::distance(linkstart, linkend)) {
-          //we have the data corruption problem of a pile of stuff at the end of a link, jump over it.
-          if (mFixDigitEndCorruption) {
-            mDigitWordsRead = std::distance(linkstart, linkend);
-          } else {
-            LOG(warn) << "read digits but data still left on the link digitwordsread:" << mDigitWordsRead << " and link length:" << std::distance(linkstart, linkend);
+          if (mDigitWordsRead != std::distance(linkstart, linkend)) {
+            //we have the data corruption problem of a pile of stuff at the end of a link, jump over it.
+            if (mFixDigitEndCorruption) {
+              mDigitWordsRead = std::distance(linkstart, linkend);
+            } else {
+              LOG(warn) << "read digits but data still left on the link digitwordsread:" << mDigitWordsRead << " and link length:" << std::distance(linkstart, linkend);
+            }
           }
+          mTotalDigitsFound += mDigitsParser.getDigitsFound();
+          if (mVerbose) {
+            LOG(info) << "mDigitWordsRead : " << mDigitWordsRead << " mem copy with offset of : " << cruhbfstartoffset << " parsing digits with linkstart: " << linkstart << " ending at : " << linkend;
+          }
+          sumlinklengths += mCurrentHalfCRULinkLengths[currentlinkindex];
+          sumtrackletwords += trackletwordsread;
+          sumdigitwords += mDigitWordsRead;
+          mHBFoffset32 += mDigitWordsRead + mDigitWordsRejected; // all 3 in 32bit units
+          mTotalDigitWordsRead = mDigitWordsRead;
+          mTotalDigitWordsRejected = mDigitWordsRejected;
         }
-        mTotalDigitsFound += mDigitsParser.getDigitsFound();
-        if (mVerbose) {
-          LOG(info) << "mDigitWordsRead : " << mDigitWordsRead << " mem copy with offset of : " << cruhbfstartoffset << " parsing digits with linkstart: " << linkstart << " ending at : " << linkend;
+        else {
+          LOG(warn) << "Digit format not configured ! major.minor in hex : " << std::hex << digitHCHeader.major << "."<< digitHCHeader.minor;
+          linkstart = linkend;
+          mHBFoffset32 = dataoffsetstart32 + currentlinksize; // go to the end of the link
         }
-        sumlinklengths += mCurrentHalfCRULinkLengths[currentlinkindex];
-        sumtrackletwords += trackletwordsread;
-        sumdigitwords += mDigitWordsRead;
-        mHBFoffset32 += mDigitWordsRead + mDigitWordsRejected; // all 3 in 32bit units
-        mTotalDigitWordsRead = mDigitWordsRead;
-        mTotalDigitWordsRejected = mDigitWordsRejected;
       }
     } else {
       if (mVerbose) {
@@ -395,18 +407,17 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   //digits and tracklets are sitting inside the parsing classes.
   //extract the vectors and copy them to tracklets and digits here, building the indexing(triggerrecords)
   //as this is for a single cru half chamber header all the tracklets and digits are for the same trigger defined by the bc and orbit in the rdh which we hold in mIR
-  mIR.bc = mCurrentHalfCRUHeader.BunchCrossing; // correct mIR to have the physics trigger bunchcrossing *NOT* the heartbeat trigger bunch crossing.
 
-  mEventRecords.addTracklets(mIR, mTrackletsParser.getTracklets());
+  //mEventRecords.addTracklets(mIR, mTrackletsParser.getTracklets());
   if (mVerbose) {
     LOG(info) << "inserting tracklets from parser of size : " << mTrackletsParser.getTracklets().size() << " mEventRecordsTracklets is now :" << mEventRecords.sumTracklets();
   }
-  mTrackletsParser.clear();
-  mEventRecords.addDigits(mIR, std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
+  //mTrackletsParser.clear();
+  //mEventRecords.addDigits(mIR, std::begin(mDigitsParser.getDigits()), std::end(mDigitsParser.getDigits()));
   if (mVerbose) {
     LOG(info) << "inserting digits from parser of size : " << mDigitsParser.getDigits().size();
   }
-  mDigitsParser.clear();
+  //mDigitsParser.clear();
   if (mVerbose) {
     LOG(info) << "Event digits after eventi # : " << mEventRecords.sumDigits() << " having added : via sum=" << mDigitsParser.getDigits().size() << " digitsfound is " << mDigitsParser.getDigitsFound();
   }

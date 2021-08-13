@@ -17,7 +17,7 @@
 #include "DataFormatsTRD/Constants.h"
 #include "DataFormatsTRD/CompressedDigit.h"
 #include "DataFormatsTRD/Digit.h"
-
+#include "TRDReconstruction/EventRecord.h"
 #include "fairlogger/Logger.h"
 
 //TODO come back and figure which of below headers I actually need.
@@ -42,7 +42,7 @@ inline void DigitsParser::swapByteOrder(unsigned int& word)
 }
 int DigitsParser::Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* data, std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator start,
                         std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator end, int detector, int stack, int layer, DigitHCHeader& hcheader,
-                        TRDFeeID& feeid, unsigned int linkindex, bool cleardigits, bool disablebyteswap, bool verbose, bool headerverbose, bool dataverbose)
+                        TRDFeeID& feeid, unsigned int linkindex, EventRecord *eventrecord, bool cleardigits, bool disablebyteswap, bool verbose, bool headerverbose, bool dataverbose)
 {
   setData(data);
   mStartParse = start;
@@ -58,6 +58,7 @@ int DigitsParser::Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* 
   }
   setByteSwap(disablebyteswap);
   mReturnVectorPos = 0;
+  mEventRecord=eventrecord;
   return Parse();
 };
 
@@ -382,7 +383,7 @@ int DigitsParser::Parse(bool verbose)
             if (mDigitWordCount == constants::TIMEBINS / 3) {
               //write out adc value to vector
               //zero digittimebinoffset
-              mDigits.emplace_back(mDetector, mROB, mMCM, mCurrentADCChannel, mADCValues); // outgoing parsed digits
+              mEventRecord->getDigits().emplace_back(mDetector, mROB, mMCM, mCurrentADCChannel, mADCValues); // outgoing parsed digits
               mDigitsFound++;
               digittimebinoffset = 0;
               mDigitWordCount = 0; // end of the digit.
