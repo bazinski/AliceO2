@@ -26,6 +26,9 @@
 #include "DataFormatsTRD/Constants.h"
 
 #include <fairmq/FairMQDevice.h>
+#include <TH3F.h>
+#include "TH2F.h"
+#include "TFile.h"
 
 //using namespace o2::framework;
 
@@ -42,6 +45,107 @@ void DataReaderTask::init(InitContext& ic)
 
   ic.services().get<CallbackService>().set(CallbackService::Id::Stop, finishFunction);
   mDataDesc = "RAWDATA";
+
+  mRootFile=new TFile("histos.root","recreate");
+
+  //lets hack this for some graphs
+  LinkError=new TH2F("linkerrors","Count of Link had no errors during run",18,0,18,30,0,30);
+  LinkError1=new TH2F("linkerrors","Count of Linkerrors 0x1 seen during run",18,0,18,30,0,30);
+  LinkError2=new TH2F("linkerrors","Count of Linkerrors 0x2 seen during run",18,0,18,30,0,30);
+  LinkError3=new TH2F("linkerrors","Count of any Linkerror seen during run",18,0,18,30,0,30);
+  LinkError4=new TH2F("linknodata","Link was seen with no data (empty) during run",18,0,18,30,0,30);
+  LinkError5=new TH2F("linkdata","Link was seen with data seen during run",18,0,18,30,0,30);
+  LinkError6=new TH2F("linkbaddata","Links seen with corrupted data during run",18,0,18,30,0,30);
+  LinkError7=new TH2F("linknobaddata","Links seen with out corrupted data during run",18,0,18,30,0,30);
+  mReader.setTimeHistos(mTimeFrameTime,mTrackletParsingTime,mDigitParsingTime);
+  mTimeFrameTime= new TH1F("timetimeframe","Time taken per time frame",3000,0,3000);
+  mTrackletParsingTime= new TH1F("timetimeframe","Time taken per time frame",3000,0,3000);
+  mDigitParsingTime= new TH1F("timetimeframe","Time taken per time frame",3000,0,3000);
+  mTimeFrameTime->GetXaxis()->SetTitle("Time taken in #{mu}s");
+  mTrackletParsingTime->GetXaxis()->SetTitle("Time taken in #{mu}s");
+  mDigitParsingTime->GetXaxis()->SetTitle("Time taken in #{mu}s");
+  mTimeFrameTime->GetYaxis()->SetTitle("Counts");
+  mTrackletParsingTime->GetYaxis()->SetTitle("Counts");
+  mDigitParsingTime->GetYaxis()->SetTitle("Counts");
+  for(int s=0;s<5;++s){
+    for(int l=0;l<6;++l){
+      std::string label=fmt::format("{0}_{1}",s,l);
+      LOG(info) << "Label : " << label;
+      LinkError->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError1->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError2->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError3->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError4->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError5->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError6->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError7->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+    }
+  }
+  LinkError->GetYaxis()->SetTitle("Stack_Layer");
+  LinkError->GetYaxis()->CenterTitle(kTRUE);
+  LinkError->GetXaxis()->CenterTitle(kTRUE);
+  LinkError->GetXaxis()->SetTitle("Supermodule");
+  LinkError1->GetYaxis()->SetTitle("Stack_Layer");
+  LinkError1->GetYaxis()->CenterTitle(kTRUE);
+  LinkError1->GetXaxis()->CenterTitle(kTRUE);
+  LinkError1->GetXaxis()->SetTitle("Supermodule");
+  LinkError2->GetYaxis()->SetTitle("Stack_Layer");
+  LinkError2->GetYaxis()->CenterTitle(kTRUE);
+  LinkError2->GetXaxis()->CenterTitle(kTRUE);
+  LinkError2->GetXaxis()->SetTitle("Supermodule");
+  LinkError3->GetYaxis()->SetTitle("Stack_Layer");
+  LinkError3->GetYaxis()->CenterTitle(kTRUE);
+  LinkError3->GetXaxis()->CenterTitle(kTRUE);
+  LinkError3->GetXaxis()->SetTitle("Supermodule");
+  LinkError4->GetYaxis()->SetTitle("Stack_Layer");
+  LinkError4->GetYaxis()->CenterTitle(kTRUE);
+  LinkError4->GetXaxis()->CenterTitle(kTRUE);
+  LinkError4->GetXaxis()->SetTitle("Supermodule");
+  LinkError5->GetYaxis()->SetTitle("Stack_Layer");
+  LinkError5->GetYaxis()->CenterTitle(kTRUE);
+  LinkError5->GetXaxis()->CenterTitle(kTRUE);
+  LinkError5->GetXaxis()->SetTitle("Supermodule");
+  LinkError6->GetYaxis()->SetTitle("Stack_Layer");
+  LinkError6->GetYaxis()->CenterTitle(kTRUE);
+  LinkError6->GetXaxis()->CenterTitle(kTRUE);
+  LinkError6->GetXaxis()->SetTitle("Supermodule");
+  LinkError7->GetYaxis()->SetTitle("Stack_Layer");
+  LinkError7->GetYaxis()->CenterTitle(kTRUE);
+  LinkError7->GetXaxis()->CenterTitle(kTRUE);
+  LinkError7->GetXaxis()->SetTitle("Supermodule");
+
+  mReader.setHistos(LinkError,LinkError1,LinkError2);
+  mReader.setHistos1(LinkError3,LinkError4,LinkError5);
+  mReader.setHistos2(LinkError6,LinkError7);
+  mReader.setTimeHistos(mTimeFrameTime,mTrackletParsingTime,mDigitParsingTime);
+
+}
+
+void DataReaderTask::endOfStream(o2::framework::EndOfStreamContext& ec)
+{
+  LinkError->Draw();
+  LinkError1->Draw();
+  LinkError2->Draw();
+  LinkError3->Draw();
+  LinkError4->Draw();
+  LinkError5->Draw();
+  LinkError6->Draw();
+  LinkError7->Draw();
+  mTimeFrameTime->Draw();
+  mTrackletParsingTime->Draw();
+  mDigitParsingTime->Draw();
+  LinkError->Write();
+  LinkError1->Write();
+  LinkError2->Write();
+  LinkError3->Write();
+  LinkError4->Write();
+  LinkError5->Write();
+  LinkError6->Write();
+  LinkError7->Write();
+  mTimeFrameTime->Write();
+  mTrackletParsingTime->Write();
+  mDigitParsingTime->Write();
+  mRootFile->Close();
 }
 
 void DataReaderTask::sendData(ProcessingContext& pc, bool blankframe)
@@ -142,9 +246,9 @@ void DataReaderTask::run(ProcessingContext& pc)
           mCompressedReader.run();
         }
       } // ignore the input of DISTSUBTIMEFRAMEFLP
-        //      auto inputprocessingtime = std::chrono::high_resolution_clock::now() - inputprocessingstart;
-        //     LOGP(info, "Input [{}/{}/{:#x}] TF#{} 1st_orbit:{} Payload {} : processed in {} us",
-        //           dh->dataOrigin.str, dh->dataDescription.str, dh->subSpecification, dh->tfCounter, dh->firstTForbit, dh->payloadSize,std::chrono::duration_cast<std::chrono::microseconds>(inputprocessingtime).count());
+      //      auto inputprocessingtime = std::chrono::high_resolution_clock::now() - inputprocessingstart;
+      //     LOGP(info, "Input [{}/{}/{:#x}] TF#{} 1st_orbit:{} Payload {} : processed in {} us",
+      //           dh->dataOrigin.str, dh->dataDescription.str, dh->subSpecification, dh->tfCounter, dh->firstTForbit, dh->payloadSize,std::chrono::duration_cast<std::chrono::microseconds>(inputprocessingtime).count());
     }
     /* output */
     sendData(pc, false);
@@ -152,6 +256,7 @@ void DataReaderTask::run(ProcessingContext& pc)
 
   auto dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;
   LOG(info) << "Processing time for Data reading  " << std::chrono::duration_cast<std::chrono::microseconds>(dataReadTime).count() << "us";
+  mTimeFrameTime->Fill(std::chrono::duration_cast<std::chrono::microseconds>(dataReadTime).count());
   mTimeFrameCounters.mTimeTaken=std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count();
   mTimeFrameCounters.mDigitsFound=  mReader.getDigitsFound();
   mTimeFrameCounters.mTrackletsFound = mReader.getTrackletsFound();

@@ -29,16 +29,13 @@ namespace o2::trd
 class TRDDataCountersPerEvent { //thisis on a per event basis
   public:
   //TODO this should go into a dpl message for catching by qc ?? I think.
-  std::array<uint32_t, 1080> mLinkWords;    //units of 256bits "cru word"
+  std::array<uint32_t, 1080> mLinkWords;    //units of 256bits, read from the cru half chamber header
   std::array<uint32_t, 1080> mLinkWordsRead; // units of 32 bits the data words read before dumping or finishing
   std::array<uint32_t, 1080> mLinkWordsDumped; // units of 32 bits the data dumped due to some or other error
   std::array<uint8_t, 1080> mLinkErrorFlag;      //status of the error flags for this event
   //from the above you can get the stats for supermodule and detector.
   std::array<bool, 1080> mLinkEmpty; // Link only has padding words only, probably not serious.
   //maybe change this to actual traps ?? but it will get large.
-  std::array<uint32_t, 1080> mLinkTrackletPerTrap1; // incremented if a trap on this link has 1 tracklet
-  std::array<uint32_t, 1080> mLinkTrackletPerTrap2; // incremented if a trap on this link has 2 tracklet
-  std::array<uint32_t, 1080> mLinkTrackletPerTrap3; // incremented if a trap on this link has 3 tracklet
   std::array<int64_t, o2::trd::constants::MAXMCMCOUNT> mLinkMCMsWithData; // and its corresponding volume of data.
   std::array<std::array<uint16_t,16>, 1080> mMCMsBeforeCorruption; // count the mcms read before link was corrupt
   std::array<std::array<uint16_t,16>, 1080> mMCMsOnlyClean; // d
@@ -48,9 +45,9 @@ class TRDDataCountersPerEvent { //thisis on a per event basis
   std::array<uint32_t, constants::MAXMCMCOUNT> mTrapTrackletCount;
   std::array<uint16_t, constants::MAXMCMCOUNT> mMCMstats; // bit pattern for errors current event for a given mcm;
   std::vector<uint32_t> mEmptyTraps;                      // MCM indexes of traps that are empty ?? list might better
-  double mTimeTaken;
-  double mDataWords;
-  double mDataWordsSkipped;
+  double mTimeTaken; // time take to process an event (summed trackletparsing and digitparsing) parts not accounted for.
+  double mDataWordsRead;// data words read in
+  double mDataWordsSkipped; // data words skipped for various reasons.
 };
 
 class TRDDataCountersPerTimeFrame { //thisis on a per event basis
@@ -61,9 +58,10 @@ class TRDDataCountersPerTimeFrame { //thisis on a per event basis
     uint64_t mDataWordsRead;
     uint64_t mDataWordsRejected;
 };
+
 //TODO not sure this class is needed
 class TRDDataCountersRunning { //those counters that keep counting
-  std::array<uint32_t, 1080> mLinkFreq;          //units of 256bits "cru word"
+  std::array<uint32_t, 1080> mLinkFreq; //units of 256bits "cru word"
   std::array<bool, 1080> mLinkEmpty; // Link only has padding words only, probably not serious.
 };
 
