@@ -169,6 +169,7 @@ void EventStorage::unpackData(std::vector<TriggerRecord>& triggers, std::vector<
 void EventStorage::sendData(o2::framework::ProcessingContext& pc, bool displaytracklets)
 {
   //at this point we know the total number of tracklets and digits and triggers.
+  auto dataReadStart = std::chrono::high_resolution_clock::now();
   uint64_t trackletcount = 0;
   uint64_t digitcount = 0;
   uint64_t triggercount = 0;
@@ -203,6 +204,9 @@ void EventStorage::sendData(o2::framework::ProcessingContext& pc, bool displaytr
   pc.outputs().snapshot(o2::framework::Output{o2::header::gDataOriginTRD, "DIGITS", 0, o2::framework::Lifetime::Timeframe}, digits);
   pc.outputs().snapshot(o2::framework::Output{o2::header::gDataOriginTRD, "TRACKLETS", 0, o2::framework::Lifetime::Timeframe}, tracklets);
   pc.outputs().snapshot(o2::framework::Output{o2::header::gDataOriginTRD, "TRKTRGRD", 0, o2::framework::Lifetime::Timeframe}, triggers);
+  std::chrono::duration<double,std::milli> dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;
+  LOG(info) << "Preparing for sending and sending data took  " << std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count() << "ms";
+  mPackagingTime->Fill((int)std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count());
 }
 
 int EventStorage::sumTracklets()

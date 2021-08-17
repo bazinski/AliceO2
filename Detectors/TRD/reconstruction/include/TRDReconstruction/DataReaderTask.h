@@ -44,7 +44,7 @@ class DataReaderTask : public Task
   void sendData(ProcessingContext& pc, bool blankframe = false);
   void run(ProcessingContext& pc) final;
   bool isTimeFrameEmpty(ProcessingContext& pc);
-  void endOfStream(o2::framework::EndOfStreamContext& ec);
+  void endOfStream(o2::framework::EndOfStreamContext& ec)override;
 
  private:
   CruRawReader mReader;                  // this will do the parsing, of raw data passed directly through the flp(no compression)
@@ -80,6 +80,8 @@ class DataReaderTask : public Task
   TH1F *mTimeFrameTime;
   TH1F *mTrackletParsingTime;
   TH1F *mDigitParsingTime;
+  TH1F *mCruTime;
+  TH1F *mPackagingTime;
   TFile *mRootFile;
 };
 

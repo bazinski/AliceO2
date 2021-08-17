@@ -49,36 +49,50 @@ void DataReaderTask::init(InitContext& ic)
   mRootFile=new TFile("histos.root","recreate");
 
   //lets hack this for some graphs
-  LinkError=new TH2F("linkerrors","Count of Link had no errors during run",18,0,18,30,0,30);
-  LinkError1=new TH2F("linkerrors","Count of Linkerrors 0x1 seen during run",18,0,18,30,0,30);
-  LinkError2=new TH2F("linkerrors","Count of Linkerrors 0x2 seen during run",18,0,18,30,0,30);
-  LinkError3=new TH2F("linkerrors","Count of any Linkerror seen during run",18,0,18,30,0,30);
-  LinkError4=new TH2F("linknodata","Link was seen with no data (empty) during run",18,0,18,30,0,30);
-  LinkError5=new TH2F("linkdata","Link was seen with data seen during run",18,0,18,30,0,30);
-  LinkError6=new TH2F("linkbaddata","Links seen with corrupted data during run",18,0,18,30,0,30);
-  LinkError7=new TH2F("linknobaddata","Links seen with out corrupted data during run",18,0,18,30,0,30);
-  mReader.setTimeHistos(mTimeFrameTime,mTrackletParsingTime,mDigitParsingTime);
-  mTimeFrameTime= new TH1F("timetimeframe","Time taken per time frame",3000,0,3000);
-  mTrackletParsingTime= new TH1F("timetimeframe","Time taken per time frame",3000,0,3000);
-  mDigitParsingTime= new TH1F("timetimeframe","Time taken per time frame",3000,0,3000);
-  mTimeFrameTime->GetXaxis()->SetTitle("Time taken in #{mu}s");
-  mTrackletParsingTime->GetXaxis()->SetTitle("Time taken in #{mu}s");
-  mDigitParsingTime->GetXaxis()->SetTitle("Time taken in #{mu}s");
+  LinkError=new TH2F("linkerrors","Count of Link had no errors during run",36,0,36,30,0,30);
+  LinkError1=new TH2F("linkerrors","Count of Linkerrors 0x1 seen during run",36,0,36,30,0,30);
+  LinkError2=new TH2F("linkerrors","Count of Linkerrors 0x2 seen during run",36,0,36,30,0,30);
+  LinkError3=new TH2F("linkerrors","Count of any Linkerror seen during run",36,0,36,30,0,30);
+  LinkError4=new TH2F("linknodata","Link was seen with no data (empty) during run",36,0,36,30,0,30);
+  LinkError5=new TH2F("linkdata","Link was seen with data seen during run",36,0,36,30,0,30);
+  LinkError6=new TH2F("linkbaddata","Links seen with corrupted data during run",36,0,36,30,0,30);
+  LinkError7=new TH2F("linknobaddata","Links seen with out corrupted data during run",36,0,36,30,0,30);
+  mTimeFrameTime= new TH1F("timeframetime","Time taken per time frame",10000,0,10000);
+  mTrackletParsingTime= new TH1F("tracklettime","Time taken per time frame",1000,0,1000);
+  mDigitParsingTime= new TH1F("digittime","Time taken per time frame",1000,0,1000);
+  mCruTime= new TH1F("crutime","Time taken per time frame",1000,0,1000);
+  mPackagingTime= new TH1F("packagingtime","Time to package the eventrecord and copy the output",1000,0,1000);
+  mTimeFrameTime->GetXaxis()->SetTitle("Time taken in us");
+  mCruTime->GetXaxis()->SetTitle("Time taken in ms");
+  mTrackletParsingTime->GetXaxis()->SetTitle("Time taken in {#mu}s");
+  mDigitParsingTime->GetXaxis()->SetTitle("Time taken in {#mu}s");
+  mPackagingTime->GetXaxis()->SetTitle("Time taken in ms");
   mTimeFrameTime->GetYaxis()->SetTitle("Counts");
   mTrackletParsingTime->GetYaxis()->SetTitle("Counts");
   mDigitParsingTime->GetYaxis()->SetTitle("Counts");
-  for(int s=0;s<5;++s){
-    for(int l=0;l<6;++l){
+  mCruTime->GetYaxis()->SetTitle("Counts");
+  mPackagingTime->GetYaxis()->SetTitle("Counts");
+  for(int s=0;s<o2::trd::constants::NSTACK;++s){
+    for(int l=0;l<o2::trd::constants::NLAYER;++l){
       std::string label=fmt::format("{0}_{1}",s,l);
       LOG(info) << "Label : " << label;
-      LinkError->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError1->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError2->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError3->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError4->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError5->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError6->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError7->GetXaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      int pos=s*o2::trd::constants::NLAYER+l+1;
+      LinkError->GetYaxis()->SetBinLabel(pos,label.c_str());
+      LinkError1->GetYaxis()->SetBinLabel(pos,label.c_str());
+      LinkError2->GetYaxis()->SetBinLabel(pos,label.c_str());
+      LinkError3->GetYaxis()->SetBinLabel(pos,label.c_str());
+      LinkError4->GetYaxis()->SetBinLabel(pos,label.c_str());
+      LinkError5->GetYaxis()->SetBinLabel(pos,label.c_str());
+      LinkError6->GetYaxis()->SetBinLabel(pos,label.c_str());
+      LinkError7->GetYaxis()->SetBinLabel(pos,label.c_str());
+      /* LinkError->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError1->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError2->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError3->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError4->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError5->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError6->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
+      LinkError7->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);*/
     }
   }
   LinkError->GetYaxis()->SetTitle("Stack_Layer");
@@ -117,7 +131,7 @@ void DataReaderTask::init(InitContext& ic)
   mReader.setHistos(LinkError,LinkError1,LinkError2);
   mReader.setHistos1(LinkError3,LinkError4,LinkError5);
   mReader.setHistos2(LinkError6,LinkError7);
-  mReader.setTimeHistos(mTimeFrameTime,mTrackletParsingTime,mDigitParsingTime);
+  mReader.setTimeHistos(mTimeFrameTime,mTrackletParsingTime,mDigitParsingTime,mCruTime,mPackagingTime);
 
 }
 
@@ -134,6 +148,8 @@ void DataReaderTask::endOfStream(o2::framework::EndOfStreamContext& ec)
   mTimeFrameTime->Draw();
   mTrackletParsingTime->Draw();
   mDigitParsingTime->Draw();
+  mCruTime->Draw();
+  mPackagingTime->Draw();
   LinkError->Write();
   LinkError1->Write();
   LinkError2->Write();
@@ -145,6 +161,8 @@ void DataReaderTask::endOfStream(o2::framework::EndOfStreamContext& ec)
   mTimeFrameTime->Write();
   mTrackletParsingTime->Write();
   mDigitParsingTime->Write();
+  mCruTime->Write();
+  mPackagingTime->Write();
   mRootFile->Close();
 }
 
@@ -254,9 +272,9 @@ void DataReaderTask::run(ProcessingContext& pc)
     sendData(pc, false);
   }
 
-  auto dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;
-  LOG(info) << "Processing time for Data reading  " << std::chrono::duration_cast<std::chrono::microseconds>(dataReadTime).count() << "us";
-  mTimeFrameTime->Fill(std::chrono::duration_cast<std::chrono::microseconds>(dataReadTime).count());
+  std::chrono::duration<double,std::milli> dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;
+  LOG(info) << "Processing time for Data reading  " << std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count() << "ms";
+  mTimeFrameTime->Fill((int)std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count());
   mTimeFrameCounters.mTimeTaken=std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count();
   mTimeFrameCounters.mDigitsFound=  mReader.getDigitsFound();
   mTimeFrameCounters.mTrackletsFound = mReader.getTrackletsFound();

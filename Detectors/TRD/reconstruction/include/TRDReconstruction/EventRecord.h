@@ -14,6 +14,7 @@
 
 #include <iosfwd>
 #include "Rtypes.h"
+#include "TH2F.h"
 #include "CommonDataFormat/InteractionRecord.h"
 #include "CommonDataFormat/RangeReference.h"
 #include "FairLogger.h"
@@ -106,12 +107,14 @@ class EventStorage
   std::vector<Tracklet64>& getTracklets(InteractionRecord& ir);
   std::vector<Digit>& getDigits(InteractionRecord& ir);
   void printIR();
+  void setHisto(TH1F* packagetime){mPackagingTime=packagetime;}
 
  private:
   std::vector<EventRecord> mEventRecords;
   //these 2 are hacks to be able to send bak a blank vector if interaction record is not found.
   std::vector<Tracklet64> mDummyTracklets;
   std::vector<Digit> mDummyDigits;
+  TH1F* mPackagingTime;
 };
 std::ostream& operator<<(std::ostream& stream, const EventRecord& trg);
 
