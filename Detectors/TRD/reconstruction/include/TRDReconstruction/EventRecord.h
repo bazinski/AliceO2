@@ -63,6 +63,7 @@ class EventRecord
   void addTracklet(Tracklet64& tracklet);
   void addTracklets(std::vector<Tracklet64>::iterator& start, std::vector<Tracklet64>::iterator& end);
   void addTracklets(std::vector<Tracklet64>& tracklets);
+  void popTracklets(int popcount);
   //void printStream(std::ostream& stream) const;
   void sortByHCID();
 

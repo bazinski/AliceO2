@@ -46,7 +46,8 @@ class TrackletsParser
     mDataVerbose = data;
   }
   void setByteSwap(bool swap) { mByteOrderFix = swap; }
-  int getDataWordsParsed() { return mDataWordsParsed; }
+  int getDataWordsRead() { return mWordsRead; }
+  int getDataWordsDumped() { return mWordsDumped; }
   int getTrackletsFound() { return mTrackletsFound; }
   void setIgnoreTrackletHCHeader(bool ignore) { mIgnoreTrackletHCHeader = ignore; }
   bool getIgnoreTrackletHCHeader() { return mIgnoreTrackletHCHeader; }
@@ -73,18 +74,17 @@ class TrackletsParser
   TrackletMCMData* mTrackletMCMData;
 
   int mState;               // state that the parser is currently in.
-  int mDataWordsParsed;     // count of data wordsin data that have been parsed in current call to parse.
+  int mWordsRead{0};           // number of words read from buffer
+  uint64_t mWordsDumped{0}; // number of words ignored from buffer
   int mTrackletsFound;      // tracklets found in the data block, mostly used for debugging.
   int mPaddingWordsCounter; // count of padding words encoutnered
   Tracklet64 mCurrentTrack; // the current track we are looking at, used to accumulate the possibly 3 tracks from the parsing 4 incoming data words
-  int mWordsRead;           // number of words read frombuffer
   bool mVerbose{false};     // user verbose output, put debug statement in output from commandline.
   bool mHeaderVerbose{false};
   bool mDataVerbose{false};
   int mTrackletHCHeaderState{0}; //what to with the tracklet half chamber header 0,1,2
   bool mIgnoreTrackletHCHeader{false}; // Is the data with out the tracklet HC Header? defaults to having it in.
   bool mByteOrderFix{false};           // simulated data is not byteswapped, real is, so deal with it accodringly.
-  uint64_t mWordsDumped{0};
 
   uint16_t mEventCounter;
   std::chrono::duration<double> mTrackletparsetime;                                        // store the time it takes to parse

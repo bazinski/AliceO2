@@ -57,7 +57,7 @@ int TrackletsParser::Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX
   setVerbose(verbose, headerverbose, dataverbose);
   setByteSwap(disablebyteswap);
   mWordsRead = 0;
-  mDataWordsParsed = 0;
+  mWordsDumped = 0;
   mTrackletsFound = 0;
   mPaddingWordsCounter = 0;
   mTrackletHCHeaderState = usetracklethcheader; //what to with the tracklet half chamber header 0,1,2
@@ -140,7 +140,7 @@ int TrackletsParser::Parse()
   int trackletloopcount = 0;
   int headertrackletcount = 0;
   bool ignoreDataTillTrackletEndMarker=false;// used for when we need to dump the rest of the tracklet data.
-
+  LOG(info) << "looping from 0x"<< std::hex << mStartParse << " to 0x" << mEndParse << " distance of " << std::dec << std::distance(mStartParse,mEndParse);
   for (auto word = mStartParse; word != mEndParse; word++) { // loop over the entire data buffer (a complete link of tracklets and digits)
 
     if (mState == StateFinished) {
@@ -152,6 +152,7 @@ int TrackletsParser::Parse()
     //check for tracklet end marker 0x1000 0x1000
     int index = std::distance(mStartParse, word);
     int indexend = std::distance(word, mEndParse);
+    LOG(info) << "start : end :: " << index << ":" << indexend;
     std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator nextword = word;
     std::advance(nextword, 1);
     uint32_t nextwordcopy = *nextword;
@@ -178,24 +179,29 @@ int TrackletsParser::Parse()
       mTrackletparsetime += std::chrono::high_resolution_clock::now() - parsetimestart;
       return mWordsRead;
     }
-    if(ignoreDataTillTrackletEndMarker){
-      continue;//go back to the start of loop, walk the data till the above code of the tracklet end marker is hit or we get to the end of the data.
-    }
     if (*word == o2::trd::constants::CRUPADDING32) {
       //padding word first as it clashes with the hcheader.
-      LOG(info) << "Padding : 0x" << std::hex << *word << " at 0x" << std::distance(mStartParse, word);
+      LOG(info) << "Padding : 0x" << std::hex << *word << " at 0x" << std::distance(mStartParse, word) << " mEndParse:"<< std::hex << mEndParse << " word:0x" << word;
       mState = StatePadding;
       mWordsRead++;
       LOG(warn) << "CRU Padding word while parsing tracklets. This should *never* happen, this should happen after the tracklet end markers when we are outside the tracklet parsing";
+      ignoreDataTillTrackletEndMarker=true;
+      word=mEndParse;
+      LOG(info) << "Padding after assignment : 0x" << std::hex << *word << " at 0x" << std::distance(mStartParse, word) << " mEndParse:"<< std::hex << mEndParse << " word:0x" << word;
+      mWordsDumped=std::distance(word,mEndParse);
+      continue; // bail out
       //dumping data
-      //mWordsRead+=std::distance(word,mEndParse);
-      //word =mEndParse;
 
     } else {
+      if(ignoreDataTillTrackletEndMarker){
+        continue;//go back to the start of loop, walk the data till the above code of the tracklet end marker is hit, padding is hit or we get to the end of the data.
+        //TODO might be good to check for end of digit marker as well?
+      }
       //now for Tracklet hc header
       if ((((*word) & (0x1 << 11)) != 0) && !mIgnoreTrackletHCHeader && mState == StateTrackletHCHeader) { //TrackletHCHeader has bit 11 set to 1 always. Check for state because raw data can have bit 11 set!
         if (mState != StateTrackletHCHeader) {
           LOG(warn) << "Something wrong with TrackletHCHeader bit 11 is set but state is not " << StateTrackletMCMHeader << " its :" << mState;
+          //TODO count remove warning
         }
         //read the header
         if (mHeaderVerbose) {
@@ -206,16 +212,16 @@ int TrackletsParser::Parse()
         //sanity check of trackletheader ??
         if (!trackletHCHeaderSanityCheck(*mTrackletHCHeader)) {
           LOG(warn) << "Sanity check Failure HCHeader : " << std::hex << *word << " at offset :0x" << std::distance(mStartParse, word);
+          //TODO count remove warning
         }
         mWordsRead++;
         mState = StateTrackletMCMHeader;                                // now we should read a MCMHeader next time through loop
-      } else {                                                          //not TrackletMCMHeader
+      } else {                                                          //not TrackletHCHeader
         if ((*word) & 0x80000001 && mState == StateTrackletMCMHeader) { //TrackletMCMHeader has the bits on either end always 1
           //mcmheader
           mTrackletMCMHeader = (TrackletMCMHeader*)&(*word);
           if (mHeaderVerbose) {
             LOG(info) << "***TrackletMCMHeader : 0x" << std::hex << *word << " at offset: 0x" << std::distance(mStartParse, word);
-            ;
             TrackletMCMHeader a;
             a.word = *word;
             printTrackletMCMHeader(a);
@@ -233,11 +239,19 @@ int TrackletsParser::Parse()
           mState = StateTrackletMCMData;
           //tracklet data;
           mTrackletMCMData = (TrackletMCMData*)&(*word);
-          //if (mHeaderVerbose) {
+          if (mHeaderVerbose) {
             LOG(info) << "*** TrackletMCMData : 0x" << std::hex << *word << " at offset :0x" << std::distance(mStartParse, word);
-            ;
             printTrackletMCMData(*mTrackletMCMData);
-         // }
+          }
+          // do we have more tracklets than the header allows?
+          if(headertrackletcount<mcmtrackletcount){
+            ignoreDataTillTrackletEndMarker=true;
+            //dump the rest of the data ... undo any tracklets already written?
+            //cant dump till mEndParse and digits are after the tracklets
+            //we can assume the mcmtrackletcountth (n from the end) last tracklets in the vector are to be removed.
+            mEventRecord->popTracklets(mcmtrackletcount); // our format is always 4
+            //TODO count remove warning
+          }
           mWordsRead++;
           // take the header and this data word and build the underlying 64bit tracklet.
           int q0, q1, q2;
@@ -254,54 +268,44 @@ int TrackletsParser::Parse()
               break;
             default:
               LOG(warn) << "mcmtrackletcount is not in [0:2] count=" << mcmtrackletcount << " headertrackletcount=" << headertrackletcount << " something very wrong parsing the TrackletMCMData fields with data of : 0x" << std::hex << mTrackletMCMData->word;
+              //this should have been caught above by the headertrackletcount to mcmtrackletcount
+              ignoreDataTillTrackletEndMarker=true;
               break;
           }
-          q0 = getQFromRaw(mTrackletMCMHeader, mTrackletMCMData, 0, mcmtrackletcount);
-          q1 = getQFromRaw(mTrackletMCMHeader, mTrackletMCMData, 1, mcmtrackletcount);
-          q2 = getQFromRaw(mTrackletMCMHeader, mTrackletMCMData, 2, mcmtrackletcount);
-          int padrow = mTrackletMCMHeader->padrow;
-          int col = mTrackletMCMHeader->col;
-          int pos = mTrackletMCMData->pos;
-          int slope = mTrackletMCMData->slope;
-          int hcid = mDetector * 2 + mRobSide;
-          if (mDataVerbose) {
-            if (mTrackletHCHeaderState) {
-              LOG(info) << "Tracklet HCID : " << hcid << " mDetector:" << mDetector << " robside:" << mRobSide << " " << mTrackletMCMHeader->padrow << ":" << mTrackletMCMHeader->col << " ---- " << mTrackletHCHeader->supermodule << ":" << mTrackletHCHeader->stack << ":" << mTrackletHCHeader->layer << ":" << mTrackletHCHeader->side << " rawhcheader : 0x" << std::hex << std::hex << mTrackletHCHeader->word;
-            } else {
-              LOG(info) << "Tracklet HCID : " << hcid << " mDetector:" << mDetector << " robside:" << mRobSide << " " << mTrackletMCMHeader->padrow << ":" << mTrackletMCMHeader->col;
+          if(!ignoreDataTillTrackletEndMarker){
+            q0 = getQFromRaw(mTrackletMCMHeader, mTrackletMCMData, 0, mcmtrackletcount);
+            q1 = getQFromRaw(mTrackletMCMHeader, mTrackletMCMData, 1, mcmtrackletcount);
+            q2 = getQFromRaw(mTrackletMCMHeader, mTrackletMCMData, 2, mcmtrackletcount);
+            int padrow = mTrackletMCMHeader->padrow;
+            int col = mTrackletMCMHeader->col;
+            int pos = mTrackletMCMData->pos;
+            int slope = mTrackletMCMData->slope;
+            int hcid = mDetector * 2 + mRobSide;
+            if (mDataVerbose) {
+              if (mTrackletHCHeaderState) {
+                LOG(info) << "Tracklet HCID : " << hcid << " mDetector:" << mDetector << " robside:" << mRobSide << " " << mTrackletMCMHeader->padrow << ":" << mTrackletMCMHeader->col << " ---- " << mTrackletHCHeader->supermodule << ":" << mTrackletHCHeader->stack << ":" << mTrackletHCHeader->layer << ":" << mTrackletHCHeader->side << " rawhcheader : 0x" << std::hex << std::hex << mTrackletHCHeader->word;
+              } else {
+                LOG(info) << "Tracklet HCID : " << hcid << " mDetector:" << mDetector << " robside:" << mRobSide << " " << mTrackletMCMHeader->padrow << ":" << mTrackletMCMHeader->col;
+              }
             }
-          }
-          //TODO cross reference hcid to somewhere for a check. mDetector is assigned at the time of parser init.
-          //
-          mEventRecord->getTracklets().emplace_back(4, hcid, padrow, col, pos, slope, q0, q1, q2); // our format is always 4
-          if (mDataVerbose) {
-            LOG(info) << "Tracklet added:" << 4 << "-" << hcid << "-" << padrow << "-" << col << "-" << pos << "-" << slope << "-" << q0 << ":" << q1 << ":" << q2;
-          }
-          mTrackletsFound++;
-          mcmtrackletcount++;
-          if (mcmtrackletcount == headertrackletcount) { // headertrackletcount and mcmtrackletcount are not zero based counting
-            // at the end of the tracklet output of this mcm
-            // next to come can either be an mcmheaderword or a trackletendmarker.
-            // check next word if its a trackletendmarker
-            auto nextdataword = std::next(word, 1);
-            // the check is unambigous between trackletendmarker and mcmheader
-            if ((*nextdataword) == constants::TRACKLETENDMARKER) {
-              mState = StateTrackletEndMarker;
-            } else {
-              mState = StateTrackletMCMHeader;
+            //TODO cross reference hcid to somewhere for a check. mDetector is assigned at the time of parser init.
+            //
+            mEventRecord->getTracklets().emplace_back(4, hcid, padrow, col, pos, slope, q0, q1, q2); // our format is always 4
+            if (mDataVerbose) {
+              LOG(info) << "Tracklet added:" << 4 << "-" << hcid << "-" << padrow << "-" << col << "-" << pos << "-" << slope << "-" << q0 << ":" << q1 << ":" << q2;
             }
-          }
-          if (mcmtrackletcount > 3) {
-            LOG(warn) << "We have more than 3 Tracklets in parsing the TrackletMCMData attached to a single TrackletMCMHeader";
-            //dump out preceeding 8 words and subsequent 8 words, might help in diagnostics
-            if (mVerbose) {
-              auto debugword = std::prev(word, -4); //
-              int debugcount = -4;
-              //now output it to info
-              while (debugcount != 4) {
-                LOG(info) << "tracklet debug " << debugcount << " 0x" << std::hex << *debugword;
-                debugword++;
-                debugcount++;
+            mTrackletsFound++;
+            mcmtrackletcount++;
+            if (mcmtrackletcount == headertrackletcount) { // headertrackletcount and mcmtrackletcount are not zero based counting
+              // at the end of the tracklet output of this mcm
+              // next to come can either be an mcmheaderword or a trackletendmarker.
+              // check next word if its a trackletendmarker
+              auto nextdataword = std::next(word, 1);
+              // the check is unambigous between trackletendmarker and mcmheader
+              if ((*nextdataword) == constants::TRACKLETENDMARKER) {
+                mState = StateTrackletEndMarker;
+              } else {
+                mState = StateTrackletMCMHeader;
               }
             }
           }
