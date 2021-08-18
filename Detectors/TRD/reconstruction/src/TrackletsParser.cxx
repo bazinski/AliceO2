@@ -140,8 +140,7 @@ int TrackletsParser::Parse()
   int trackletloopcount = 0;
   int headertrackletcount = 0;
   bool ignoreDataTillTrackletEndMarker=false;// used for when we need to dump the rest of the tracklet data.
-  LOG(info) << "looping from 0x"<< std::hex << mStartParse << " to 0x" << mEndParse << " distance of " << std::dec << std::distance(mStartParse,mEndParse);
-  for (auto word = mStartParse; word != mEndParse; word++) { // loop over the entire data buffer (a complete link of tracklets and digits)
+  for (auto word = mStartParse; word < mEndParse; ++word) { // loop over the entire data buffer (a complete link of tracklets and digits)
 
     if (mState == StateFinished) {
       mTrackletparsetime += std::chrono::high_resolution_clock::now() - parsetimestart;
@@ -152,7 +151,6 @@ int TrackletsParser::Parse()
     //check for tracklet end marker 0x1000 0x1000
     int index = std::distance(mStartParse, word);
     int indexend = std::distance(word, mEndParse);
-    LOG(info) << "start : end :: " << index << ":" << indexend;
     std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator nextword = word;
     std::advance(nextword, 1);
     uint32_t nextwordcopy = *nextword;
@@ -181,19 +179,20 @@ int TrackletsParser::Parse()
     }
     if (*word == o2::trd::constants::CRUPADDING32) {
       //padding word first as it clashes with the hcheader.
-      LOG(info) << "Padding : 0x" << std::hex << *word << " at 0x" << std::distance(mStartParse, word) << " mEndParse:"<< std::hex << mEndParse << " word:0x" << word;
       mState = StatePadding;
-      mWordsRead++;
-      LOG(warn) << "CRU Padding word while parsing tracklets. This should *never* happen, this should happen after the tracklet end markers when we are outside the tracklet parsing";
+      LOG(warn) << "CRU Padding word while parsing tracklets. Corrupt data dumping the rest of this link";
+      //TOOD replace warning with stats increment
+      mWordsDumped=std::distance(word,mEndParse);
       ignoreDataTillTrackletEndMarker=true;
       word=mEndParse;
       LOG(info) << "Padding after assignment : 0x" << std::hex << *word << " at 0x" << std::distance(mStartParse, word) << " mEndParse:"<< std::hex << mEndParse << " word:0x" << word;
-      mWordsDumped=std::distance(word,mEndParse);
+      //TODO remove tracklets already added erroneously
       continue; // bail out
       //dumping data
 
     } else {
       if(ignoreDataTillTrackletEndMarker){
+        mWordsRead++;
         continue;//go back to the start of loop, walk the data till the above code of the tracklet end marker is hit, padding is hit or we get to the end of the data.
         //TODO might be good to check for end of digit marker as well?
       }

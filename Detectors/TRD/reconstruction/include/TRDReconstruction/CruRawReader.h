@@ -198,6 +198,10 @@ class CruRawReader
   uint64_t mDigitWordsRejected = 0;
   uint64_t mTotalDigitWordsRead = 0;
   uint64_t mTotalDigitWordsRejected = 0;
+  uint64_t mTrackletWordsRead = 0;
+  uint64_t mTrackletWordsRejected = 0;
+  uint64_t mTotalTrackletWordsRejected= 0;
+  uint64_t mTotalTrackletWordsRead= 0;
   //pointers to the data as we read them in, again no point in copying.
   HalfCRUHeader* mhalfcruheader;
 

@@ -172,7 +172,7 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
   mHBFoffset32 = 0;
 
   while ((mHBFoffset32 < ((mTotalHBFPayLoad) / 4))) { // the blank event of eeeeee at the end
-    if (mVerbose) {
+    if (mHeaderVerbose) {
       LOG(info) << "Looping over cruheaders in HBF, loop count " << counthalfcru << " current offset is" << mHBFoffset32 << " total payload is " << mTotalHBFPayLoad / 4 << "  raw :" << mTotalHBFPayLoad;
     }
     int halfcruprocess = processHalfCRU(mHBFoffset32);
@@ -194,6 +194,7 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     //take care of the case where there is an "empty" rdh containing all 0xeeeeeeee as payload.
     if (mTotalHBFPayLoad / 4 - mHBFoffset32 == 8 && mHBFPayload[mHBFoffset32 + 7] == o2::trd::constants::CRUPADDING32) {
       mHBFoffset32 += 8;
+        LOG(info) << " mHBFoffset32 incremented by 8 to " << mHBFoffset32 << " at line "<< __LINE__ ;
     }
     counthalfcru++;
     if (counthalfcru == 1) {
@@ -221,9 +222,10 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   uint32_t sumtrackletwords = 0;
   uint32_t sumdigitwords = 0;
   uint32_t sumlinklengths = 0;
-  int trackletwordsread = 0; // this will read up to the tracnklet end marker.
-  int mDigitWordsRead = 0;
-  int mDigitWordsRejected = 0;
+  mDigitWordsRead = 0;
+  mDigitWordsRejected = 0;
+  mTrackletWordsRead = 0;
+  mTrackletWordsRejected = 0;
   uint32_t cruwordsread = 9;
   //reject halfcru if it starts with padding words.
   //this should only hit that instance where the cru payload is a "blank event" of o2::trd::constants::CRUPADDING32
@@ -321,7 +323,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       LOG(error) << " we are not 256 bit aligned ... this should never happen";
     }
     if (mHeaderVerbose) {
-      LOG(info) << "Cru link :" << currentlinkindex << " raw dump before processing begin linkstart:" << std::hex << linkstart << " to " << linkend;
+      LOG(info) << "Cru link :" << currentlinkindex << " raw dump before processing begin linkstart:" << std::hex << linkstart << " to " << linkend << " mHBFoffset32="<< std::dec << mHBFoffset32 << " and distance from start is : " << std::distance(mHBFPayload.begin(),linkstart);
       for (int dumpoffset = dataoffsetstart32 + linksizeAccum32; dumpoffset < dataoffsetstart32 + linksizeAccum32 + currentlinksize32; dumpoffset += 8) {
         LOGP(info, "0x{0:06x} :: {1:08x} {2:08x}  {3:08x} {4:08x} {5:08x} {6:08x} {7:08x} {8:08x} ", dumpoffset, HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 1]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 2]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 3]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 4]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 5]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 6]), HelperMethods::swapByteOrderreturn(mHBFPayload[dumpoffset + 7]));
       }
@@ -334,18 +336,32 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
     if (linkstart != linkend) { // if link is not empty
       bool cleardigits = false; //linkstart and linkend already have the multiple cruheaderoffsets built in
       auto trackletparsingstart= std::chrono::high_resolution_clock::now();
-      trackletwordsread = mTrackletsParser.Parse(&mHBFPayload, linkstart, linkend, mFEEID, halfchamberside, currentdetector, stack, layer, mCurrentEvent, cleardigits, mByteSwap, mTrackletHCHeaderState, mVerbose, mHeaderVerbose, mDataVerbose); // this will read up to the tracklet end marker.
+      if (mHeaderVerbose) {
+        LOG(info) << "*** Tracklet Parser : starting at " << std::hex << linkstart <<  " at hbfoffset: "<<std::dec <<  mHBFoffset32;
+      }
+      mTrackletWordsRead = mTrackletsParser.Parse(&mHBFPayload, linkstart, linkend, mFEEID, halfchamberside, currentdetector, stack, layer, mCurrentEvent, cleardigits, mByteSwap, mTrackletHCHeaderState, mVerbose, mHeaderVerbose, mDataVerbose); // this will read up to the tracklet end marker.
+      mTrackletWordsRejected=mTrackletsParser.getDataWordsDumped();
       std::chrono::duration<double,std::micro> trackletparsingtime= std::chrono::high_resolution_clock::now()-trackletparsingstart;
       mTrackletTiming->Fill((int)std::chrono::duration_cast<std::chrono::microseconds>(trackletparsingtime).count());
       if (mVerbose) {
-        LOG(info) << "trackletwordsread:" << trackletwordsread << "  mem copy with offset of : " << cruhbfstartoffset << " parsing with linkstart: " << linkstart << " ending at : " << linkend;
+        LOG(info) << "trackletwordsread:" << mTrackletWordsRead << "  mem copy with offset of : " << cruhbfstartoffset << " parsing with linkstart: " << linkstart << " ending at : " << linkend;
       }
-      linkstart += trackletwordsread;
+      linkstart += mTrackletWordsRead+mTrackletWordsRejected;
       //now we have a tracklethcheader and a digithcheader.
-      mHBFoffset32 += trackletwordsread;
+      mHBFoffset32 +=mTrackletWordsRead+mTrackletWordsRejected; 
       mTotalTrackletsFound += mTrackletsParser.getTrackletsFound();
-      //now read the digit half chamber header
+      mTotalTrackletWordsRejected+=mTrackletWordsRejected;
+      mTotalTrackletWordsRead+= mTrackletWordsRead;
+      if (mHeaderVerbose) {
+        LOG(info) << "*** Tracklet Parser : trackletwordsread:"<< mTrackletWordsRead << " ending " << std::hex << linkstart <<  " at hbfoffset: "<<std::dec <<  mHBFoffset32;
+      }
+
       DigitHCHeader digitHCHeader;
+      // check if we are now at the end of the data due to bugs, i.e. if trackletparsing read padding words.
+      if(linkstart!=linkend){
+        // linkstart advanced all the way to the end due to trackletparser parsing crupadding words (known bug or feature )
+      //now read the digit half chamber header
+      LOG(info) << "mHBFPayload after trackletparsing and before getting hchid starts is at : " << std::hex << &mHBFPayload[0];
       uint32_t dhcheader0 = mHBFPayload[mHBFoffset32++];
       uint32_t dhcheader1 = mHBFPayload[mHBFoffset32++];
       if (mByteSwap) {
@@ -356,7 +372,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       digitHCHeader.word0 = dhcheader0;
       digitHCHeader.word1 = dhcheader1;
       if (mHeaderVerbose) {
-        LOG(info) << "*** HCHHeader : 0x" << std::hex << digitHCHeader.word0 << " 0x" << digitHCHeader.word1;
+        LOG(info) << "*** HCHHeader : 0x" << std::hex << digitHCHeader.word0 << " 0x" << digitHCHeader.word1 << " at hbfoffset: "<<std::dec <<  mHBFoffset32 << " hcheader start at " << std::hex << &mHBFPayload[mHBFoffset32-2];
         printDigitHCHeader(digitHCHeader);
       }
       if (digitHCHeader.word0 == 0x0 || digitHCHeader.word1 == 0x0) {
@@ -365,12 +381,16 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       }
       //move over the DigitHCHeader mHBFoffset32 has already been moved in the reading.
       linkstart += 2;
+    }
+      else LOG(info)<< "by passing HCHeader due to tracklets already seeing crupadding";
       if (digitHCHeader.major == 0x47) {
         // config event so ignore for now and bail out of parsing.
         LOG(warn) << " HCHeader major version is 0x47 bailing out of parsing this as its a config event";
         //advance data pointers to the end;
         linkstart = linkend;
-        mHBFoffset32 = dataoffsetstart32 + currentlinksize; // go to the end of the link
+        //mHBFoffset32 = std::distance(mHBFPayload.begin(),linkend);//dataoffsetstart32 + currentlinksize; // go to the end of the link
+        mHBFoffset32 =  std::distance(mHBFPayload.begin(),linkend);//currentlinksize-mTrackletWordsRead-sizeof(digitHCHeader)/4; // advance to the end of the link
+        mTotalDigitWordsRejected += std::distance(linkstart+mTrackletWordsRead+sizeof(DigitHCHeader)/4,linkend);
       } else {
         if(digitHCHeader.major==0x21 || digitHCHeader.major==0x51){
           mDigitWordsRead = 0;
@@ -399,19 +419,23 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
           if (mVerbose) {
             LOG(info) << "mDigitWordsRead : " << mDigitWordsRead << " mem copy with offset of : " << cruhbfstartoffset << " parsing digits with linkstart: " << linkstart << " ending at : " << linkend;
           }
-          sumlinklengths += mCurrentHalfCRULinkLengths[currentlinkindex];
-          sumtrackletwords += trackletwordsread;
-          sumdigitwords += mDigitWordsRead;
           mHBFoffset32 += mDigitWordsRead + mDigitWordsRejected; // all 3 in 32bit units
-          mTotalDigitWordsRead = mDigitWordsRead;
-          mTotalDigitWordsRejected = mDigitWordsRejected;
+          mTotalDigitWordsRead += mDigitWordsRead;
+          mTotalDigitWordsRejected += mDigitWordsRejected;
         }
         else {
           LOG(warn) << "Digit format not configured ! major.minor in hex : " << std::hex << digitHCHeader.major << "."<< digitHCHeader.minor;
           linkstart = linkend;
-          mHBFoffset32 = dataoffsetstart32 + currentlinksize; // go to the end of the link
+          //mHBFoffset32 = dataoffsetstart32 + currentlinksize; // go to the end of the link
+         // mHBFoffset32 +=  currentlinksize-mTrackletWordsRead-sizeof(digitHCHeader)/4; // advance to the end of the link
+          mHBFoffset32 =  std::distance(mHBFPayload.begin(),linkend);//currentlinksize-mTrackletWordsRead-sizeof(digitHCHeader)/4; // advance to the end of the link
+          mTotalDigitWordsRejected += std::distance(linkstart+mTrackletWordsRead+sizeof(DigitHCHeader)/4,linkend);
         }
       }
+          sumlinklengths += mCurrentHalfCRULinkLengths[currentlinkindex];
+          sumtrackletwords += mTrackletWordsRead;
+          sumdigitwords += mDigitWordsRead;
+
       if(mDigitWordsRejected>0){
         hist7->Fill(supermodule_half,stack_layer);
       }
@@ -490,8 +514,10 @@ bool CruRawReader::run()
   uint32_t dowhilecount = 0;
   uint64_t totaldataread = 0;
   rewind();
-  uint64_t mTotalDigitWordsRead = 0;
-  uint64_t mTotalDigitWordsRejected = 0;
+  mTotalDigitWordsRead = 0;
+  mTotalDigitWordsRejected = 0;
+  mTotalTrackletWordsRead = 0;
+  mTotalTrackletWordsRejected = 0;
   uint32_t* bufferptr;
   bufferptr = (uint32_t*)mDataBuffer;
   do {
