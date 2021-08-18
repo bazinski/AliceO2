@@ -114,16 +114,32 @@ class CruRawReader
     mDigitsParser.clear();
   }
   void OutputHalfCruRawData();
-  void setHistos(TH2F *h1, TH2F *h2, TH2F *h3){hist1=h1;hist2=h2;hist3=h3;};// a hack!
-  void setHistos1(TH2F *h1, TH2F *h2, TH2F *h3){hist4=h1;hist5=h2;hist6=h3;};// a hack!
-  void setHistos2(TH2F *h1, TH2F *h2){hist7=h1;hist8=h2;};// a hack!
-  void setTimeHistos(TH1F* timeframetime,TH1F* trackletparsingtime,TH1F* digitparsingtime, TH1F* crutime, TH1F* packagingtime){
-          mTimeFrameTime=timeframetime;
-          mTrackletTiming=trackletparsingtime;
-          mDigitTiming=digitparsingtime;
-          mCruTime=crutime;
-          mEventRecords.setHisto(packagingtime);
+  void setHistos(TH2F* h1, TH2F* h2, TH2F* h3)
+  {
+    hist1 = h1;
+    hist2 = h2;
+    hist3 = h3;
+  }; // a hack!
+  void setHistos1(TH2F* h1, TH2F* h2, TH2F* h3)
+  {
+    hist4 = h1;
+    hist5 = h2;
+    hist6 = h3;
+  }; // a hack!
+  void setHistos2(TH2F* h1, TH2F* h2)
+  {
+    hist7 = h1;
+    hist8 = h2;
+  }; // a hack!
+  void setTimeHistos(TH1F* timeframetime, TH1F* trackletparsingtime, TH1F* digitparsingtime, TH1F* crutime, TH1F* packagingtime)
+  {
+    mTimeFrameTime = timeframetime;
+    mTrackletTiming = trackletparsingtime;
+    mDigitTiming = digitparsingtime;
+    mCruTime = crutime;
+    mEventRecords.setHisto(packagingtime);
   };
+
  protected:
   bool processHBFs(int datasizealreadyread = 0, bool verbose = false);
   bool processHBFsa(int datasizealreadyread = 0, bool verbose = false);
@@ -200,8 +216,8 @@ class CruRawReader
   uint64_t mTotalDigitWordsRejected = 0;
   uint64_t mTrackletWordsRead = 0;
   uint64_t mTrackletWordsRejected = 0;
-  uint64_t mTotalTrackletWordsRejected= 0;
-  uint64_t mTotalTrackletWordsRead= 0;
+  uint64_t mTotalTrackletWordsRejected = 0;
+  uint64_t mTotalTrackletWordsRead = 0;
   //pointers to the data as we read them in, again no point in copying.
   HalfCRUHeader* mhalfcruheader;
 
@@ -222,13 +238,13 @@ class CruRawReader
   uint32_t mErrorCounter;
 
   EventStorage mEventRecords; // store data range indexes into the above vectors.
-  EventRecord *mCurrentEvent; // the current event we are looking at, info extracted from cru half chamber header.
+  EventRecord* mCurrentEvent; // the current event we are looking at, info extracted from cru half chamber header.
   bool mReturnBlob{0};        // whether to return blobs or vectors;
   o2::trd::TRDDataCountersPerEvent mStatCountersPerEvent;
   o2::trd::TRDDataCountersRunning mStatCountersRunning;
-  TH2F *hist1, *hist2, *hist3;// a hack !
-  TH2F *hist4, *hist5, *hist6;// a hack !
-  TH2F *hist7, *hist8;// a hack !
+  TH2F *hist1, *hist2, *hist3; // a hack !
+  TH2F *hist4, *hist5, *hist6; // a hack !
+  TH2F *hist7, *hist8;         // a hack !
   TH1F *mTimeFrameTime, *mTrackletTiming, *mDigitTiming, *mCruTime;
 
   /** summary data **/

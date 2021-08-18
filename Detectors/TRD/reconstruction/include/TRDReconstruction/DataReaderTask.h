@@ -44,7 +44,7 @@ class DataReaderTask : public Task
   void sendData(ProcessingContext& pc, bool blankframe = false);
   void run(ProcessingContext& pc) final;
   bool isTimeFrameEmpty(ProcessingContext& pc);
-  void endOfStream(o2::framework::EndOfStreamContext& ec)override;
+  void endOfStream(o2::framework::EndOfStreamContext& ec) override;
 
  private:
   CruRawReader mReader;                  // this will do the parsing, of raw data passed directly through the flp(no compression)
@@ -66,23 +66,22 @@ class DataReaderTask : public Task
   std::string mDataDesc;
   o2::header::DataDescription mUserDataDescription = o2::header::gDataDescriptionInvalid; // alternative user-provided description to pick
   bool mFixDigitEndCorruption{false};                                                     // fix the parsing of corrupt end of digit data. bounce over it.
-  o2::trd::TRDDataCountersPerTimeFrame mTimeFrameCounters; //TODO when this is running on the front end its subtimeframes.
+  o2::trd::TRDDataCountersPerTimeFrame mTimeFrameCounters;                                //TODO when this is running on the front end its subtimeframes.
 
-
-  TH2F *LinkError;
-  TH2F *LinkError1;
-  TH2F *LinkError2;
-  TH2F *LinkError3;
-  TH2F *LinkError4;
-  TH2F *LinkError5;
-  TH2F *LinkError6;
-  TH2F *LinkError7;
-  TH1F *mTimeFrameTime;
-  TH1F *mTrackletParsingTime;
-  TH1F *mDigitParsingTime;
-  TH1F *mCruTime;
-  TH1F *mPackagingTime;
-  TFile *mRootFile;
+  TH2F* LinkError;
+  TH2F* LinkError1;
+  TH2F* LinkError2;
+  TH2F* LinkError3;
+  TH2F* LinkError4;
+  TH2F* LinkError5;
+  TH2F* LinkError6;
+  TH2F* LinkError7;
+  TH1F* mTimeFrameTime;
+  TH1F* mTrackletParsingTime;
+  TH1F* mDigitParsingTime;
+  TH1F* mCruTime;
+  TH1F* mPackagingTime;
+  TFile* mRootFile;
 };
 
 } // namespace o2::trd

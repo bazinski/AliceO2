@@ -43,7 +43,7 @@ int TrackletsParser::Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX
                            std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator start,
                            std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator end,
                            TRDFeeID feeid, int robside, int detector, int stack, int layer,
-                           EventRecord *eventrecord, bool cleardigits, bool disablebyteswap, int usetracklethcheader,
+                           EventRecord* eventrecord, bool cleardigits, bool disablebyteswap, int usetracklethcheader,
                            bool verbose, bool headerverbose, bool dataverbose)
 {
   mStartParse = start;
@@ -61,7 +61,7 @@ int TrackletsParser::Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX
   mTrackletsFound = 0;
   mPaddingWordsCounter = 0;
   mTrackletHCHeaderState = usetracklethcheader; //what to with the tracklet half chamber header 0,1,2
-  mEventRecord=eventrecord;
+  mEventRecord = eventrecord;
   //    mTracklets.clear();
   return Parse();
 }
@@ -139,7 +139,7 @@ int TrackletsParser::Parse()
   int mcmtrackletcount = 0;
   int trackletloopcount = 0;
   int headertrackletcount = 0;
-  bool ignoreDataTillTrackletEndMarker=false;// used for when we need to dump the rest of the tracklet data.
+  bool ignoreDataTillTrackletEndMarker = false;             // used for when we need to dump the rest of the tracklet data.
   for (auto word = mStartParse; word < mEndParse; ++word) { // loop over the entire data buffer (a complete link of tracklets and digits)
 
     if (mState == StateFinished) {
@@ -182,18 +182,18 @@ int TrackletsParser::Parse()
       mState = StatePadding;
       LOG(warn) << "CRU Padding word while parsing tracklets. Corrupt data dumping the rest of this link";
       //TOOD replace warning with stats increment
-      mWordsDumped=std::distance(word,mEndParse);
-      ignoreDataTillTrackletEndMarker=true;
-      word=mEndParse;
-      LOG(info) << "Padding after assignment : 0x" << std::hex << *word << " at 0x" << std::distance(mStartParse, word) << " mEndParse:"<< std::hex << mEndParse << " word:0x" << word;
+      mWordsDumped = std::distance(word, mEndParse);
+      ignoreDataTillTrackletEndMarker = true;
+      word = mEndParse;
+      LOG(info) << "Padding after assignment : 0x" << std::hex << *word << " at 0x" << std::distance(mStartParse, word) << " mEndParse:" << std::hex << mEndParse << " word:0x" << word;
       //TODO remove tracklets already added erroneously
       continue; // bail out
       //dumping data
 
     } else {
-      if(ignoreDataTillTrackletEndMarker){
+      if (ignoreDataTillTrackletEndMarker) {
         mWordsRead++;
-        continue;//go back to the start of loop, walk the data till the above code of the tracklet end marker is hit, padding is hit or we get to the end of the data.
+        continue; //go back to the start of loop, walk the data till the above code of the tracklet end marker is hit, padding is hit or we get to the end of the data.
         //TODO might be good to check for end of digit marker as well?
       }
       //now for Tracklet hc header
@@ -230,9 +230,9 @@ int TrackletsParser::Parse()
           mcmtrackletcount = 0;
           mWordsRead++;
         } else {
-          if(mState==StateTrackletMCMHeader){
+          if (mState == StateTrackletMCMHeader) {
             // if we are here something is wrong, dump the data. The else of line 227 should imply we are in StateTrackletMCMData;
-            ignoreDataTillTrackletEndMarker=true;
+            ignoreDataTillTrackletEndMarker = true;
             continue;
           }
           mState = StateTrackletMCMData;
@@ -243,8 +243,8 @@ int TrackletsParser::Parse()
             printTrackletMCMData(*mTrackletMCMData);
           }
           // do we have more tracklets than the header allows?
-          if(headertrackletcount<mcmtrackletcount){
-            ignoreDataTillTrackletEndMarker=true;
+          if (headertrackletcount < mcmtrackletcount) {
+            ignoreDataTillTrackletEndMarker = true;
             //dump the rest of the data ... undo any tracklets already written?
             //cant dump till mEndParse and digits are after the tracklets
             //we can assume the mcmtrackletcountth (n from the end) last tracklets in the vector are to be removed.
@@ -268,10 +268,10 @@ int TrackletsParser::Parse()
             default:
               LOG(warn) << "mcmtrackletcount is not in [0:2] count=" << mcmtrackletcount << " headertrackletcount=" << headertrackletcount << " something very wrong parsing the TrackletMCMData fields with data of : 0x" << std::hex << mTrackletMCMData->word;
               //this should have been caught above by the headertrackletcount to mcmtrackletcount
-              ignoreDataTillTrackletEndMarker=true;
+              ignoreDataTillTrackletEndMarker = true;
               break;
           }
-          if(!ignoreDataTillTrackletEndMarker){
+          if (!ignoreDataTillTrackletEndMarker) {
             q0 = getQFromRaw(mTrackletMCMHeader, mTrackletMCMData, 0, mcmtrackletcount);
             q1 = getQFromRaw(mTrackletMCMHeader, mTrackletMCMData, 1, mcmtrackletcount);
             q2 = getQFromRaw(mTrackletMCMHeader, mTrackletMCMData, 2, mcmtrackletcount);

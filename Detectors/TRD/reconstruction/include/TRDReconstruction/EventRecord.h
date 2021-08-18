@@ -108,7 +108,7 @@ class EventStorage
   std::vector<Tracklet64>& getTracklets(InteractionRecord& ir);
   std::vector<Digit>& getDigits(InteractionRecord& ir);
   void printIR();
-  void setHisto(TH1F* packagetime){mPackagingTime=packagetime;}
+  void setHisto(TH1F* packagetime) { mPackagingTime = packagetime; }
 
  private:
   std::vector<EventRecord> mEventRecords;

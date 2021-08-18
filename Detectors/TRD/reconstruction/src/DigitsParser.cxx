@@ -42,7 +42,7 @@ inline void DigitsParser::swapByteOrder(unsigned int& word)
 }
 int DigitsParser::Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* data, std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator start,
                         std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator end, int detector, int stack, int layer, DigitHCHeader& hcheader,
-                        TRDFeeID& feeid, unsigned int linkindex, EventRecord *eventrecord, bool cleardigits, bool disablebyteswap, bool verbose, bool headerverbose, bool dataverbose)
+                        TRDFeeID& feeid, unsigned int linkindex, EventRecord* eventrecord, bool cleardigits, bool disablebyteswap, bool verbose, bool headerverbose, bool dataverbose)
 {
   setData(data);
   mStartParse = start;
@@ -58,7 +58,7 @@ int DigitsParser::Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* 
   }
   setByteSwap(disablebyteswap);
   mReturnVectorPos = 0;
-  mEventRecord=eventrecord;
+  mEventRecord = eventrecord;
   return Parse();
 };
 

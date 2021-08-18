@@ -204,7 +204,7 @@ void EventStorage::sendData(o2::framework::ProcessingContext& pc, bool displaytr
   pc.outputs().snapshot(o2::framework::Output{o2::header::gDataOriginTRD, "DIGITS", 0, o2::framework::Lifetime::Timeframe}, digits);
   pc.outputs().snapshot(o2::framework::Output{o2::header::gDataOriginTRD, "TRACKLETS", 0, o2::framework::Lifetime::Timeframe}, tracklets);
   pc.outputs().snapshot(o2::framework::Output{o2::header::gDataOriginTRD, "TRKTRGRD", 0, o2::framework::Lifetime::Timeframe}, triggers);
-  std::chrono::duration<double,std::milli> dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;
+  std::chrono::duration<double, std::milli> dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;
   LOG(info) << "Preparing for sending and sending data took  " << std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count() << "ms";
   mPackagingTime->Fill((int)std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count());
 }
@@ -272,32 +272,29 @@ void EventStorage::printIR()
   }
 }
 
-
 EventRecord& EventStorage::getEventRecord(InteractionRecord& ir)
 {
-//now find the event record in question
-for(auto& event : mEventRecords){
-  if(event==ir){
-    return event;
+  //now find the event record in question
+  for (auto& event : mEventRecords) {
+    if (event == ir) {
+      return event;
+    }
   }
-}
-//oops its new, so add it
-mEventRecords.push_back(EventRecord(ir));
-return mEventRecords.back();
+  //oops its new, so add it
+  mEventRecords.push_back(EventRecord(ir));
+  return mEventRecords.back();
 }
 
 void EventRecord::popTracklets(int popcount)
 {
- if(popcount>3 || popcount < 0){
-   LOG(error) << " been asked to pop more than 3 tracklets:"<< popcount;
- }
- else{
-   while(popcount>0){
-     mTracklets.pop_back();
-     popcount--;
-   }
- }
+  if (popcount > 3 || popcount < 0) {
+    LOG(error) << " been asked to pop more than 3 tracklets:" << popcount;
+  } else {
+    while (popcount > 0) {
+      mTracklets.pop_back();
+      popcount--;
+    }
+  }
 }
-
 
 } // namespace o2::trd

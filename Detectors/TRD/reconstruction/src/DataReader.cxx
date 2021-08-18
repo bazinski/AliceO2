@@ -68,7 +68,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
   auto fixdigitcorruption = cfgc.options().get<bool>("trd-datareader-fixdigitcorruptdata");
   auto tracklethcheader = cfgc.options().get<int>("tracklethcheader");
   auto enabletimeinfo = cfgc.options().get<bool>("enable-time-info");
-  auto enablestats=cfgc.options().get<bool>("enable-stats");
+  auto enablestats = cfgc.options().get<bool>("enable-stats");
 
   std::vector<OutputSpec> outputs;
   outputs.emplace_back("TRD", "TRACKLETS", 0, Lifetime::Timeframe);
