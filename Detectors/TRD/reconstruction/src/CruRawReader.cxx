@@ -194,7 +194,6 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     //take care of the case where there is an "empty" rdh containing all 0xeeeeeeee as payload.
     if (mTotalHBFPayLoad / 4 - mHBFoffset32 == 8 && mHBFPayload[mHBFoffset32 + 7] == o2::trd::constants::CRUPADDING32) {
       mHBFoffset32 += 8;
-      LOG(info) << " mHBFoffset32 incremented by 8 to " << mHBFoffset32 << " at line " << __LINE__;
     }
     counthalfcru++;
     if (counthalfcru == 1) {
@@ -367,7 +366,6 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       if (linkstart != linkend) {
         // linkstart advanced all the way to the end due to trackletparser parsing crupadding words (known bug or feature )
         //now read the digit half chamber header
-        LOG(info) << "mHBFPayload after trackletparsing and before getting hchid starts is at : " << std::hex << &mHBFPayload[0];
         uint32_t dhcheader0 = mHBFPayload[mHBFoffset32++];
         uint32_t dhcheader1 = mHBFPayload[mHBFoffset32++];
         if (mByteSwap) {
@@ -387,8 +385,10 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
         }
         //move over the DigitHCHeader mHBFoffset32 has already been moved in the reading.
         linkstart += 2;
-      } else
-        LOG(info) << "by passing HCHeader due to tracklets already seeing crupadding";
+      } else{
+        //LOG(info) << "by passing HCHeader due to tracklets already seeing crupadding";
+        //TODO replace with histogram increment
+      }
       if (digitHCHeader.major == 0x47) {
         // config event so ignore for now and bail out of parsing.
         LOG(warn) << " HCHeader major version is 0x47 bailing out of parsing this as its a config event";
@@ -398,7 +398,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
         mHBFoffset32 = std::distance(mHBFPayload.begin(), linkend); //currentlinksize-mTrackletWordsRead-sizeof(digitHCHeader)/4; // advance to the end of the link
         mTotalDigitWordsRejected += std::distance(linkstart + mTrackletWordsRead + sizeof(DigitHCHeader) / 4, linkend);
       } else {
-        if (digitHCHeader.major == 0x21 || digitHCHeader.major == 0x51) {
+        if (digitHCHeader.major == 0x21 || digitHCHeader.major == 0x32) {
           mDigitWordsRead = 0;
           auto digitsparsingstart = std::chrono::high_resolution_clock::now();
           //linkstart and linkend already have the multiple cruheaderoffsets built in

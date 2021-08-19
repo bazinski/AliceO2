@@ -75,7 +75,6 @@ void DataReaderTask::init(InitContext& ic)
   for (int s = 0; s < o2::trd::constants::NSTACK; ++s) {
     for (int l = 0; l < o2::trd::constants::NLAYER; ++l) {
       std::string label = fmt::format("{0}_{1}", s, l);
-      LOG(info) << "Label : " << label;
       int pos = s * o2::trd::constants::NLAYER + l + 1;
       LinkError->GetYaxis()->SetBinLabel(pos, label.c_str());
       LinkError1->GetYaxis()->SetBinLabel(pos, label.c_str());

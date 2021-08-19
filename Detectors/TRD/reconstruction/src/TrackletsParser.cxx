@@ -144,7 +144,6 @@ int TrackletsParser::Parse()
 
     if (mState == StateFinished) {
       mTrackletparsetime += std::chrono::high_resolution_clock::now() - parsetimestart;
-      LOG(info) << "state finished so bailing out tracklet parsing having read : " << mWordsRead << " words";
       return mWordsRead;
     }
     //loop over all the words ...
@@ -169,11 +168,7 @@ int TrackletsParser::Parse()
       }
       mWordsRead += 2;
       //we should now have a tracklet half chamber header.
-      mState = StateTrackletHCHeader;
-      std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator hchword = word;
-      std::advance(hchword, 2);
-      uint32_t halfchamberheaderint = *hchword;
-      mState = StateTrackletEndMarker;
+      mState = StateFinished;
       mTrackletparsetime += std::chrono::high_resolution_clock::now() - parsetimestart;
       return mWordsRead;
     }
@@ -184,8 +179,8 @@ int TrackletsParser::Parse()
       //TOOD replace warning with stats increment
       mWordsDumped = std::distance(word, mEndParse);
       ignoreDataTillTrackletEndMarker = true;
+      //mWordsRead++;
       word = mEndParse;
-      LOG(info) << "Padding after assignment : 0x" << std::hex << *word << " at 0x" << std::distance(mStartParse, word) << " mEndParse:" << std::hex << mEndParse << " word:0x" << word;
       //TODO remove tracklets already added erroneously
       continue; // bail out
       //dumping data
@@ -193,6 +188,8 @@ int TrackletsParser::Parse()
     } else {
       if (ignoreDataTillTrackletEndMarker) {
         mWordsRead++;
+        //LOG(info) << "ignoring till end marker ..... word read:0x"<<std::hex << *word << " at offset 0x"<< std::distance(mStartParse,word);
+        //TODO increment counter instead of above log message
         continue; //go back to the start of loop, walk the data till the above code of the tracklet end marker is hit, padding is hit or we get to the end of the data.
         //TODO might be good to check for end of digit marker as well?
       }
@@ -216,7 +213,7 @@ int TrackletsParser::Parse()
         mWordsRead++;
         mState = StateTrackletMCMHeader;                                // now we should read a MCMHeader next time through loop
       } else {                                                          //not TrackletHCHeader
-        if ((*word) & 0x80000001 && mState == StateTrackletMCMHeader) { //TrackletMCMHeader has the bits on either end always 1
+        if (((*word) & 0x80000001)==0x80000001 && mState == StateTrackletMCMHeader) { //TrackletMCMHeader has the bits on either end always 1
           //mcmheader
           mTrackletMCMHeader = (TrackletMCMHeader*)&(*word);
           if (mHeaderVerbose) {
@@ -233,11 +230,13 @@ int TrackletsParser::Parse()
           if (mState == StateTrackletMCMHeader) {
             // if we are here something is wrong, dump the data. The else of line 227 should imply we are in StateTrackletMCMData;
             ignoreDataTillTrackletEndMarker = true;
+            mWordsRead++;
             continue;
           }
           mState = StateTrackletMCMData;
           //tracklet data;
           mTrackletMCMData = (TrackletMCMData*)&(*word);
+          mWordsRead++;
           if (mHeaderVerbose) {
             LOG(info) << "*** TrackletMCMData : 0x" << std::hex << *word << " at offset :0x" << std::distance(mStartParse, word);
             printTrackletMCMData(*mTrackletMCMData);
@@ -251,7 +250,6 @@ int TrackletsParser::Parse()
             mEventRecord->popTracklets(mcmtrackletcount); // our format is always 4
             //TODO count remove warning
           }
-          mWordsRead++;
           // take the header and this data word and build the underlying 64bit tracklet.
           int q0, q1, q2;
           int qa, qb;
