@@ -213,7 +213,7 @@ int TrackletsParser::Parse()
         mWordsRead++;
         mState = StateTrackletMCMHeader;                                // now we should read a MCMHeader next time through loop
       } else {                                                          //not TrackletHCHeader
-        if (((*word) & 0x80000001)==0x80000001 && mState == StateTrackletMCMHeader) { //TrackletMCMHeader has the bits on either end always 1
+        if (((*word) & 0x80000001) == 0x80000001 && mState == StateTrackletMCMHeader) { //TrackletMCMHeader has the bits on either end always 1
           //mcmheader
           mTrackletMCMHeader = (TrackletMCMHeader*)&(*word);
           if (mHeaderVerbose) {

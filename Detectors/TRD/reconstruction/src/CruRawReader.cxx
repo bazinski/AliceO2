@@ -385,7 +385,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
         }
         //move over the DigitHCHeader mHBFoffset32 has already been moved in the reading.
         linkstart += 2;
-      } else{
+      } else {
         //LOG(info) << "by passing HCHeader due to tracklets already seeing crupadding";
         //TODO replace with histogram increment
       }
