@@ -398,7 +398,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
         mHBFoffset32 = std::distance(mHBFPayload.begin(), linkend); //currentlinksize-mTrackletWordsRead-sizeof(digitHCHeader)/4; // advance to the end of the link
         mTotalDigitWordsRejected += std::distance(linkstart + mTrackletWordsRead + sizeof(DigitHCHeader) / 4, linkend);
       } else {
-        if (digitHCHeader.major == 0x21 || digitHCHeader.major == 0x32) {
+        if (digitHCHeader.major == 0x21 || digitHCHeader.major == 0x32 ) {
           mDigitWordsRead = 0;
           auto digitsparsingstart = std::chrono::high_resolution_clock::now();
           //linkstart and linkend already have the multiple cruheaderoffsets built in
