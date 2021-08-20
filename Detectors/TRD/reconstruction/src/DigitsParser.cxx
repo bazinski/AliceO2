@@ -91,7 +91,6 @@ void DigitsParser::OutputIncomingData()
 int DigitsParser::Parse(bool verbose)
 {
 
-  auto timedigitparsestart = std::chrono::high_resolution_clock::now(); // measure total processing time
   //we are handed the buffer payload of an rdh and need to parse its contents.
   //producing a vector of digits.
   mVerbose = verbose;
@@ -110,14 +109,6 @@ int DigitsParser::Parse(bool verbose)
   if (mHeaderVerbose) {
     OutputIncomingData();
   }
-  if (mVerbose) {
-    LOG(info) << "Digit Parser parse of data sitting at :" << std::hex << (void*)mData << " starting at pos " << mStartParse;
-    if (mByteOrderFix) {
-      LOG(info) << " we will not be byte swapping";
-    } else {
-      LOG(info) << " we will be byte swapping";
-    }
-  }
   int mcmdatacount = 0;
   int digittimebinoffset = 0;
   //mData holds a buffer containing digits parse placing the read digits where they need to be
@@ -125,7 +116,6 @@ int DigitsParser::Parse(bool verbose)
   // data starts with a DigitHCHeader, so pull that off first to simplify looping
 
   for (auto word = mStartParse; word < mEndParse; ++word) { // loop over the entire data buffer (a complete link of digits)
-    auto looptime = std::chrono::high_resolution_clock::now() - timedigitparsestart;
     //loop over all the words
     if (mDataVerbose || mVerbose) {
       LOG(info) << "parsing word : " << std::hex << *word;
@@ -172,7 +162,7 @@ int DigitsParser::Parse(bool verbose)
             // we can try a 16 bit bitshift...
             mWordsDumped = std::distance(word, mEndParse);
             LOG(error) << " dumping the rest of this digitparsing buffer of " << mWordsDumped;
-            tryFindMCMHeaderAndDisplay(word);
+            //tryFindMCMHeaderAndDisplay(word);
             word = mEndParse;
           }
         }
@@ -189,7 +179,7 @@ int DigitsParser::Parse(bool verbose)
               LOG(error) << " dump?";
               mWordsDumped = std::distance(word, mEndParse);
               LOG(error) << " dumping the rest of this digitparsing buffer of " << mWordsDumped;
-              tryFindMCMHeaderAndDisplay(word);
+              //tryFindMCMHeaderAndDisplay(word);
               word = mEndParse;
             }
           }
@@ -198,7 +188,7 @@ int DigitsParser::Parse(bool verbose)
         if (mDigitMCMHeader->mcm < lastmcmread && mDigitMCMHeader->rob == lastrobread) {
           LOG(warn) << "**DigitMCMHeader MCM number is not increasing 0x" << std::hex << *word << " at offset " << std::distance(mStartParse, word);
           printDigitMCMHeader(*mDigitMCMHeader);
-          tryFindMCMHeaderAndDisplay(word);
+          //tryFindMCMHeaderAndDisplay(word);
           if (mDumpUnknownData) {
             // we dump the remainig data pending better options.
             // we can try a 16 bit bitshift...
@@ -240,7 +230,7 @@ int DigitsParser::Parse(bool verbose)
             LOG(info) << "**DigitADCMask SANITY CHECK FAILURE " << std::hex << mDigitMCMADCMask->adcmask << " raw form : 0x" << std::hex << mDigitMCMADCMask->word << " at offset " << std::distance(mStartParse, word);
             mWordsDumped = std::distance(word, mEndParse);
             LOG(error) << " dumping the rest of this digitparsing buffer of " << mWordsDumped;
-            tryFindMCMHeaderAndDisplay(word);
+           // tryFindMCMHeaderAndDisplay(word);
             word = mEndParse;
           }
           overchannelcount = 0;
@@ -361,7 +351,7 @@ int DigitsParser::Parse(bool verbose)
               // to bale or not to bale?
               mWordsDumped = std::distance(word, mEndParse);
               LOG(error) << " dumping the rest of this digitparsing buffer of " << mWordsDumped;
-              tryFindMCMHeaderAndDisplay(word);
+            //  tryFindMCMHeaderAndDisplay(word);
               word = mEndParse;
             }
             mState = StateDigitMCMData;
@@ -384,6 +374,8 @@ int DigitsParser::Parse(bool verbose)
               //write out adc value to vector
               //zero digittimebinoffset
               mEventRecord->getDigits().emplace_back(mDetector, mROB, mMCM, mCurrentADCChannel, mADCValues); // outgoing parsed digits
+              LOG(info) << "DDD " << mDetector << ":" << mROB << ":" << mMCM << ":" << mCurrentADCChannel
+                        << " supermodule:stack:layer:side : " << mDigitHCHeader.supermodule << ":" << mDigitHCHeader.stack << ":" << mDigitHCHeader.layer << ":" << mDigitHCHeader.side;
               mDigitsFound++;
               digittimebinoffset = 0;
               mDigitWordCount = 0; // end of the digit.
@@ -401,9 +393,6 @@ int DigitsParser::Parse(bool verbose)
     // mTotalHalfCRUDataLength++;
     //end of data so
   } // for loop over word
-  if (mVerbose) {
-    LOG(info) << "*** parsing loop finished for this link";
-  }
   if (!(mState == StateDigitMCMHeader || mState == StatePadding || mState == StateDigitEndMarker)) {
     LOG(warn) << "Exiting parsing but the state is wrong ... mState= " << mState;
   }

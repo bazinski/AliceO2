@@ -84,14 +84,6 @@ void DataReaderTask::init(InitContext& ic)
       LinkError5->GetYaxis()->SetBinLabel(pos, label.c_str());
       LinkError6->GetYaxis()->SetBinLabel(pos, label.c_str());
       LinkError7->GetYaxis()->SetBinLabel(pos, label.c_str());
-      /* LinkError->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError1->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError2->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError3->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError4->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError5->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError6->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);
-      LinkError7->GetYaxis()->ChangeLabel(0,-1,-1,-1,-1,-1,label);*/
     }
   }
   LinkError->GetYaxis()->SetTitle("Stack_Layer");
