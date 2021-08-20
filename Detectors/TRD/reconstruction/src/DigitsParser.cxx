@@ -374,9 +374,9 @@ int DigitsParser::Parse(bool verbose)
               //write out adc value to vector
               //zero digittimebinoffset
               mEventRecord->getDigits().emplace_back(mDetector, mROB, mMCM, mCurrentADCChannel, mADCValues); // outgoing parsed digits
-              if(mDataVerbose){
+              if (mDataVerbose) {
                 LOG(info) << "DDD " << mDetector << ":" << mROB << ":" << mMCM << ":" << mCurrentADCChannel
-                        << " supermodule:stack:layer:side : " << mDigitHCHeader.supermodule << ":" << mDigitHCHeader.stack << ":" << mDigitHCHeader.layer << ":" << mDigitHCHeader.side;
+                          << " supermodule:stack:layer:side : " << mDigitHCHeader.supermodule << ":" << mDigitHCHeader.stack << ":" << mDigitHCHeader.layer << ":" << mDigitHCHeader.side;
               }
               mDigitsFound++;
               digittimebinoffset = 0;
