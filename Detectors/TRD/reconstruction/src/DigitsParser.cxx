@@ -230,7 +230,7 @@ int DigitsParser::Parse(bool verbose)
             LOG(info) << "**DigitADCMask SANITY CHECK FAILURE " << std::hex << mDigitMCMADCMask->adcmask << " raw form : 0x" << std::hex << mDigitMCMADCMask->word << " at offset " << std::distance(mStartParse, word);
             mWordsDumped = std::distance(word, mEndParse);
             LOG(error) << " dumping the rest of this digitparsing buffer of " << mWordsDumped;
-           // tryFindMCMHeaderAndDisplay(word);
+            // tryFindMCMHeaderAndDisplay(word);
             word = mEndParse;
           }
           overchannelcount = 0;
@@ -351,7 +351,7 @@ int DigitsParser::Parse(bool verbose)
               // to bale or not to bale?
               mWordsDumped = std::distance(word, mEndParse);
               LOG(error) << " dumping the rest of this digitparsing buffer of " << mWordsDumped;
-            //  tryFindMCMHeaderAndDisplay(word);
+              //  tryFindMCMHeaderAndDisplay(word);
               word = mEndParse;
             }
             mState = StateDigitMCMData;
