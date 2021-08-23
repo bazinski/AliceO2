@@ -38,7 +38,7 @@ void customize(std::vector<ConfigParamSpec>& workflowOptions)
     {"trd-datareader-compresseddata", VariantType::Bool, false, {"The incoming data is compressed or not"}},
     {"ignore-dist-stf", VariantType::Bool, false, {"do not subscribe to FLP/DISTSUBTIMEFRAME/0 message (no lost TF recovery)"}},
     {"trd-datareader-fixdigitcorruptdata", VariantType::Bool, false, {"Fix the erroneous data at the end of digits"}},
-    {"enable-time-info", VariantType::Bool, false, {"enable the timing of tracklet, digit, and timeframe processing"}},
+    {"enable-timing", VariantType::Bool, false, {"enable the timing of tracklet, digit, timeframe, cru processing"}},
     {"enable-stats", VariantType::Bool, false, {"enable the reader stats"}},
     {"enable-root-output", VariantType::Bool, false, {"Write the data to file"}},
     {"tracklethcheader", VariantType::Int, 0, {"Status of TrackletHalfChamberHeader 0 off always, 1 iff tracklet data, 2 on always"}},
@@ -67,7 +67,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
   auto askSTFDist = !cfgc.options().get<bool>("ignore-dist-stf");
   auto fixdigitcorruption = cfgc.options().get<bool>("trd-datareader-fixdigitcorruptdata");
   auto tracklethcheader = cfgc.options().get<int>("tracklethcheader");
-  auto enabletimeinfo = cfgc.options().get<bool>("enable-time-info");
+  auto enabletimeinfo = cfgc.options().get<bool>("enable-timing");
   auto enablestats = cfgc.options().get<bool>("enable-stats");
 
   std::vector<OutputSpec> outputs;
@@ -75,9 +75,8 @@ WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
   outputs.emplace_back("TRD", "DIGITS", 0, Lifetime::Timeframe);
   outputs.emplace_back("TRD", "TRKTRGRD", 0, Lifetime::Timeframe);
   //outputs.emplace_back("TRD", "FLPSTAT", 0, Lifetime::Timeframe);
-  LOG(info) << "enablebyteswap :" << byteswap;
   AlgorithmSpec algoSpec;
-  algoSpec = AlgorithmSpec{adaptFromTask<o2::trd::DataReaderTask>(compresseddata, byteswap, fixdigitcorruption, tracklethcheader, verbose, headerverbose, dataverbose)};
+  algoSpec = AlgorithmSpec{adaptFromTask<o2::trd::DataReaderTask>(compresseddata, byteswap, fixdigitcorruption, tracklethcheader, verbose, headerverbose, dataverbose,enabletimeinfo,enablestats, cfgc.options().get<bool>("enable-root-output"))};
 
   WorkflowSpec workflow;
 

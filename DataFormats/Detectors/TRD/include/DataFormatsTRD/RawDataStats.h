@@ -21,11 +21,12 @@
 #include <cstdint>
 #include <array>
 #include <vector>
+#include <gsl/span>
 #include "DataFormatsTRD/Constants.h"
 
 namespace o2::trd
 {
-
+enum ParsingErrors{TRDParsingNoError,TRDParsingUnrecognisedFormat, TRDParsingBadDigt, TRDParsingBadTracklet, TRDParsing};
 class TRDDataCountersPerEvent
 { //thisis on a per event basis
  public:
@@ -39,7 +40,7 @@ class TRDDataCountersPerEvent
   //maybe change this to actual traps ?? but it will get large.
   std::array<int64_t, o2::trd::constants::MAXMCMCOUNT> mLinkMCMsWithData; // and its corresponding volume of data.
   std::array<std::array<uint16_t, 16>, 1080> mMCMsBeforeCorruption;       // count the mcms read before link was corrupt
-  std::array<std::array<uint16_t, 16>, 1080> mMCMsOnlyClean;              // d
+  std::array<std::array<uint16_t, 16>, 1080> mMCMsOnlyClean;
   std::array<uint32_t, 1080> mLinkMCMCountBeforeCorruption;
   std::array<uint32_t, 1080> mLinkDigitCount;
   std::array<uint32_t, 1080> mLinkTrackletCount;
@@ -66,6 +67,7 @@ class TRDDataCountersRunning
 {                                       //those counters that keep counting
   std::array<uint32_t, 1080> mLinkFreq; //units of 256bits "cru word"
   std::array<bool, 1080> mLinkEmpty;    // Link only has padding words only, probably not serious.
+  std::array<uint64_t,65535> mDataFormatRead; // 7bits.7bits major.minor version read from HCHeader.
 };
 
 } // namespace o2::trd

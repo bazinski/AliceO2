@@ -38,7 +38,8 @@ namespace o2::trd
 class DataReaderTask : public Task
 {
  public:
-  DataReaderTask(bool compresseddata, bool byteswap, bool fixdigitendcorruption, int tracklethcheader, bool verbose, bool headerverbose, bool dataverbose) : mCompressedData(compresseddata), mByteSwap(byteswap), mFixDigitEndCorruption(fixdigitendcorruption), mTrackletHCHeaderState(tracklethcheader), mVerbose(verbose), mHeaderVerbose(headerverbose), mDataVerbose(dataverbose) {}
+  DataReaderTask(bool compresseddata, bool byteswap, bool fixdigitendcorruption, int tracklethcheader, bool verbose, bool headerverbose, bool dataverbose, bool enabletimeinfo, bool enablestats, bool enablerootoutput) : mCompressedData(compresseddata), mByteSwap(byteswap), mFixDigitEndCorruption(fixdigitendcorruption), mTrackletHCHeaderState(tracklethcheader), mVerbose(verbose), mHeaderVerbose(headerverbose), mDataVerbose(dataverbose), mEnableTimeInfo(enabletimeinfo), mEnableStats(enablestats), mRootOutput(enablerootoutput) {}
+  //TODO change all these options to a bitpattern, makes it more readable.
   ~DataReaderTask() override = default;
   void init(InitContext& ic) final;
   void sendData(ProcessingContext& pc, bool blankframe = false);
@@ -59,6 +60,10 @@ class DataReaderTask : public Task
   bool mCompressedData{false};   // are we dealing with the compressed data from the flp (send via option)
   bool mByteSwap{true};          // whether we are to byteswap the incoming data, mc is not byteswapped, raw data is (too be changed in cru at some point)
                                  //  o2::header::DataDescription mDataDesc; // Data description of the incoming data
+  bool mEnableTimeInfo{false};   // enable the timing of timeframe,cru,digit,tracklet processing.
+  bool mEnableStats{false};      // enable the taking of stats in the rawdatastats class
+  bool mRootOutput{false};       // enable the writing of histos.root, a poor mans qc, mostly for debugging.
+
   uint64_t mWordsRead = 0;
   uint64_t mWordsRejected = 0;
   int mTrackletHCHeaderState{0}; // what to do about tracklethcheader, 0 never there, 2 always there, 1 there iff tracklet data, i.e. only there if next word is *not* endmarker 10001000.
@@ -81,6 +86,7 @@ class DataReaderTask : public Task
   TH1F* mDigitParsingTime;
   TH1F* mCruTime;
   TH1F* mPackagingTime;
+  TH1F* mDataVersions;
   TFile* mRootFile;
 };
 

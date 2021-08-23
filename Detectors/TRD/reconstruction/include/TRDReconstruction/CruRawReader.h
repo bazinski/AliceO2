@@ -61,7 +61,7 @@ class CruRawReader
 
   void checkSummary();
   void resetCounters();
-  void configure(bool byteswap, bool fixdigitcorruption, int tracklethcheader, bool verbose, bool headerverbose, bool dataverbose)
+  void configure(bool byteswap, bool fixdigitcorruption, int tracklethcheader, bool verbose, bool headerverbose, bool dataverbose, bool enabletimeinfo, bool enablestats,bool rootoutput)
   {
     mByteSwap = byteswap;
     mVerbose = verbose;
@@ -69,6 +69,9 @@ class CruRawReader
     mDataVerbose = dataverbose;
     mFixDigitEndCorruption = fixdigitcorruption;
     mTrackletHCHeaderState = tracklethcheader;
+    mRootOutput=rootoutput;
+    mEnableTimeInfo=enabletimeinfo;
+    mEnableStats=enablestats;
   }
   void setBlob(bool returnblob) { mReturnBlob = returnblob; }; //set class to produce blobs and not vectors. (compress vs pass through)`
   void setDataBuffer(const char* val)
@@ -131,13 +134,15 @@ class CruRawReader
     hist7 = h1;
     hist8 = h2;
   }; // a hack!
-  void setTimeHistos(TH1F* timeframetime, TH1F* trackletparsingtime, TH1F* digitparsingtime, TH1F* crutime, TH1F* packagingtime)
+  void setTimeHistos(TH1F* timeframetime, TH1F* trackletparsingtime, TH1F* digitparsingtime, 
+                     TH1F* crutime, TH1F* packagingtime, TH1F* versions)
   {
     mTimeFrameTime = timeframetime;
     mTrackletTiming = trackletparsingtime;
     mDigitTiming = digitparsingtime;
     mCruTime = crutime;
     mEventRecords.setHisto(packagingtime);
+    mDataVersions=versions;
   };
 
  protected:
@@ -163,6 +168,9 @@ class CruRawReader
   bool mByteSwap{false};
   bool mFixDigitEndCorruption{false};
   int mTrackletHCHeaderState{0};
+  bool mRootOutput{0};
+  bool mEnableTimeInfo{0};
+  bool mEnableStats{0};
 
   const char* mDataBuffer = nullptr;
   static const uint32_t mMaxHBFBufferSize = o2::trd::constants::HBFBUFFERMAX;
@@ -246,6 +254,7 @@ class CruRawReader
   TH2F *hist4, *hist5, *hist6; // a hack !
   TH2F *hist7, *hist8;         // a hack !
   TH1F *mTimeFrameTime, *mTrackletTiming, *mDigitTiming, *mCruTime;
+  TH1F *mDataVersions;
 
   /** summary data **/
 };
