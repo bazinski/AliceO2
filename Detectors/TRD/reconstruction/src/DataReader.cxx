@@ -76,7 +76,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
   outputs.emplace_back("TRD", "TRKTRGRD", 0, Lifetime::Timeframe);
   //outputs.emplace_back("TRD", "FLPSTAT", 0, Lifetime::Timeframe);
   AlgorithmSpec algoSpec;
-  algoSpec = AlgorithmSpec{adaptFromTask<o2::trd::DataReaderTask>(compresseddata, byteswap, fixdigitcorruption, tracklethcheader, verbose, headerverbose, dataverbose,enabletimeinfo,enablestats, cfgc.options().get<bool>("enable-root-output"))};
+  algoSpec = AlgorithmSpec{adaptFromTask<o2::trd::DataReaderTask>(compresseddata, byteswap, fixdigitcorruption, tracklethcheader, verbose, headerverbose, dataverbose, enabletimeinfo, enablestats, cfgc.options().get<bool>("enable-root-output"))};
 
   WorkflowSpec workflow;
 

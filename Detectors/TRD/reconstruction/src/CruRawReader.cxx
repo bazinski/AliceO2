@@ -301,7 +301,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
     int supermodule_half = supermodule * 2 + halfchamberside;
     float stack_layer;
     stack_layer = stack * constants::NLAYER + layer;
-    if(mRootOutput){
+    if (mRootOutput) {
       if (mCurrentHalfCRULinkErrorFlags[currentlinkindex] == 0)
         hist1->Fill(supermodule_half, stack_layer);
       if (mCurrentHalfCRULinkErrorFlags[currentlinkindex] == 1)
@@ -346,7 +346,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       mTrackletWordsRead = mTrackletsParser.Parse(&mHBFPayload, linkstart, linkend, mFEEID, halfchamberside, currentdetector, stack, layer, mCurrentEvent, cleardigits, mByteSwap, mTrackletHCHeaderState, mVerbose, mHeaderVerbose, mDataVerbose); // this will read up to the tracklet end marker.
       mTrackletWordsRejected = mTrackletsParser.getDataWordsDumped();
       std::chrono::duration<double, std::micro> trackletparsingtime = std::chrono::high_resolution_clock::now() - trackletparsingstart;
-      if(mRootOutput){
+      if (mRootOutput) {
         mTrackletTiming->Fill((int)std::chrono::duration_cast<std::chrono::microseconds>(trackletparsingtime).count());
       }
       if (mVerbose) {
@@ -390,8 +390,8 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
         //LOG(info) << "by passing HCHeader due to tracklets already seeing crupadding";
         //TODO replace with histogram increment
       }
-      if(mRootOutput){
-        mDataVersions->Fill((digitHCHeader.major<<7) + digitHCHeader.minor);
+      if (mRootOutput) {
+        mDataVersions->Fill((digitHCHeader.major << 7) + digitHCHeader.minor);
       }
       if (digitHCHeader.major == 0x47) {
         // config event so ignore for now and bail out of parsing.
@@ -408,7 +408,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
           //linkstart and linkend already have the multiple cruheaderoffsets built in
           mDigitWordsRead = mDigitsParser.Parse(&mHBFPayload, linkstart, linkend, currentdetector, stack, layer, digitHCHeader, mFEEID, currentlinkindex, mCurrentEvent, cleardigits, mByteSwap, mVerbose, mHeaderVerbose, mDataVerbose);
           std::chrono::duration<double, std::micro> digitsparsingtime = std::chrono::high_resolution_clock::now() - trackletparsingstart;
-          if(mRootOutput){
+          if (mRootOutput) {
             mDigitTiming->Fill((int)std::chrono::duration_cast<std::chrono::microseconds>(digitsparsingtime).count());
           }
           mDigitWordsRejected = mDigitsParser.getDumpedDataCount();
@@ -446,13 +446,12 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       sumdigitwords += mDigitWordsRead;
 
       if (mDigitWordsRejected > 0) {
-          if(mRootOutput){
-        hist7->Fill(supermodule_half, stack_layer);
-          }
-      } else
-          if(mRootOutput){
+        if (mRootOutput) {
+          hist7->Fill(supermodule_half, stack_layer);
+        }
+      } else if (mRootOutput) {
         hist8->Fill(supermodule_half, stack_layer);
-          }
+      }
     } else {
       if (mVerbose) {
         LOG(info) << "link start and end are the same, link appears to be empty for link currentlinkdex";
@@ -475,7 +474,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
   }
   int lasttrigger = 0, lastdigit = 0, lasttracklet = 0;
   std::chrono::duration<double, std::micro> cruparsingtime = std::chrono::high_resolution_clock::now() - crustart;
-  if(mRootOutput){
+  if (mRootOutput) {
     mCruTime->Fill((int)std::chrono::duration_cast<std::chrono::microseconds>(cruparsingtime).count());
   }
 
@@ -491,7 +490,7 @@ bool CruRawReader::buildCRUPayLoad()
   int additionalBytes = -1;
   int crudatasize = -1;
   LOG(info) << "--- Build CRU Payload, added " << additionalBytes << " bytes to CRU "
-    << cruid << " with new size " << crudatasize;
+            << cruid << " with new size " << crudatasize;
   return true;
 }
 
@@ -516,8 +515,8 @@ void CruRawReader::checkSummary()
   char chname[2] = {'a', 'b'};
 
   LOG(info) << "--- SUMMARY COUNTERS: " << mEventCounter << " events "
-    << " | " << mFatalCounter << " decode fatals "
-    << " | " << mErrorCounter << " decode errors ";
+            << " | " << mFatalCounter << " decode fatals "
+            << " | " << mErrorCounter << " decode errors ";
 }
 
 bool CruRawReader::run()
