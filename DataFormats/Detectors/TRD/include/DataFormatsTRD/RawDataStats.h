@@ -21,57 +21,84 @@
 #include <cstdint>
 #include <array>
 #include <vector>
+#include <bitset>
 #include <gsl/span>
 #include "DataFormatsTRD/Constants.h"
 
 namespace o2::trd
 {
 enum ParsingErrors { TRDParsingNoError,
-                     TRDParsingUnrecognisedFormat,
+                     TRDParsingUnrecognisedVersion,
                      TRDParsingBadDigt,
                      TRDParsingBadTracklet,
-                     TRDParsing };
+                     TRDParsingDigitEndMarkerWrongState,  // read a end marker but we were expecting something else due to
+                     TRDParsingDigitMCMHeaderSanityCheckFailure, //essentially we did not see an MCM header see RawData.h for requirement
+                     TRDParsingDigitROBDecreasing,    // sequential headers must have the same or increasing rob number
+                     TRDParsingDigitMCMNotIncreasing, // sequential headers must have increasing mcm number
+                     TRDParsingDigitADCMaskMismatch,  // mask adc count does not match # of 1s in bitpattern
+                     TRDParsingDigitADCMaskAdvanceToEnd,// in advancing to adcmask we have reached the end of the buffer
+                     TRDParsingDigitMCMHeaderBypassButStateMCMHeader, // we are reading mcmadc data but the state is mcmheader
+                     TRDParsingDigitEndMarkerStateButReadingMCMADCData, // read the endmarker while expecting to read the mcmadcdata
+                     TRDParsingDigitADCChannel21, // ADCMask is zero but we are still on a digit.
+                     TRDParsingDigitADCChannelGT22, // error allocating digit, so digit channel has error value
+                     TRDParsingDigitGT10ADCs, // more than 10 adc data words seen
+                     TRDParsingDigitSanityCheck, // adc failed sanity check see RawData.cxx for faiulre reasons
+                     TRDParsingDigitExcessTimeBins,// ADC has more than 30 timebins (10 adc words)
+                     TRDParsingDigitParsingExitInWrongState, // exiting parsing in the wrong state ... got to the end of the buffer in wrong state.
+                     TRDParsingTrackletCRUPaddingWhileParsingTracklets, // reading a padding word while expecting tracklet data
+                     TRDParsingTrackletBit11NotSetInTrackletHCHeader,  // bit 11 not set in hc header for tracklets.
+                     TRDParsingTrackletHCHeaderSanityCheckFailure, // HCHeader sanity check failure, see RawData.cxx for reasons.
+                     TRDParsingTrackletMCMHeaderSanityCheckFailure, // MCMHeader sanity check failure, see RawData.cxx for reasons.
+                     TRDParsingTrackletMCMHeaderButParsingMCMData, // state is still MCMHeader but we are parsing MCMData
+                     TRDParsingTrackletTrackletCountGTThatDeclaredInMCMHeader, //mcmheader tracklet count does not match that in we have parsed.
+                     TRDParsingTrackletPadRowIncreaseError, // subsequent padrow can not be less than previous one.
+                     TRDParsingTrackletColIncreaseError, // subsequent col can not be less than previous one
+                     TRDParsingTrackletNoTrackletEndMarker // got to the end of the buffer with out finding a tracklet end marker.
+                     };
 class TRDDataCountersPerEvent
 { //thisis on a per event basis
  public:
   //TODO this should go into a dpl message for catching by qc ?? I think.
-  std::array<uint32_t, 1080> mLinkWords;       //units of 256bits, read from the cru half chamber header
-  std::array<uint32_t, 1080> mLinkWordsRead;   // units of 32 bits the data words read before dumping or finishing
-  std::array<uint32_t, 1080> mLinkWordsDumped; // units of 32 bits the data dumped due to some or other error
-  std::array<uint8_t, 1080> mLinkErrorFlag;    //status of the error flags for this event
-  //from the above you can get the stats for supermodule and detector.
-  std::array<bool, 1080> mLinkEmpty; // Link only has padding words only, probably not serious.
-  //maybe change this to actual traps ?? but it will get large.
-  std::array<int64_t, o2::trd::constants::MAXMCMCOUNT> mLinkMCMsWithData; // and its corresponding volume of data.
-  std::array<std::array<uint16_t, 16>, 1080> mMCMsBeforeCorruption;       // count the mcms read before link was corrupt
-  std::array<std::array<uint16_t, 16>, 1080> mMCMsOnlyClean;
-  std::array<uint32_t, 1080> mLinkMCMCountBeforeCorruption;
-  std::array<uint32_t, 1080> mLinkDigitCount;
-  std::array<uint32_t, 1080> mLinkTrackletCount;
-  std::array<uint32_t, constants::MAXMCMCOUNT> mTrapTrackletCount;
-  std::array<uint16_t, constants::MAXMCMCOUNT> mMCMstats; // bit pattern for errors current event for a given mcm;
-  std::vector<uint32_t> mEmptyTraps;                      // MCM indexes of traps that are empty ?? list might better
-  double mTimeTaken;                                      // time take to process an event (summed trackletparsing and digitparsing) parts not accounted for.
-  double mDataWordsRead;                                  // data words read in
-  double mDataWordsSkipped;                               // data words skipped for various reasons.
+  uint64_t mTimeTaken;              // time take to process an event (summed trackletparsing and digitparsing) parts not accounted for.
+  uint64_t mTimeTakenForDigits;     // time take to process tracklet data blocks [us].
+  uint64_t mTimeTakenForTracklets;  // time take to process digit data blocks [us].
+  uint64_t mDigitWordsRead;         // digit words read in
+  uint64_t mDigitWordsSkipped;      // digit words skipped for various reasons.
+  uint64_t mTrackletWordsRead;      // tracklet words read in
+  uint64_t mTrackletWordsSkipped;   // tracklet words skipped for various reasons.
 };
 
 class TRDDataCountersPerTimeFrame
 { //thisis on a per event basis
  public:
-  double mTimeTaken;
-  uint64_t mDigitsFound;
-  uint64_t mTrackletsFound;
-  uint64_t mDataWordsRead;
-  uint64_t mDataWordsRejected;
+  std::array<uint32_t,1080> mLinkNoData; // Link had no data or was not present.
+  std::array<uint32_t, 1080> mLinkWords{};       //units of 256bits, read from the cru half chamber header
+  std::array<uint32_t, 1080> mLinkWordsRead{};   // units of 32 bits the data words read before dumping or finishing
+  std::array<uint32_t, 1080> mLinkWordsDumped{}; // units of 32 bits the data dumped due to some or other error
+  std::array<uint8_t, 1080> mLinkErrorFlag{};    //status of the error flags for this event
+  std::array<int64_t, o2::trd::constants::MAXMCMCOUNT> mLinkMCMsWithData{}; // and its corresponding volume of data.
+  std::array<uint32_t, constants::MAXMCMCOUNT> mMCMDigitCount{};
+  std::array<uint32_t, constants::MAXMCMCOUNT> mMCMTrackletCount{};
+  std::array<uint32_t, 30> mParsingErrors{}; // errors in parsing, indexed by enum above of ParsingErrors
+  std::array<uint32_t, 1080*30> mParsingErrorsByLink{}; // errors in parsing, indexed by enum above of ParsingErrors
+  uint64_t mTimeTaken;              // time taken to process the entire timeframe [ms].
+  uint64_t mTimeTakenForDigits;     // time take to process tracklet data blocks [us].
+  uint64_t mTimeTakenForTracklets;  // time take to process digit data blocks [us].
+  uint64_t mDigitsFound;          // digit found in the time frame.
+  uint64_t mTrackletsFound;       // tracklets found in the time frame.
+  uint64_t mDigitWordsRead;         // digit words read in.
+  uint64_t mDigitWordsSkipped;      // digit words skipped for various reasons.
+  uint64_t mTrackletWordsRead;      // tracklet words read in.
+  uint64_t mTrackletWordsSkipped;   // tracklet words skipped for various reasons.
+  //TRDDataCountersPerTimeFrame* operator=(TRDDataCountersPerTimeFrame *old){this=old;return *this;}
 };
 
 //TODO not sure this class is needed
 class TRDDataCountersRunning
 {                                       //those counters that keep counting
-  std::array<uint32_t, 1080> mLinkFreq; //units of 256bits "cru word"
-  std::array<bool, 1080> mLinkEmpty;    // Link only has padding words only, probably not serious.
-  std::array<uint64_t, 65535> mDataFormatRead; // 7bits.7bits major.minor version read from HCHeader.
+  std::array<uint32_t, 1080> mLinkFreq{}; //units of 256bits "cru word"
+  std::array<bool, 1080> mLinkEmpty{};    // Link only has padding words only, probably not serious.
+  std::array<uint64_t, 65535> mDataFormatRead{}; // 7bits.7bits major.minor version read from HCHeader.
 };
 
 } // namespace o2::trd

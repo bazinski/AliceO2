@@ -117,6 +117,7 @@ class CruRawReader
     mDigitsParser.clear();
   }
   void OutputHalfCruRawData();
+ // void setStats(o2::trd::TRDDataCountersPerTimeFrame* trdstats){mTimeFrameStats=trdstats;}
   void setHistos(TH2F* h1, TH2F* h2, TH2F* h3)
   {
     hist1 = h1;
@@ -247,6 +248,8 @@ class CruRawReader
 
   EventStorage mEventRecords; // store data range indexes into the above vectors.
   EventRecord* mCurrentEvent; // the current event we are looking at, info extracted from cru half chamber header.
+  o2::trd::TRDDataCountersPerTimeFrame mTimeFrameStats;
+
   bool mReturnBlob{0};        // whether to return blobs or vectors;
   o2::trd::TRDDataCountersPerEvent mStatCountersPerEvent;
   o2::trd::TRDDataCountersRunning mStatCountersRunning;

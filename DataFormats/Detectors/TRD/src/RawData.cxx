@@ -313,11 +313,11 @@ bool trackletMCMHeaderSanityCheck(o2::trd::TrackletMCMHeader& header)
     goodheader = false;
   }
   // if we have 3rd tracklet (pid2!=0) then we must have all the others as well.
-  if ((header.pid2 != 0) && (header.pid1 == 0 || header.pid0 == 0)) {
+  if ((header.pid2 != 0xff) && (header.pid1 == 0xff || header.pid0 == 0xff)) {
     goodheader = false;
   }
   // sim for 2 tracklets.
-  if ((header.pid1 != 0) && (header.pid0 == 0)) {
+  if ((header.pid1 != 0xff) && (header.pid0 == 0xff)) {
     goodheader = false;
   }
 
@@ -372,11 +372,11 @@ bool digitMCMADCMaskSanityCheck(o2::trd::DigitMCMADCMask& mask, int numberofbits
   }*/
   if (mask.n != 0x1) {
     goodadcmask = false;
-    LOG(warn) << "***DigitMCMADCMask bad n value should be 0x01 but:0x" << std::hex << mask.n;
+    //  LOG(warn) << "***DigitMCMADCMask bad n value should be 0x01 but:0x" << std::hex << mask.n;
   }
   if (mask.j != 0xc) {
     goodadcmask = false;
-    LOG(warn) << "***DigitMCMADCMask bad j value should be 0xc but:0x" << std::hex << mask.c;
+    // LOG(warn) << "***DigitMCMADCMask bad j value should be 0xc but:0x" << std::hex << mask.c;
   }
   return goodadcmask;
 }

@@ -109,13 +109,14 @@ class EventStorage
   std::vector<Digit>& getDigits(InteractionRecord& ir);
   void printIR();
   void setHisto(TH1F* packagetime) { mPackagingTime = packagetime; }
-
+  //TODO what would be nice is to write this out as a root tree event by event instead of using the sendData method where its all packaged together to then be unpackaged again.
  private:
   std::vector<EventRecord> mEventRecords;
   //these 2 are hacks to be able to send bak a blank vector if interaction record is not found.
   std::vector<Tracklet64> mDummyTracklets;
   std::vector<Digit> mDummyDigits;
   TH1F* mPackagingTime;
+  TRDDataCountersPerTimeFrame mStats;
 };
 std::ostream& operator<<(std::ostream& stream, const EventRecord& trg);
 

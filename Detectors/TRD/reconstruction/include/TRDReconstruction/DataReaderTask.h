@@ -71,7 +71,8 @@ class DataReaderTask : public Task
   std::string mDataDesc;
   o2::header::DataDescription mUserDataDescription = o2::header::gDataDescriptionInvalid; // alternative user-provided description to pick
   bool mFixDigitEndCorruption{false};                                                     // fix the parsing of corrupt end of digit data. bounce over it.
-  o2::trd::TRDDataCountersPerTimeFrame mTimeFrameCounters;                                //TODO when this is running on the front end its subtimeframes.
+  o2::trd::TRDDataCountersPerTimeFrame mTimeFrameStats;                                   // TODO for compressed data this is going to come in for each subtimeframe
+                                                                                          // and we need to collate them.
 
   TH2F* LinkError;
   TH2F* LinkError1;

@@ -205,6 +205,7 @@ bool DataReaderTask::isTimeFrameEmpty(ProcessingContext& pc)
 
 void DataReaderTask::run(ProcessingContext& pc)
 {
+  //NB this is run per time frame on the epn.
   LOG(info) << "TRD Translator Task run";
   auto dataReadStart = std::chrono::high_resolution_clock::now();
 
@@ -250,6 +251,7 @@ void DataReaderTask::run(ProcessingContext& pc)
           mReader.setDataBuffer(payloadIn);
           mReader.setDataBufferSize(payloadInSize);
           mReader.configure(mByteSwap, mFixDigitEndCorruption, mTrackletHCHeaderState, mVerbose, mHeaderVerbose, mDataVerbose, mEnableTimeInfo, mEnableStats, mRootOutput);
+          mReader.setStats(mTimeFrameStats);
           mReader.run();
           mWordsRead += mReader.getWordsRead();
           mWordsRejected += mReader.getWordsRejected();

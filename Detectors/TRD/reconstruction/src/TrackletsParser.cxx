@@ -13,6 +13,7 @@
 /// @brief  TRD raw data parser for Tracklet data format
 
 #include "DataFormatsTRD/RawData.h"
+#include "DataFormatsTRD/RawDataStats.h"
 #include "DataFormatsTRD/Tracklet64.h"
 #include "DataFormatsTRD/HelperMethods.h"
 
@@ -176,6 +177,8 @@ int TrackletsParser::Parse()
       //padding word first as it clashes with the hcheader.
       mState = StatePadding;
       LOG(warn) << "CRU Padding word while parsing tracklets. Corrupt data dumping the rest of this link";
+      //mEventRecord.ErrorStats[TRDParsingTrackletCRUPaddingWhileParsingTracklets]++;
+
       //TOOD replace warning with stats increment
       mWordsDumped = std::distance(word, mEndParse);
       ignoreDataTillTrackletEndMarker = true;
@@ -198,6 +201,7 @@ int TrackletsParser::Parse()
         if (mState != StateTrackletHCHeader) {
           LOG(warn) << "Something wrong with TrackletHCHeader bit 11 is set but state is not " << StateTrackletMCMHeader << " its :" << mState;
           //TODO count remove warning
+          //mEventRecord.ErrorStats[TRDParsingTrackletBit11NotSetInTrackletHCHeader]++;
         }
         //read the header
         if (mHeaderVerbose) {
@@ -209,6 +213,7 @@ int TrackletsParser::Parse()
         if (!trackletHCHeaderSanityCheck(*mTrackletHCHeader)) {
           LOG(warn) << "Sanity check Failure HCHeader : " << std::hex << *word << " at offset :0x" << std::distance(mStartParse, word);
           //TODO count remove warning
+          //mEventRecord.ErrorStats[TRDParsingTrackletHCHeaderSanityCheckFailure]++;
         }
         mWordsRead++;
         mState = StateTrackletMCMHeader;                                // now we should read a MCMHeader next time through loop
@@ -222,6 +227,10 @@ int TrackletsParser::Parse()
             a.word = *word;
             printTrackletMCMHeader(a);
           }
+          if(!trackletMCMHeaderSanityCheck(*mTrackletMCMHeader)){
+            LOG(warn) << "***TrackletMCMHeader SanityCheckFailure: 0x" << std::hex << *word << " at offset: 0x" << std::distance(mStartParse, word);
+            //mEventRecord.ErrorStats[TRDParsingTrackletMCMHeaderSanityCheckFailure]++;
+          }
           headertrackletcount = getNumberofTracklets(*mTrackletMCMHeader);
           mState = StateTrackletMCMData; // afrter reading a header we should then have data for next round through the loop
           mcmtrackletcount = 0;
@@ -230,6 +239,7 @@ int TrackletsParser::Parse()
           if (mState == StateTrackletMCMHeader) {
             // if we are here something is wrong, dump the data. The else of line 227 should imply we are in StateTrackletMCMData;
             ignoreDataTillTrackletEndMarker = true;
+            //mEventRecord.ErrorStats[TRDParsingTrackletStateMCMHeaderButParsingMCMData]++;
             mWordsRead++;
             continue;
           }
@@ -247,6 +257,7 @@ int TrackletsParser::Parse()
             //dump the rest of the data ... undo any tracklets already written?
             //cant dump till mEndParse and digits are after the tracklets
             //we can assume the mcmtrackletcountth (n from the end) last tracklets in the vector are to be removed.
+            //mEventRecord.ErrorStats[TRDParsingTrackletTrackletCountGTThatDeclaredInMCMHeader]++;
             mEventRecord->popTracklets(mcmtrackletcount); // our format is always 4
             //TODO count remove warning
           }
@@ -265,6 +276,7 @@ int TrackletsParser::Parse()
               break;
             default:
               LOG(warn) << "mcmtrackletcount is not in [0:2] count=" << mcmtrackletcount << " headertrackletcount=" << headertrackletcount << " something very wrong parsing the TrackletMCMData fields with data of : 0x" << std::hex << mTrackletMCMData->word;
+              //mEventRecord.ErrorStats[TRDParsingTrackletInvalidTrackletCount]++;
               //this should have been caught above by the headertrackletcount to mcmtrackletcount
               ignoreDataTillTrackletEndMarker = true;
               break;
@@ -287,6 +299,7 @@ int TrackletsParser::Parse()
             }
             //TODO cross reference hcid to somewhere for a check. mDetector is assigned at the time of parser init.
             //
+            //mEventRecord.TrackletCounts[mcm][mcmtrackletcount]++;
             mEventRecord->getTracklets().emplace_back(4, hcid, padrow, col, pos, slope, q0, q1, q2); // our format is always 4
             if (mDataVerbose) {
               LOG(info) << "Tracklet added:" << 4 << "-" << hcid << "-" << padrow << "-" << col << "-" << pos << "-" << slope << "-" << q0 << ":" << q1 << ":" << q2;
@@ -313,6 +326,7 @@ int TrackletsParser::Parse()
   } //end of for loop
   //sanity check
   LOG(warn) << " end of Trackelt parsing but we are exiting with out a tracklet end marker with " << mWordsRead << " 32bit words read";
+  //mEventRecord.ErrorStats[TRDParsingTrackletExitingNoTrackletEndMarker]++;
   mTrackletparsetime += std::chrono::high_resolution_clock::now() - parsetimestart;
   return mWordsRead;
 }
