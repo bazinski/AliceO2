@@ -269,15 +269,15 @@ void DataReaderTask::run(ProcessingContext& pc)
 
   std::chrono::duration<double, std::milli> dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;
   LOG(info) << "Processing time for Data reading  " << std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count() << "ms";
-  if(mRootOutput){
+  if (mRootOutput) {
     mTimeFrameTime->Fill((int)std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count());
   }
   //auto timeframe=mReader.getEventStorage();
- // (*timeframe)->mTFStats.mTimeTaken= std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count();
- // (*timeframe)->mTFStats.mDigitsFound = mReader.getDigitsFound();
- // (*timeframe)->mTFStats.mTrackletsFound = mReader.getTrackletsFound();
-//  (*timeframe)->mTFStats.mDataWordsRead = mWordsRead * 4;
- // (*timeframe)->mTFStats.mDataWordsRejected = mWordsRejected * 4;
+  // (*timeframe)->mTFStats.mTimeTaken= std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count();
+  // (*timeframe)->mTFStats.mDigitsFound = mReader.getDigitsFound();
+  // (*timeframe)->mTFStats.mTrackletsFound = mReader.getTrackletsFound();
+  //  (*timeframe)->mTFStats.mDataWordsRead = mWordsRead * 4;
+  // (*timeframe)->mTFStats.mDataWordsRejected = mWordsRejected * 4;
   if (!mCompressedData) {
     LOG(info) << "Digits found : " << mReader.getDigitsFound();
     LOG(info) << "Tracklets found : " << mReader.getTrackletsFound();

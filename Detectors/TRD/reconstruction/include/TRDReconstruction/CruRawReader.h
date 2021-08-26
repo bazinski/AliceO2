@@ -107,7 +107,7 @@ class CruRawReader
   int getWordsRead() { return mTotalDigitWordsRead; }
   int getWordsRejected() { return mTotalDigitWordsRejected; }
 
-  std::shared_ptr<EventStorage*> getEventStorage(){return std::make_shared<EventStorage*>(&mEventRecords);}
+  std::shared_ptr<EventStorage*> getEventStorage() { return std::make_shared<EventStorage*>(&mEventRecords); }
   void clearall()
   {
     mEventRecords.clear();
@@ -257,9 +257,8 @@ class CruRawReader
   TH2F *hist1, *hist2, *hist3; // a hack !
   TH2F *hist4, *hist5, *hist6; // a hack !
   TH2F *hist7, *hist8;         // a hack !
-  TH1F *mTimeFrameTime, *mTrackletTiming, *mDigitTiming, *mCruTime;         // a hack !
-  TH1F* mDataVersions;         // a hack !
-
+  TH1F *mTimeFrameTime, *mTrackletTiming, *mDigitTiming, *mCruTime; // a hack !
+  TH1F* mDataVersions;                                              // a hack !
 };
 
 } // namespace o2::trd

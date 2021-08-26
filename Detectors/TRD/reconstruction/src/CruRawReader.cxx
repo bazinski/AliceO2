@@ -321,7 +321,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
     currentlinksize32 = currentlinksize * 8; //x8 to go from 256 bits to 32 bit;
     linkstart = mHBFPayload.begin() + dataoffsetstart32 + linksizeAccum32;
     linkend = linkstart + currentlinksize32;
-    if(currentlinksize==0){
+    if (currentlinksize == 0) {
       mEventRecords.mTFStats.mLinkNoData[oriindex]++;
     }
     uint64_t linkzsum = 0;

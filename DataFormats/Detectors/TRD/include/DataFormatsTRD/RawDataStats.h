@@ -59,14 +59,14 @@ class TRDDataCountersPerEvent
 { //thisis on a per event basis
  public:
   //TODO this should go into a dpl message for catching by qc ?? I think.
-  uint64_t mTimeTaken;             // time take to process an event (summed trackletparsing and digitparsing) parts not accounted for.
-  uint64_t mTimeTakenForDigits;    // time take to process tracklet data blocks [us].
-  uint64_t mTimeTakenForTracklets; // time take to process digit data blocks [us].
-  uint64_t mDigitWordsRead;        // digit words read in
-  uint64_t mDigitWordsSkipped;     // digit words skipped for various reasons.
-  uint64_t mTrackletWordsRead;     // tracklet words read in
-  uint64_t mTrackletWordsSkipped;  // tracklet words skipped for various reasons.
-  std::array<uint8_t, 1080> mLinkErrorFlag{};                               //status of the error flags for this event, 8bit values from cru halfchamber header.
+  uint64_t mTimeTaken;                        // time take to process an event (summed trackletparsing and digitparsing) parts not accounted for.
+  uint64_t mTimeTakenForDigits;               // time take to process tracklet data blocks [us].
+  uint64_t mTimeTakenForTracklets;            // time take to process digit data blocks [us].
+  uint64_t mDigitWordsRead;                   // digit words read in
+  uint64_t mDigitWordsSkipped;                // digit words skipped for various reasons.
+  uint64_t mTrackletWordsRead;                // tracklet words read in
+  uint64_t mTrackletWordsSkipped;             // tracklet words skipped for various reasons.
+  std::array<uint8_t, 1080> mLinkErrorFlag{}; //status of the error flags for this event, 8bit values from cru halfchamber header.
 };
 
 class TRDDataCountersPerTimeFrame
