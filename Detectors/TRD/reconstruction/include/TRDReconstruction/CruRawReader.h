@@ -254,9 +254,9 @@ class CruRawReader
   bool mReturnBlob{0};        // whether to return blobs or vectors;
   o2::trd::TRDDataCountersRunning mStatCountersRunning;
 
-  TH2F *hist1, *hist2, *hist3; // a hack !
-  TH2F *hist4, *hist5, *hist6; // a hack !
-  TH2F *hist7, *hist8;         // a hack !
+  TH2F *hist1, *hist2, *hist3;                                      // a hack !
+  TH2F *hist4, *hist5, *hist6;                                      // a hack !
+  TH2F *hist7, *hist8;                                              // a hack !
   TH1F *mTimeFrameTime, *mTrackletTiming, *mDigitTiming, *mCruTime; // a hack !
   TH1F* mDataVersions;                                              // a hack !
 };

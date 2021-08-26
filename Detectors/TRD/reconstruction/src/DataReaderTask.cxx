@@ -267,27 +267,27 @@ void DataReaderTask::run(ProcessingContext& pc)
       } // ignore the input of DISTSUBTIMEFRAMEFLP
     }
 
-  std::chrono::duration<double, std::milli> dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;
-  LOG(info) << "Processing time for Data reading  " << std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count() << "ms";
-  if (mRootOutput) {
-    mTimeFrameTime->Fill((int)std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count());
-  }
-  //auto timeframe=mReader.getEventStorage();
-  // (*timeframe)->mTFStats.mTimeTaken= std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count();
-  // (*timeframe)->mTFStats.mDigitsFound = mReader.getDigitsFound();
-  // (*timeframe)->mTFStats.mTrackletsFound = mReader.getTrackletsFound();
-  //  (*timeframe)->mTFStats.mDataWordsRead = mWordsRead * 4;
-  // (*timeframe)->mTFStats.mDataWordsRejected = mWordsRejected * 4;
-  if (!mCompressedData) {
-    LOG(info) << "Digits found : " << mReader.getDigitsFound();
-    LOG(info) << "Tracklets found : " << mReader.getTrackletsFound();
-    LOG(info) << "DataRead in :" << mWordsRead * 4 << " bytes";
-    LOG(info) << "DataRejected in :" << mWordsRejected * 4 << " bytes";
-    LOG(info) << "DataRetention :bad/good" << (double)mWordsRejected / (double)mWordsRead << "";
-    LOG(info) << "Total % good data bad/(good+bad)" << (double)mWordsRejected / ((double)mWordsRead + (double)mWordsRejected) * 100.0 << " %";
-  }
-  /* output */
-  sendData(pc, false);
+    std::chrono::duration<double, std::milli> dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;
+    LOG(info) << "Processing time for Data reading  " << std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count() << "ms";
+    if (mRootOutput) {
+      mTimeFrameTime->Fill((int)std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count());
+    }
+    //auto timeframe=mReader.getEventStorage();
+    // (*timeframe)->mTFStats.mTimeTaken= std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count();
+    // (*timeframe)->mTFStats.mDigitsFound = mReader.getDigitsFound();
+    // (*timeframe)->mTFStats.mTrackletsFound = mReader.getTrackletsFound();
+    //  (*timeframe)->mTFStats.mDataWordsRead = mWordsRead * 4;
+    // (*timeframe)->mTFStats.mDataWordsRejected = mWordsRejected * 4;
+    if (!mCompressedData) {
+      LOG(info) << "Digits found : " << mReader.getDigitsFound();
+      LOG(info) << "Tracklets found : " << mReader.getTrackletsFound();
+      LOG(info) << "DataRead in :" << mWordsRead * 4 << " bytes";
+      LOG(info) << "DataRejected in :" << mWordsRejected * 4 << " bytes";
+      LOG(info) << "DataRetention :bad/good" << (double)mWordsRejected / (double)mWordsRead << "";
+      LOG(info) << "Total % good data bad/(good+bad)" << (double)mWordsRejected / ((double)mWordsRead + (double)mWordsRejected) * 100.0 << " %";
+    }
+    /* output */
+    sendData(pc, false);
   }
 }
 

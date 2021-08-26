@@ -97,7 +97,7 @@ class TRDDataCountersPerTimeFrame
 
 //TODO not sure this class is needed
 class TRDDataCountersRunning
-{                                       //those counters that keep counting
+{                                                //those counters that keep counting
   std::array<uint32_t, 1080> mLinkFreq{};        //units of 256bits "cru word"
   std::array<bool, 1080> mLinkEmpty{};           // Link only has padding words only, probably not serious.
   std::array<uint64_t, 65535> mDataFormatRead{}; // 7bits.7bits major.minor version read from HCHeader.
