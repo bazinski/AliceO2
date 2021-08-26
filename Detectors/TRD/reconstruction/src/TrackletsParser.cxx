@@ -227,7 +227,7 @@ int TrackletsParser::Parse()
             a.word = *word;
             printTrackletMCMHeader(a);
           }
-          if(!trackletMCMHeaderSanityCheck(*mTrackletMCMHeader)){
+          if (!trackletMCMHeaderSanityCheck(*mTrackletMCMHeader)) {
             LOG(warn) << "***TrackletMCMHeader SanityCheckFailure: 0x" << std::hex << *word << " at offset: 0x" << std::distance(mStartParse, word);
             //mEventRecord.ErrorStats[TRDParsingTrackletMCMHeaderSanityCheckFailure]++;
           }

@@ -81,12 +81,12 @@ class EventRecord
   BCData mBCData;                       /// orbit and Bunch crossing data of the physics trigger
   std::vector<Digit> mDigits{};         /// digit data, for this event
   std::vector<Tracklet64> mTracklets{}; /// tracklet data, for this event
-  o2::trd::TRDDataCountersPerEvent mStats;
+  o2::trd::TRDDataCountersPerEvent mEventStats;
 };
 
 class EventStorage
 {
-  //
+  //store a timeframes events for later collating sending on as a message
  public:
   EventStorage() = default;
   ~EventStorage() = default;
@@ -110,14 +110,15 @@ class EventStorage
   void printIR();
   void setHisto(TH1F* packagetime) { mPackagingTime = packagetime; }
   //TODO what would be nice is to write this out as a root tree event by event instead of using the sendData method where its all packaged together to then be unpackaged again.
+  TRDDataCountersPerTimeFrame mTFStats;
  private:
   std::vector<EventRecord> mEventRecords;
   //these 2 are hacks to be able to send bak a blank vector if interaction record is not found.
   std::vector<Tracklet64> mDummyTracklets;
   std::vector<Digit> mDummyDigits;
-  TH1F* mPackagingTime;
-  TRDDataCountersPerTimeFrame mStats;
+  TH1F* mPackagingTime{nullptr};
 };
+
 std::ostream& operator<<(std::ostream& stream, const EventRecord& trg);
 
 } // namespace o2::trd

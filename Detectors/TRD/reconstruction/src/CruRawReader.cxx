@@ -315,12 +315,15 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset)
       if (mCurrentHalfCRULinkLengths[currentlinkindex] == 0)
         hist6->Fill(supermodule_half, stack_layer);
     }
-    mStatCountersPerEvent.mLinkErrorFlag[currentdetector] = mCurrentHalfCRULinkErrorFlags[currentlinkindex];
+    //mStatCountersPerEvent.mLinkErrorFlag[currentdetector] = mCurrentHalfCRULinkErrorFlags[currentlinkindex];
 
     currentlinksize = mCurrentHalfCRULinkLengths[currentlinkindex];
     currentlinksize32 = currentlinksize * 8; //x8 to go from 256 bits to 32 bit;
     linkstart = mHBFPayload.begin() + dataoffsetstart32 + linksizeAccum32;
     linkend = linkstart + currentlinksize32;
+    if(currentlinksize==0){
+      mEventRecords.mTFStats.mLinkNoData[oriindex]++;
+    }
     uint64_t linkzsum = 0;
     int dioffset = dataoffsetstart32 + linksizeAccum32;
     if (dioffset % 8 != 0) {
@@ -504,7 +507,7 @@ bool CruRawReader::processCRULink()
 
 void CruRawReader::resetCounters()
 {
-  mStatCountersPerEvent.mLinkErrorFlag.fill(0);
+  //:mStatCountersPerEvent.mLinkErrorFlag.fill(0);
   mEventCounter = 0;
   mFatalCounter = 0;
   mErrorCounter = 0;

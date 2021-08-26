@@ -133,7 +133,7 @@ int DigitsParser::Parse(bool verbose)
       if (mState == StateDigitMCMData || mState == StateDigitEndMarker || mState == StateDigitHCHeader || mState == StateDigitMCMHeader) {
       } else {
         LOG(warn) << "Digit end marker found but state is not StateDigitMCMData(" << StateDigitMCMData << ") or StateDigit but rather " << mState;
-       // mEventRecord.ErrorStats[TRDParsingDigitEndMarkerWrongState]++;
+        // mEventRecord.ErrorStats[TRDParsingDigitEndMarkerWrongState]++;
       }
       //only thing that can remain is the padding.
       //now read padding words till end.
@@ -315,7 +315,6 @@ int DigitsParser::Parse(bool verbose)
                 if (mCurrentADCChannel == 21) {
                   LOG(warn) << "ADCMask is zero but we seem to have a digit";
                   //mEventRecord.ErrorStats[TRDParsingDigitADCChannel21]++;
-
                 }
                 if (mCurrentADCChannel > 22) {
                   LOG(error) << "invalid bitpattern (read a zero) for this mcm 0x" << std::hex << mADCMask << " at offset " << std::distance(mStartParse, word);
