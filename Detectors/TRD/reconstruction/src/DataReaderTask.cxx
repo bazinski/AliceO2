@@ -35,8 +35,6 @@
 namespace o2::trd
 {
 
-
-
 void DataReaderTask::setParsingErrorLabels()
 {
 
@@ -174,8 +172,8 @@ void DataReaderTask::init(InitContext& ic)
     mReader.setHistos1(LinkError3, LinkError4, LinkError5);
     mReader.setHistos2(LinkError6, LinkError7);
     mReader.setTimeHistos(mTimeFrameTime, mTrackletParsingTime,
-        mDigitParsingTime, mCruTime, mPackagingTime,
-        mDataVersions, mDataVersionsMajor, mParsingErrors);
+                          mDigitParsingTime, mCruTime, mPackagingTime,
+                          mDataVersions, mDataVersionsMajor, mParsingErrors);
   }
 }
 
@@ -239,9 +237,9 @@ bool DataReaderTask::isTimeFrameEmpty(ProcessingContext& pc)
 {
   constexpr auto origin = header::gDataOriginTRD;
   o2::framework::InputSpec dummy{"dummy",
-    framework::ConcreteDataMatcher{origin,
-      header::gDataDescriptionRawData,
-      0xDEADBEEF}};
+                                 framework::ConcreteDataMatcher{origin,
+                                                                header::gDataDescriptionRawData,
+                                                                0xDEADBEEF}};
   // if we see requested data type input with 0xDEADBEEF subspec and 0 payload.
   // frame detected we have no data and send this instead
   // send empty output so as to not block workflow
@@ -249,7 +247,7 @@ bool DataReaderTask::isTimeFrameEmpty(ProcessingContext& pc)
     const auto dh = o2::framework::DataRefUtils::getHeader<o2::header::DataHeader*>(ref);
     if (dh->payloadSize == 0) {
       LOGP(INFO, "Found blank input input [{}/{}/{:#x}] TF#{} 1st_orbit:{} Payload {} : ",
-          dh->dataOrigin.str, dh->dataDescription.str, dh->subSpecification, dh->tfCounter, dh->firstTForbit, dh->payloadSize);
+           dh->dataOrigin.str, dh->dataDescription.str, dh->subSpecification, dh->tfCounter, dh->firstTForbit, dh->payloadSize);
       return true;
     }
   }
@@ -286,7 +284,7 @@ void DataReaderTask::run(ProcessingContext& pc)
       if (mVerbose) {
         const auto dh = DataRefUtils::getHeader<o2::header::DataHeader*>(ref);
         LOGP(info, "Found input [{}/{}/{:#x}] TF#{} 1st_orbit:{} Payload {} : ",
-            dh->dataOrigin.str, dh->dataDescription.str, dh->subSpecification, dh->tfCounter, dh->firstTForbit, dh->payloadSize);
+             dh->dataOrigin.str, dh->dataDescription.str, dh->subSpecification, dh->tfCounter, dh->firstTForbit, dh->payloadSize);
       }
       const auto* headerIn = DataRefUtils::getHeader<o2::header::DataHeader*>(ref);
       auto payloadIn = ref.payload;
