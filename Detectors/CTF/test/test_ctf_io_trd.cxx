@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(CTFTest)
 
       for (int i = nTrk; i--;) {
         tracklets.emplace_back(formatTrk, hcid, gRandom->Integer(0x1 << 4), gRandom->Integer(0x1 << 2),
-                               gRandom->Integer(0x1 << 11), gRandom->Integer(0x1 << 8), gRandom->Integer(0x1 << 24));
+                               gRandom->Integer(0x1 << 11) ^ 0x80, gRandom->Integer(0x1 << 8) ^ 0x80, gRandom->Integer(0x1 << 24));
       }
       for (int i = nDig; i--;) {
         auto& dig = digits.emplace_back(cid, gRandom->Integer(0x1 << 8), gRandom->Integer(0x1 << 8), gRandom->Integer(0x1 << 8));
