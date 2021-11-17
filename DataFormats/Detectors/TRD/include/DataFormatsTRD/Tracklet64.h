@@ -65,7 +65,7 @@ class Tracklet64
                     ((Q0 << Q0bs) & Q0mask);
   }
 
- Tracklet64(uint64_t format, uint64_t hcid, uint64_t padrow, uint64_t col, uint64_t position,
+  Tracklet64(uint64_t format, uint64_t hcid, uint64_t padrow, uint64_t col, uint64_t position,
              uint64_t slope, uint64_t pid)
   {
     mtrackletWord = ((format << formatbs) & formatmask) |
