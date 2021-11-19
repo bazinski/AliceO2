@@ -115,9 +115,9 @@ BOOST_AUTO_TEST_CASE(CTFTest)
   LOG(INFO) << "Decompressed in " << sw.CpuTime() << " s";
 
   //fix for XOR of 0x80 of pos and slope.
-  for(auto &tracklet : trackletsD){
-          tracklet.setPosition(tracklet.getPosition());
-          tracklet.setSlope(tracklet.getSlope());
+  for (auto& tracklet : trackletsD) {
+    tracklet.setPosition(tracklet.getPosition());
+    tracklet.setSlope(tracklet.getSlope());
   }
 
   BOOST_CHECK(triggersD.size() == triggers.size());
