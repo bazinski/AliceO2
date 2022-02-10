@@ -52,7 +52,7 @@ void customize(std::vector<ConfigParamSpec>& workflowOptions)
     {"halfchamberwords", VariantType::Int, 0, {"Fix half chamber for when it is version is 0.0 integer value of additional header words, ignored if version is not 0.0"}},
     {"halfchambermajor", VariantType::Int, 0, {"Fix half chamber for when it is version is 0.0 integer value of major version, ignored if version is not 0.0"}},
     {"ignore-digithcheader", VariantType::Bool, false, {"Ignore the digithalf chamber header for cross referencing, take rdh/cru as authorative."}},
-//    {"fixsm1617", VariantType::Bool, false, {"Fix the missing bit in the tracklet hc header of supermodules 16 and 17. Requires option tracklethcheader 2"}},
+    //    {"fixsm1617", VariantType::Bool, false, {"Fix the missing bit in the tracklet hc header of supermodules 16 and 17. Requires option tracklethcheader 2"}},
     {"fixforoldtrigger", VariantType::Bool, false, {"Fix for the old data not having a 2 stage trigger stored in the cru header."}},
     {"tracklethcheader", VariantType::Int, 2, {"Status of TrackletHalfChamberHeader 0 off always, 1 iff tracklet data, 2 on always"}},
     {"histogramsfile", VariantType::String, "histos.root", {"Name of the histogram file, so one can run multiple per node"}},
