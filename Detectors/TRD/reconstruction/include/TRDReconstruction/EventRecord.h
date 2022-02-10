@@ -18,6 +18,7 @@
 #include "DataFormatsTRD/Tracklet64.h"
 #include "DataFormatsTRD/RawDataStats.h"
 #include "DataFormatsTRD/Digit.h"
+#include "DataFormatsTRD/TrapConfig3.h"
 
 namespace o2::framework
 {
@@ -99,6 +100,8 @@ class EventRecordContainer
   void incLinkWordsRead(int hcid, int count) { mTFStats.mLinkWordsRead[hcid] += count; }
   void incLinkWordsRejected(int hcid, int count) { mTFStats.mLinkWordsRejected[hcid] += count; }
   void incMajorVersion(int version) { mTFStats.mDataFormatRead[version]++; }
+  void addConfigEvent(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>& data, uint32_t start, uint32_t end, int hcid, uint32_t configeventlength);
+  void addTrapConfig(TrapConfig3& config) { mTrapConfig = &config; }
 
   void incParsingError(int error, int hcid)
   {
@@ -114,6 +117,8 @@ class EventRecordContainer
   int mCurrEventRecord = 0;
   std::vector<EventRecord> mEventRecords;
   TRDDataCountersPerTimeFrame mTFStats;
+  std::vector<uint32_t> mConfigEvents;
+  TrapConfig3* mTrapConfig;
 };
 
 } // namespace o2::trd

@@ -66,6 +66,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
   outputs.emplace_back("TRD", "DIGITS", 0, Lifetime::Timeframe);
   outputs.emplace_back("TRD", "TRKTRGRD", 0, Lifetime::Timeframe);
   outputs.emplace_back("TRD", "RAWSTATS", 0, Lifetime::Timeframe);
+  outputs.emplace_back("TRD", "CONFEVT", 0, Lifetime::Timeframe);
 
   std::bitset<16> binaryoptions;
   binaryoptions[o2::trd::TRDVerboseBit] = cfgc.options().get<bool>("verbose");
