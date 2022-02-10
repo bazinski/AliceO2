@@ -22,6 +22,8 @@
 #include <set>
 #include <utility>
 #include <array>
+#include <TH2F.h>
+#include <TFile.h>
 #include "Headers/RAWDataHeader.h"
 #include "Headers/RDHAny.h"
 #include "DetectorsRaw/RDHUtils.h"
@@ -139,6 +141,14 @@ class CruRawReader
 
   // to check for which half-chambers we have seen correct headers and for which we have seen wrong ones
   void printHalfChamberHeaderReport() const;
+  // get a hit pattern of the hcid that had tracklets
+  std::bitset<1080>& getTrackletsHCID() { return mTrackletsHCID; }
+
+  // reset the bit pattern of which half chambers fired and which not
+  void resetTrackletsHCID() { mTrackletsHCID.reset(); }
+
+  // Does this time frame have config events in it.
+  bool isConfigEvent() { return mTimeFrameHasConfigEvent; }
 
  private:
   // these variables are configured externally
@@ -178,8 +188,12 @@ class CruRawReader
   std::set<std::pair<int, int>> mHalfChamberMismatches; // first element is HCID from RDH and second element is HCID from TrackletHCHeader
 
   o2::InteractionRecord mIR;
+  bool mFirstConfigIR{true};
+  o2::InteractionRecord mLastConfigIR;
+  std::chrono::duration<double, std::micro> mTotalConfigTime;
   std::array<uint32_t, 15> mCurrentHalfCRULinkLengths;
   std::array<uint32_t, 15> mCurrentHalfCRULinkErrorFlags;
+  int mConfigEventCount = 0;
 
   const LinkToHCIDMapping* mLinkMap = nullptr; // to retrieve HCID from Link ID
 
@@ -193,6 +207,9 @@ class CruRawReader
   uint32_t mWordsRejected = 0;         // those words rejected before tracklet and digit parsing could start
 
   EventRecordContainer mEventRecords; // store data range indexes into the above vectors.
+
+  std::bitset<1080> mTrackletsHCID;
+  bool mTimeFrameHasConfigEvent;
 };
 
 } // namespace o2::trd

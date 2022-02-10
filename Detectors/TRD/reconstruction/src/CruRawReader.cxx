@@ -49,6 +49,7 @@ void CruRawReader::configure(int tracklethcheader, int halfchamberwords, int hal
   if (mOptions[TRDVerboseErrorsBit] && (ParsingErrorsString.size() - 1) != TRDLastParsingError) {
     LOG(error) << "Verbose error reporting requested, but the mapping of error code to error string is not complete";
   }
+  mTotalConfigTime = (std::chrono::duration<double, std::micro>)0;
 }
 
 void CruRawReader::incrementErrors(int error, int hcid, std::string message)
@@ -323,7 +324,7 @@ bool CruRawReader::parseDigitHCHeaders(int hcid)
         if (headersfound.test(2)) {
           // we have a problem, we already have a Digit HC Header3, we are hereby lost.
           if (mOptions[TRDVerboseErrorsBit]) {
-            LOG(info) << "We have a >1 Digit HC Header 2  : " << std::hex << " raw: 0x" << headers[headerwordcount];
+            LOG(error) << "We have a >1 Digit HC Header 2  : " << std::hex << " raw: 0x" << headers[headerwordcount];
             printDigitHCHeader(mDigitHCHeader, headers.data());
           }
           incrementErrors(DigitHCHeader3Problem, hcid);
@@ -338,6 +339,7 @@ bool CruRawReader::parseDigitHCHeaders(int hcid)
               LOG(warning) << "Conflicting SVN in DigitHCHeader3";
               printDigitHCHeader(mDigitHCHeader, headers.data());
             }
+            LOGP(info, "SVN MisMatch: svnver {}=?{} and svnrver {}=?{} ", (unsigned int)header3.svnver, mPreviousDigitHCHeadersvnver, (unsigned int)header3.svnrver, mPreviousDigitHCHeadersvnrver);
             incrementErrors(DigitHCHeaderSVNMismatch, hcid);
             return false;
           }
@@ -368,7 +370,7 @@ bool CruRawReader::processHalfCRU(int iteration)
   // this should only hit that instance where the cru payload is a "blank event" of CRUPADDING32
   if (mHBFPayload[mHBFoffset32] == CRUPADDING32) {
     if (mOptions[TRDVerboseBit]) {
-      LOG(info) << "blank rdh payload data at " << mHBFoffset32 << ": 0x " << std::hex << mHBFPayload[mHBFoffset32] << " and 0x" << mHBFPayload[mHBFoffset32 + 1];
+      LOG(error) << "blank rdh payload data at " << mHBFoffset32 << ": 0x " << std::hex << mHBFPayload[mHBFoffset32] << " and 0x" << mHBFPayload[mHBFoffset32 + 1];
     }
     int loopcount = 0;
     while (mHBFPayload[mHBFoffset32] == CRUPADDING32 && loopcount < 8) { // can only ever be an entire 256 bit word hence a limit of 8 here.
@@ -468,6 +470,7 @@ bool CruRawReader::processHalfCRU(int iteration)
     // apply CTP offset shift
     mIR.bc -= o2::ctp::TriggerOffsetsParam::Instance().LM_L0;
   }
+
   mEventRecords.setCurrentEventRecord(mIR);
 
   //loop over links
@@ -490,12 +493,12 @@ bool CruRawReader::processHalfCRU(int iteration)
     }
     if (mOptions[TRDVerboseBit]) {
       if (currentlinksize32 > 0) {
-        LOGF(info, "Half-CRU link %i raw dump before parsing starts:", currentlinkindex);
+        LOGP(info, "Half-CRU link {}(hcid:{}) LME : {} raw dump before parsing starts:", currentlinkindex, halfChamberId, mCurrentHalfCRULinkErrorFlags[currentlinkindex]);
         for (uint32_t dumpoffset = mHBFoffset32; dumpoffset < mHBFoffset32 + currentlinksize32; dumpoffset += 8) {
           LOGF(info, "0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x", mHBFPayload[dumpoffset], mHBFPayload[dumpoffset + 1], mHBFPayload[dumpoffset + 2], mHBFPayload[dumpoffset + 3], mHBFPayload[dumpoffset + 4], mHBFPayload[dumpoffset + 5], mHBFPayload[dumpoffset + 6], mHBFPayload[dumpoffset + 7]);
         }
       } else {
-        LOGF(info, "Half-CRU link %i has zero link size", currentlinkindex);
+        LOGP(info, "Half-CRU link {}(hcid:{}) LMR : {} has zero link size", currentlinkindex, halfChamberId, mCurrentHalfCRULinkErrorFlags[currentlinkindex]);
       }
     }
     if (currentlinksize32 > 0) { // if link is not empty
@@ -506,6 +509,7 @@ bool CruRawReader::processHalfCRU(int iteration)
       int trackletWordsRejected = 0;
       int trackletWordsRead = parseTrackletLinkData(currentlinksize32, halfChamberId, trackletWordsRejected);
       std::chrono::duration<double, std::micro> trackletparsingtime = std::chrono::high_resolution_clock::now() - trackletparsingstart;
+      //LOGP(info,"Tracklet parsing took {}",(double)std::chrono::duration_cast<std::chrono::microseconds>(trackletparsingtime).count());
       if (trackletWordsRead == -1) {
         // something went wrong bailout of here.
         mHBFoffset32 = hbfOffsetTmp + linksizeAccum32;
@@ -514,6 +518,8 @@ bool CruRawReader::processHalfCRU(int iteration)
       }
       if (trackletWordsRejected > 0) {
         linkOK = false;
+      } else {
+        mTrackletsHCID.set(halfChamberId); // flip the bit to say we have tracklets on this hcid.
       }
       mHBFoffset32 += trackletWordsRead;
       if (mCurrentHalfCRUHeader.EventType == ETYPEPHYSICSTRIGGER &&
@@ -565,16 +571,21 @@ bool CruRawReader::processHalfCRU(int iteration)
         }
 
         mEventRecords.incMajorVersion(mDigitHCHeader.major); // 127 is max histogram goes to 256
+        //LOGP(info, " Major version {} ", (uint)mDigitHCHeader.major);
+        //uint32_t tmparray[3];
+        //printDigitHCHeader(mDigitHCHeader, tmparray);
 
         if (mDigitHCHeader.major == 0x47) {
           // config event so ignore for now and bail out of parsing.
           //advance data pointers to the end;
-          mHBFoffset32 = hbfOffsetTmp + currentlinksize32;
-          mDigitWordsRejected += hbfOffsetTmp + currentlinksize32; // count full link as rejected
-          LOG(info) << "Configuration event  ";
+          auto configeventlength = mCurrentHalfCRULinkLengths[currentlinkindex];
+          //linkend = linkstart + configeventlength * 8; // 256 bit to 32
+          //mHBFoffset32 = hbfOffsetTmp + currentlinksize32;
+          // linkbuffer vector now holds the whole config event for the current link
         } else {
           auto digitsparsingstart = std::chrono::high_resolution_clock::now();
           int digitWordsRejected = 0;
+          //TODO remove this before comitting, its to speed up the parsing to get to the config events.
           int digitWordsRead = parseDigitLinkData(endOfCurrentLink - mHBFoffset32, halfChamberId, digitWordsRejected);
           std::chrono::duration<double, std::micro> digitsparsingtime = std::chrono::high_resolution_clock::now() - digitsparsingstart;
           if (digitWordsRead == -1) {
@@ -584,7 +595,7 @@ bool CruRawReader::processHalfCRU(int iteration)
           }
           mHBFoffset32 += digitWordsRead;
           if (endOfCurrentLink - mHBFoffset32 >= 8) {
-            // check if some data is lost (probably due to bug in CRU user logic)
+            // check if some data is lost (probably due to bug in CRU user logic, or does the)
             // we should have max 7 padding words to align the link to 256 bits
             /*
             // due to the current CRU bug this is almost always the case
@@ -1041,14 +1052,14 @@ Tracklet64 CruRawReader::assembleTracklet64(int format, TrackletMCMHeader& mcmHe
 void CruRawReader::dumpInputPayload() const
 {
   // we print 8 32-bit words per line
-  LOG(info) << "Dumping full input payload ----->";
+  LOG(error) << "Dumping full input payload ----->";
   for (int iWord = 0; iWord < (mDataBufferSize / 4); iWord += 8) {
     LOGF(info, "Word %4i/%4i: 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x",
          iWord, mDataBufferSize / 4,
          *((uint32_t*)mDataBufferPtr + iWord), *((uint32_t*)mDataBufferPtr + iWord + 1), *((uint32_t*)mDataBufferPtr + iWord + 2), *((uint32_t*)mDataBufferPtr + iWord + 3),
          *((uint32_t*)mDataBufferPtr + iWord + 4), *((uint32_t*)mDataBufferPtr + iWord + 5), *((uint32_t*)mDataBufferPtr + iWord + 6), *((uint32_t*)mDataBufferPtr + iWord + 7));
   }
-  LOG(info) << "<------ Done dumping full input payload";
+  LOG(error) << "<------ Done dumping full input payload";
 }
 
 void CruRawReader::run()
@@ -1060,6 +1071,7 @@ void CruRawReader::run()
   if (mOptions[TRDVerboseBit]) {
     dumpInputPayload();
   }
+  mTimeFrameHasConfigEvent = false;
 
   mCurrRdhPtr = mDataBufferPtr; // set the pointer to the current RDH to the beginning of the payload
   while ((mCurrRdhPtr - mDataBufferPtr) < mDataBufferSize) {

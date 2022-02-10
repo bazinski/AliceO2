@@ -72,6 +72,9 @@ void EventRecordContainer::sendData(o2::framework::ProcessingContext& pc, bool g
     accumulateStats();
     pc.outputs().snapshot(o2::framework::Output{o2::header::gDataOriginTRD, "RAWSTATS", 0, o2::framework::Lifetime::Timeframe}, mTFStats);
   }
+  /*if(mTrapConfig!=nullptr){
+    pc.outputs().snapshot(o2::framework::Output{o2::header::gDataOriginTRD, "TRDCONFIG", 0, o2::framework::Lifetime::Timeframe}, mTrapConfig);
+  }*/
 
   std::chrono::duration<double, std::micro> dataReadTime = std::chrono::high_resolution_clock::now() - dataReadStart;
   LOG(debug) << "Preparing for sending and sending data took  " << std::chrono::duration_cast<std::chrono::milliseconds>(dataReadTime).count() << "ms";
@@ -125,4 +128,11 @@ void EventRecordContainer::reset()
   mEventRecords.clear();
   mTFStats.clear();
 }
+
+void EventRecordContainer::addConfigEvent(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>& data, uint32_t start, uint32_t end, int hcid, uint32_t configeventlength)
+{
+  // copy the config event into the outgoing message.
+  //
+}
+
 } // namespace o2::trd
