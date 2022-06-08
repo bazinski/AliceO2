@@ -219,9 +219,9 @@ uint32_t getChargeFromRawHeaders(const o2::trd::TrackletHCHeader& hcheader, cons
       }
       lowPID = data[trackletindex].pid;
       //lowPID is 6 bits Q0 and 6 bits of Q1
-      int pidword = (highPID << 12) + lowPID;     // the entire original 20 bit pid in the trap chips
-      int dynamicq = hcheader.format & 0x1;       // last bit of format (lsb) defines the version of tracklet charge calculation
-      uint32_t pidoffset = ((pidword >> 18) & 0x3);//<<6; // used for dynamic ranged charge windows, may or may not be used below.
+      int pidword = (highPID << 12) + lowPID;       // the entire original 20 bit pid in the trap chips
+      int dynamicq = hcheader.format & 0x1;         // last bit of format (lsb) defines the version of tracklet charge calculation
+      uint32_t pidoffset = ((pidword >> 18) & 0x3); //<<6; // used for dynamic ranged charge windows, may or may not be used below.
       //pidword is here to make this code more readible and less error prone.
       switch (pidindex) {
         case 2: //Q2
@@ -229,8 +229,8 @@ uint32_t getChargeFromRawHeaders(const o2::trd::TrackletHCHeader& hcheader, cons
             pid = (pidword >> 13) & 0x7f; // 7 bits at the top of all of pid (MSB)
           } else {
             pid = (pidword >> 12) & 0x3f; // 6 bits of Q2 and a shift
-            pid |= pidoffset<<6;
-           // LOG(info) << "Q2 pid : " << std::hex << pid << " pidoffset: "  << pidoffset;
+            pid |= pidoffset << 6;
+            // LOG(info) << "Q2 pid : " << std::hex << pid << " pidoffset: "  << pidoffset;
           }
           break;
         case 1: //Q1
@@ -238,7 +238,7 @@ uint32_t getChargeFromRawHeaders(const o2::trd::TrackletHCHeader& hcheader, cons
             pid = (pidword >> 6) & 0x7f; // 7 bits Q1 above the 6 bits of Q0
           } else {
             pid = (pidword >> 6) & 0x3f; // 6 bits of Q1 and a shift
-            pid |= pidoffset<<6;
+            pid |= pidoffset << 6;
             //LOG(info) << "Q1 pid : " << std::hex << pid << " pidoffset: "  << pidoffset;;
           }
           break;
@@ -247,8 +247,8 @@ uint32_t getChargeFromRawHeaders(const o2::trd::TrackletHCHeader& hcheader, cons
             pid = pidword & 0x3f; // 6 least significant bits
           } else {
             pid = pidword & 0x3f; // 6 bits of Q0
-            pid |= pidoffset<<6;
-           // LOG(info) << "Q0 pid : " << std::hex << pid << " pidoffset: "  << pidoffset;
+            pid |= pidoffset << 6;
+            // LOG(info) << "Q0 pid : " << std::hex << pid << " pidoffset: "  << pidoffset;
           }
           break;
         default:
