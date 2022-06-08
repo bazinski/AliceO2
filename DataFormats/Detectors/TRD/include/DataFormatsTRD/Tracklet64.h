@@ -30,6 +30,7 @@
 #include "GPUCommonDef.h"
 #include "GPUCommonRtypes.h"
 #include "DataFormatsTRD/Constants.h"
+#include <iostream>
 
 namespace o2
 {
@@ -94,9 +95,39 @@ class Tracklet64
   GPUd() int getPosition() const { return ((mtrackletWord & posmask) >> posbs) ^ 0x80; };  // in units of 1/40 pads, 11 bit granularity
   GPUd() int getSlope() const { return ((mtrackletWord & slopemask) >> slopebs) ^ 0x80; }; // in units of 1/1000 pads/timebin, 8 bit granularity
   GPUd() int getPID() const { return ((mtrackletWord & PIDmask)); };                       // no unit, all 3 charge windows combined
-  GPUd() int getQ0() const { return ((mtrackletWord & Q0mask) >> Q0bs); };                 // no unit
-  GPUd() int getQ1() const { return ((mtrackletWord & Q1mask) >> Q1bs); };                 // no unit
-  GPUd() int getQ2() const { return ((mtrackletWord & Q2mask) >> Q2bs); };                 // no unit
+   GPUd() int getDynamicCharge (unsigned int charge) const {
+      int shift=(charge>>6) & 0x3;
+      //std::cout  << "shift before movement:0x" << std::hex << shift << std::endl;;
+      if(shift==0) shift=8;
+      else shift = shift<<1;
+      //std::cout << "shift after movement:0x" << std::hex << shift << std::endl;;
+      charge = charge << shift;
+      return charge;
+  };
+  GPUd() int getQ0() const { 
+    if((getFormat() & 0x1) == 0){
+      return ((mtrackletWord & Q0mask) >> Q0bs);
+    }
+    else {
+      return getDynamicCharge((mtrackletWord & Q0mask) >> Q0bs);
+    }
+  };                 // no unit
+  GPUd() int getQ1() const {
+    if((getFormat() & 0x1) == 0){
+      return ((mtrackletWord & Q1mask) >> Q1bs);
+    }
+    else {
+      return getDynamicCharge((mtrackletWord & Q1mask) >> Q1bs);
+    }
+    };                 // no unit
+  GPUd() int getQ2() const {
+    if((getFormat() & 0x1) == 0){
+      return ((mtrackletWord & Q2mask) >> Q2bs);
+    }
+    else {
+      return  getDynamicCharge((mtrackletWord & Q2mask) >> Q2bs);
+    }
+    };                 // no unit
 
   GPUd() void setTrackletWord(uint64_t trackletword) { mtrackletWord = trackletword; }
 
@@ -115,8 +146,8 @@ class Tracklet64
 
   GPUd() void setQ0(int charge)
   {
-    mtrackletWord &= ~Q0mask;
-    mtrackletWord |= ((charge << Q0bs) & Q0mask);
+      mtrackletWord &= ~Q0mask;
+      mtrackletWord |= ((charge << Q0bs) & Q0mask);
   }
   GPUd() void setQ1(int charge)
   {
@@ -178,7 +209,7 @@ class Tracklet64
  protected:
   uint64_t mtrackletWord; // the 64 bit word holding all the tracklet information for run3.
  private:
-  ClassDefNV(Tracklet64, 1);
+  ClassDefNV(Tracklet64, 2);
 };
 
 GPUdi() int Tracklet64::getPositionBinSigned() const
