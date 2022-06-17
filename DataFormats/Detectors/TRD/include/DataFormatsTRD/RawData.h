@@ -142,7 +142,7 @@ struct TrackletHCHeader {
       uint32_t layer : 3;
       uint32_t stack : 3;
       uint32_t supermodule : 5;
-      uint32_t zero : 1;   //always 0
+      uint32_t zero : 1;  //always 0
       uint32_t MCLK : 15; // MCM clock counter 120MHz ... for simulation -- incrementing, and uniform across an event
       uint32_t format : 4;
       //  0 baseline PID 3 time slices, 7 bit each
