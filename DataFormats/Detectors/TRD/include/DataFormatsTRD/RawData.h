@@ -133,7 +133,7 @@ struct TrackletHCHeader {
     //             |   |              |    |  |  |---  1-3  stack
     //             |   |              |    |  |------  4-6  layer
     //             |   |              |    |--------  7-11 sector
-    //             |   |              |------------- 12 always 0 
+    //             |   |              |------------- 12 always 0
     //             |   ----------------------------- 13-27 MCM Clock counter
     //             --------------------------------- 28-31 tracklet data format number
     uint32_t word;
