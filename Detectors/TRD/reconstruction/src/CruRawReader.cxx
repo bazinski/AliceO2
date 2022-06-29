@@ -135,15 +135,18 @@ bool CruRawReader::checkRDH(const o2::header::RDHAny*  rdh)
   TRDFeeID feeid;
   feeid.word=0;
   feeid.word= o2::raw::RDHUtils::getFEEID(rdh);
-  if (feeid.word==0xffff){
-    LOG(info) << "failed due to 0xffff : " << std::hex << feeid.word << " whole feeid : " << std::hex << (unsigned int)feeid.word;
+  if (((feeid.word)>>4)==0xfff){ // error condition is 0xfff? as the end point is known to the cru the "?" but the rest is configured.
+    if(mVerbose){
+      LOG(error) << "failed due to 0xffff : " << std::hex << feeid.word << " whole feeid : " << std::hex << (unsigned int)feeid.word;
+    }
     incrementErrors(TRDFEEIDIsFFFF, 0,0,0,0);
     //o2::raw::RDHUtils::printRDH(rdh);
     return false;
   }
   if(feeid.supermodule >17 ){
-    LOG(info) << "failed due to supermodule :  " << std::dec << (int)feeid.supermodule << " whole feeid : " << std::hex << (unsigned int)feeid.word;
-
+    if(mVerbose){
+      LOG(info) << "failed due to supermodule :  " << std::dec << (int)feeid.supermodule << " whole feeid : " << std::hex << (unsigned int)feeid.word;
+    }
     incrementErrors(TRDFEEIDBadSector, 0,0,0,0);
     //o2::raw::RDHUtils::printRDH(rdh);
     return false;
@@ -243,7 +246,7 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     }
     if (!checkRDH(rdh)) {
       if (mMaxErrsPrinted > 0) {
-        LOG(alarm) << "Check RDH failed feeid:" << std::hex << o2::raw::RDHUtils::getFEEID(rdh) << " cruid:"<< o2::raw::RDHUtils::getCRUID(rdh) << " packetcounter:"<< o2::raw::RDHUtils::getPacketCounter(rdh);
+        LOG(error) << "Check RDH failed feeid:" << std::hex << o2::raw::RDHUtils::getFEEID(rdh) << " cruid:"<< o2::raw::RDHUtils::getCRUID(rdh) << " packetcounter:"<< o2::raw::RDHUtils::getPacketCounter(rdh);
         checkNoErr();
       }
       return false; // dump and run.
