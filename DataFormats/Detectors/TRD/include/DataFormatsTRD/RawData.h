@@ -492,7 +492,7 @@ void printHalfCRUHeader(o2::trd::HalfCRUHeader& halfcru);
 void dumpHalfCRUHeader(o2::trd::HalfCRUHeader& halfcru);
 void clearHalfCRUHeader(o2::trd::HalfCRUHeader& halfcru);
 bool sanityCheckTrackletMCMHeader(o2::trd::TrackletMCMHeader* header);
-bool sanityCheckTrackletHCHeader(o2::trd::TrackletHCHeader& header, bool verbose=false);
+bool sanityCheckTrackletHCHeader(o2::trd::TrackletHCHeader& header, bool verbose = false);
 bool sanityCheckDigitMCMHeader(o2::trd::DigitMCMHeader* header);
 bool sanityCheckDigitMCMADCMask(o2::trd::DigitMCMADCMask& mask, int numberofbitsset);
 bool sanityCheckDigitMCMWord(o2::trd::DigitMCMData* word, int adcchannel);

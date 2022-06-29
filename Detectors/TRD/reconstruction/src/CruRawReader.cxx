@@ -129,29 +129,29 @@ void CruRawReader::dumpRDHAndNextHeader(const o2::header::RDHAny* rdh)
   LOG(info) << "######################### Finished RDH incoming buffer ##########################";
 }
 
-bool CruRawReader::checkRDH(const o2::header::RDHAny*  rdh)
+bool CruRawReader::checkRDH(const o2::header::RDHAny* rdh)
 {
-// first check for bogus FEEID
+  // first check for bogus FEEID
   TRDFeeID feeid;
-  feeid.word=0;
-  feeid.word= o2::raw::RDHUtils::getFEEID(rdh);
-  if (((feeid.word)>>4)==0xfff){ // error condition is 0xfff? as the end point is known to the cru the "?" but the rest is configured.
-    if(mVerbose){
+  feeid.word = 0;
+  feeid.word = o2::raw::RDHUtils::getFEEID(rdh);
+  if (((feeid.word) >> 4) == 0xfff) { // error condition is 0xfff? as the end point is known to the cru the "?" but the rest is configured.
+    if (mVerbose) {
       LOG(error) << "failed due to 0xffff : " << std::hex << feeid.word << " whole feeid : " << std::hex << (unsigned int)feeid.word;
     }
-    incrementErrors(TRDFEEIDIsFFFF, 0,0,0,0);
+    incrementErrors(TRDFEEIDIsFFFF, 0, 0, 0, 0);
     //o2::raw::RDHUtils::printRDH(rdh);
     return false;
   }
-  if(feeid.supermodule >17 ){
-    if(mVerbose){
+  if (feeid.supermodule > 17) {
+    if (mVerbose) {
       LOG(info) << "failed due to supermodule :  " << std::dec << (int)feeid.supermodule << " whole feeid : " << std::hex << (unsigned int)feeid.word;
     }
-    incrementErrors(TRDFEEIDBadSector, 0,0,0,0);
+    incrementErrors(TRDFEEIDBadSector, 0, 0, 0, 0);
     //o2::raw::RDHUtils::printRDH(rdh);
     return false;
   }
-return true;
+  return true;
 }
 
 bool CruRawReader::compareRDH(const o2::header::RDHAny* firstrdh, const o2::header::RDHAny* rdh)
@@ -161,8 +161,8 @@ bool CruRawReader::compareRDH(const o2::header::RDHAny* firstrdh, const o2::head
       LOG(error) << "ERDH FEEID are not identical in rdh.";
       checkNoErr();
     }
-    incrementErrors(TRDParsingBadRDHFEEID, 0,0, 0, 0);
-    if(mVerbose){
+    incrementErrors(TRDParsingBadRDHFEEID, 0, 0, 0, 0);
+    if (mVerbose) {
       LOG(error) << "ERDH FEEID are not identical in rdh.";
     }
     return false;
@@ -172,8 +172,8 @@ bool CruRawReader::compareRDH(const o2::header::RDHAny* firstrdh, const o2::head
       LOG(error) << "ERDH  EndPointID are not identical in rdh.";
       checkNoErr();
     }
-    incrementErrors(TRDParsingBadRDHEndPoint, 0,0, 0, 0);
-    if(mVerbose){
+    incrementErrors(TRDParsingBadRDHEndPoint, 0, 0, 0, 0);
+    if (mVerbose) {
       LOG(error) << "ERDH  EndPointID are not identical in rdh.";
     }
     return false;
@@ -183,8 +183,8 @@ bool CruRawReader::compareRDH(const o2::header::RDHAny* firstrdh, const o2::head
       LOG(error) << "ERDH  Orbit are not identical in rdh.";
       checkNoErr();
     }
-    incrementErrors(TRDParsingBadRDHOrbit, 0,0, 0, 0);
-    if(mVerbose){
+    incrementErrors(TRDParsingBadRDHOrbit, 0, 0, 0, 0);
+    if (mVerbose) {
       LOG(error) << "ERDH  Orbit are not identical in rdh.";
     }
     return false;
@@ -195,7 +195,7 @@ bool CruRawReader::compareRDH(const o2::header::RDHAny* firstrdh, const o2::head
       checkNoErr();
     }
     incrementErrors(TRDParsingBadRDHCRUID, 0, 0, 0, 0);
-    if(mVerbose){
+    if (mVerbose) {
       LOG(error) << "ERDH  CRUID are not identical in rdh.";
     }
     return false;
@@ -206,7 +206,7 @@ bool CruRawReader::compareRDH(const o2::header::RDHAny* firstrdh, const o2::head
       checkNoErr();
     }
     incrementErrors(TRDParsingBadRDHPacketCounter, 0, 0, 0, 0);
-    if(mVerbose){
+    if (mVerbose) {
       LOG(error) << "ERDH  PacketCounters are not sequential in rdh.";
     }
     return false;
@@ -246,13 +246,13 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     }
     if (!checkRDH(rdh)) {
       if (mMaxErrsPrinted > 0) {
-        LOG(error) << "Check RDH failed feeid:" << std::hex << o2::raw::RDHUtils::getFEEID(rdh) << " cruid:"<< o2::raw::RDHUtils::getCRUID(rdh) << " packetcounter:"<< o2::raw::RDHUtils::getPacketCounter(rdh);
+        LOG(error) << "Check RDH failed feeid:" << std::hex << o2::raw::RDHUtils::getFEEID(rdh) << " cruid:" << o2::raw::RDHUtils::getCRUID(rdh) << " packetcounter:" << o2::raw::RDHUtils::getPacketCounter(rdh);
         checkNoErr();
       }
       return false; // dump and run.
     }
     if (!compareRDH(firstRDH, rdh)) { // compare previous rdh detector info to the current rdh, they must be the same.
-      return false; // dump and run.
+      return false;                   // dump and run.
     }
     //std::memcpy((void*)&firstRDH, (void*)mDataRDH, sizeof(o2::header::RDHAny));
     firstRDH = rdh;
@@ -379,22 +379,22 @@ int CruRawReader::checkDigitHCHeader()
       //stack mismatch
       //count these
       //mEventRecord.ErrorStats[TRDParsingDigitStackMismatch]++;
-      LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__ << " command parameters: " <<std::hex << TRDParsingDigitStackMismatch << " " <<  mFEEID.supermodule << "  "<< mHalfChamberSide[0] << " " << mStack[0] << " " <<  mLayer[0];
-      LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__ << " command parameters: " <<std::hex << TRDParsingDigitStackMismatch << " " <<  mFEEID.supermodule << "  "<< mHalfChamberSide[1] << " " << mStack[1] << " " <<  mLayer[1];
+      LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__ << " command parameters: " << std::hex << TRDParsingDigitStackMismatch << " " << mFEEID.supermodule << "  " << mHalfChamberSide[0] << " " << mStack[0] << " " << mLayer[0];
+      LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__ << " command parameters: " << std::hex << TRDParsingDigitStackMismatch << " " << mFEEID.supermodule << "  " << mHalfChamberSide[1] << " " << mStack[1] << " " << mLayer[1];
       incrementErrors(TRDParsingDigitStackMismatch, mFEEID.supermodule, mHalfChamberSide[0], mStack[0], mLayer[0]);
     }
     if (currentlayer != mLayer[0] || currentlayer != mLayer[1]) {
       //layer mismatch
       //count these
       //mEventRecord.ErrorStats[TRDParsingDigitLayerMisMatch]++;
-      LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__ << " command parameters: " <<std::hex << TRDParsingDigitStackMismatch << " " <<  mFEEID.supermodule << "  "<< mHalfChamberSide[0] << " " << mStack[0] << " " <<  mLayer[0];
+      LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__ << " command parameters: " << std::hex << TRDParsingDigitStackMismatch << " " << mFEEID.supermodule << "  " << mHalfChamberSide[0] << " " << mStack[0] << " " << mLayer[0];
       incrementErrors(TRDParsingDigitLayerMismatch, mFEEID.supermodule, mHalfChamberSide[0], mStack[0], mLayer[0]);
     }
     if (currentsector != mSector[0] || currentsector != mSector[1]) {
       //sector mismatch, mDetector comes in from a construction via the feeid and ori.
       //count these
       //mEventRecord.ErrorStats[TRDParsingDigitSectorMisMatch]++;
-      LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__ << " command parameters: " <<std::hex << TRDParsingDigitStackMismatch << " " <<  mFEEID.supermodule << "  "<< mHalfChamberSide[0] << " " << mStack[0] << " " <<  mLayer[0];
+      LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__ << " command parameters: " << std::hex << TRDParsingDigitStackMismatch << " " << mFEEID.supermodule << "  " << mHalfChamberSide[0] << " " << mStack[0] << " " << mLayer[0];
       incrementErrors(TRDParsingDigitSectorMismatch, mFEEID.supermodule, mHalfChamberSide[0], mStack[0], mLayer[0]);
     }
     mSector[2] = currentsector; //from hc header treating it as authoritative
@@ -454,7 +454,7 @@ int CruRawReader::parseDigitHCHeader()
         if (headersfound.test(0)) {
           // we have a problem, we already have a Digit HC Header1, we are hereby lost, so as Monty Python said, .... run away , run away, run away.
           if (mMaxErrsPrinted > 0) {
-            LOG(alarm) << "We have a >1 Digit HC Header 1  : " << std::hex  << " raw: 0x" << headers[headerwordcount];
+            LOG(alarm) << "We have a >1 Digit HC Header 1  : " << std::hex << " raw: 0x" << headers[headerwordcount];
             checkNoErr();
           }
           incrementErrors(TRDParsingDigitHCHeader1);
@@ -465,21 +465,21 @@ int CruRawReader::parseDigitHCHeader()
           LOG(alarm) << "Digit HC Header 1 reserved : " << std::hex << mDigitHCHeader1.res << " raw: 0x" << mDigitHCHeader1.word;
           incrementErrors(TRDParsingDigitHeaderWrong1);
         }
-        //if 
-        if((mDigitHCHeader1.numtimebins > o2::trd::constants::TIMEBINS) || (mDigitHCHeader1.numtimebins < 3)) {
+        //if
+        if ((mDigitHCHeader1.numtimebins > o2::trd::constants::TIMEBINS) || (mDigitHCHeader1.numtimebins < 3)) {
           // numtimebins is unsigned so no need to check for <1
           return -1;
         }
         //TODO figure out a bunchcrossing check, what is a maximal acceptable distance?
-     //   if((mDigitHCHeader1.bunchcrossing > o2::trd::constants::TIMEBINS) || (mDigitHCHeader1.numtimebins<1)){
-     //     return -1;
-     //   }
+        //   if((mDigitHCHeader1.bunchcrossing > o2::trd::constants::TIMEBINS) || (mDigitHCHeader1.numtimebins<1)){
+        //     return -1;
+        //   }
         break;
       case 2: // header header2;
         if (headersfound.test(1)) {
           // we have a problem, we already have a Digit HC Header2, we are hereby lost, so as Monty Python said, .... run away , run away, run away.
           if (mMaxErrsPrinted > 0) {
-            LOG(alarm) << "We have a >1 Digit HC Header 2  : " << std::hex  << " raw: 0x" << headers[headerwordcount];
+            LOG(alarm) << "We have a >1 Digit HC Header 2  : " << std::hex << " raw: 0x" << headers[headerwordcount];
             checkNoErr();
           }
           incrementErrors(TRDParsingDigitHCHeader2);
@@ -496,7 +496,7 @@ int CruRawReader::parseDigitHCHeader()
         if (headersfound.test(2)) {
           // we have a problem, we already have a Digit HC Header2, we are hereby lost, so as Monty Python said, .... run away , run away, run away.
           if (mMaxErrsPrinted > 0) {
-            LOG(alarm) << "We have a >1 Digit HC Header 2  : " << std::hex  << " raw: 0x" << headers[headerwordcount];
+            LOG(alarm) << "We have a >1 Digit HC Header 2  : " << std::hex << " raw: 0x" << headers[headerwordcount];
             checkNoErr();
           }
           incrementErrors(TRDParsingDigitHCHeader3);
@@ -507,20 +507,19 @@ int CruRawReader::parseDigitHCHeader()
           // LOG(alarm) << "Digit HC Header 3 reserved : " << std::hex << mDigitHCHeader3.res << " raw: 0x" << mDigitHCHeader3.word;
           incrementErrors(TRDParsingDigitHeaderWrong3);
         }
-        if(mPreviousDigitHCHeadersvnver!=0xffffffff && mPreviousDigitHCHeadersvnrver!=0xffffffff){
-         if((mDigitHCHeader3.svnver != mPreviousDigitHCHeadersvnver) && (mDigitHCHeader3.svnrver != mPreviousDigitHCHeadersvnrver) ){
-          if (mMaxErrsPrinted > 0) {
-            LOG(alarm) << "Digit HC Header 3 svn ver : " << std::hex << mDigitHCHeader3.svnver << " svn release ver : 0x" << mDigitHCHeader3.svnrver;
-            checkNoErr();
+        if (mPreviousDigitHCHeadersvnver != 0xffffffff && mPreviousDigitHCHeadersvnrver != 0xffffffff) {
+          if ((mDigitHCHeader3.svnver != mPreviousDigitHCHeadersvnver) && (mDigitHCHeader3.svnrver != mPreviousDigitHCHeadersvnrver)) {
+            if (mMaxErrsPrinted > 0) {
+              LOG(alarm) << "Digit HC Header 3 svn ver : " << std::hex << mDigitHCHeader3.svnver << " svn release ver : 0x" << mDigitHCHeader3.svnrver;
+              checkNoErr();
+            }
+            incrementErrors(TRDParsingDigitHCHeaderSVNMismatch);
+            return -1;
+          } else {
+            // this is the first time seeing a DigitHCHeader3
+            mPreviousDigitHCHeadersvnver = mDigitHCHeader3.svnver;
+            mPreviousDigitHCHeadersvnrver = mDigitHCHeader3.svnrver;
           }
-          incrementErrors(TRDParsingDigitHCHeaderSVNMismatch);
-          return -1;
-         }
-         else {
-           // this is the first time seeing a DigitHCHeader3
-           mPreviousDigitHCHeadersvnver=mDigitHCHeader3.svnver;
-           mPreviousDigitHCHeadersvnrver=mDigitHCHeader3.svnrver;
-         }
         }
         break;
       default:
@@ -729,24 +728,24 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset, int numberOfPreviousCRU,
       if (mHeaderVerbose) {
         LOG(info) << "*** Tracklet Parser : starting at " << std::hex << linkstart << " at hbfoffset: " << std::dec << mHBFoffset32 << " linkhbf start pos:" << hbfoffsetatstartoflink;
       }
-      if(std::distance(linkend,linkstart)> mCurrentHalfCRULinkLengths[currentlinkindex]){
+      if (std::distance(linkend, linkstart) > mCurrentHalfCRULinkLengths[currentlinkindex]) {
         if (mMaxErrsPrinted > 0) {
           LOG(alarm) << "linkend - linkstart for  LINK # " << currentlinkindex << " an FEEID:" << std::hex << mFEEID.word << " det:" << std::dec << mDetector[1] << " is > the lenght stored in the cruhalfchamber header : " << mCurrentHalfCRULinkLengths[currentlinkindex];
           checkNoErr();
         }
-        incrementErrors(TRDParsingBadLinkstartend, mFEEID.supermodule,mFEEID.side, mStack[0], mLayer[0]);
+        incrementErrors(TRDParsingBadLinkstartend, mFEEID.supermodule, mFEEID.side, mStack[0], mLayer[0]);
         // in the immortal words of ... run away ... run away ... run away
         return -2; // dump this buffer.
       }
       // for now we are using 0 i.e. from rdh FIXME figure out which is authoritative between rdh and ori tracklethcheader if we have it enabled.
       mTrackletWordsRead = mTrackletsParser.Parse(&mHBFPayload, linkstart, linkend, mFEEID, mHalfChamberSide[0], mDetector[0], mStack[0], mLayer[0], mCurrentEvent, &mEventRecords, mOptions, cleardigits, mTrackletHCHeaderState); // this will read up to the tracklet end marker.
-      if(mTrackletWordsRead==-1){
+      if (mTrackletWordsRead == -1) {
         //something went wrong bailout of here.
         if (mMaxErrsPrinted > 0) {
           LOG(alarm) << "TrackletParser returned -1 for  LINK # " << currentlinkindex << " an FEEID:" << std::hex << mFEEID.word << " det:" << std::dec << mDetector[1] << " is > the lenght stored in the cruhalfchamber header : " << mCurrentHalfCRULinkLengths[currentlinkindex];
           checkNoErr();
         }
-        incrementErrors(TRDParsingTrackletsReturnedMinusOne, mFEEID.supermodule,mFEEID.side, mStack[0], mLayer[0]);
+        incrementErrors(TRDParsingTrackletsReturnedMinusOne, mFEEID.supermodule, mFEEID.side, mStack[0], mLayer[0]);
         return -2;
       }
       mTrackletWordsRejected = mTrackletsParser.getDataWordsDumped();
@@ -841,18 +840,18 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset, int numberOfPreviousCRU,
               } else {
                 LOG(info) << "FEEID: " << mFEEID.word << " LINK #" << oriindex << " good datacount:" << mDigitsParser.getDataWordsParsed() << "::" << mDigitsParser.getDumpedDataCount();
               }
-              LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__ << " command parameters: " <<TRDParsingDigitStackMismatch << " " <<  mFEEID.supermodule << "  "<< mHalfChamberSide[0] << " " << mStack[0] << " " <<  mLayer[0];
+              LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__ << " command parameters: " << TRDParsingDigitStackMismatch << " " << mFEEID.supermodule << "  " << mHalfChamberSide[0] << " " << mStack[0] << " " << mLayer[0];
               incrementErrors(TRDParsingDigitStackMismatch, mFEEID.supermodule, mHalfChamberSide[0], mStack[0], mLayer[0]);
-              LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__ ;
+              LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__;
             }
             if (mDigitWordsRead + mDigitWordsRejected != std::distance(linkstart, linkend)) {
               //we have the data corruption problem of a pile of stuff at the end of a link, jump over it.
               if (mFixDigitEndCorruption) {
                 mDigitWordsRead = std::distance(linkstart, linkend);
               } else {
-              LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__ ;
+                LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__;
                 incrementErrors(TRDParsingDigitDataStillOnLink, mFEEID.supermodule, mHalfChamberSide[0], mStack[0], mLayer[0]);
-              LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__ ;
+                LOG(info) << __FILE__ << " " << __func__ << " " << __LINE__;
               }
             }
             mTotalDigitsFound += mDigitsParser.getDigitsFound();

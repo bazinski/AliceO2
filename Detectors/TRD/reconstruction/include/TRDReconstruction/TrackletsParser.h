@@ -67,24 +67,24 @@ class TrackletsParser
 
   void incParsingError(int error)
   {
-    int sector=mFEEID.supermodule;
-    int stack=mStack;
-    int layer=mLayer;
-    int side=mHalfChamberSide;
-    if(side >1 || side <0 ) {
-      side=0;
+    int sector = mFEEID.supermodule;
+    int stack = mStack;
+    int layer = mLayer;
+    int side = mHalfChamberSide;
+    if (side > 1 || side < 0) {
+      side = 0;
     }
-    if (mFEEID.supermodule>17 || mFEEID.supermodule < 0) {
+    if (mFEEID.supermodule > 17 || mFEEID.supermodule < 0) {
       sector = 0;
     }
-    if (mStack > 4 || mStack<0) {
+    if (mStack > 4 || mStack < 0) {
       stack = 0;
     }
-    if (layer > 5 || mLayer<0) {
+    if (layer > 5 || mLayer < 0) {
       layer = 0;
     }
     // error is too big ?
-    if (mOptions[TRDGenerateStats] && error<=TRDLastParsingError){
+    if (mOptions[TRDGenerateStats] && error <= TRDLastParsingError) {
       mEventRecords->incParsingError(error, sector, side, stack * constants::NLAYER + layer);
     }
   }
@@ -97,10 +97,10 @@ class TrackletsParser
   TrackletMCMHeader* mTrackletMCMHeader;
   std::array<TrackletMCMData, 3> mTrackletMCMData;
 
-  int mState{0};               // state that the parser is currently in.
+  int mState{0};            // state that the parser is currently in.
   int mWordsRead{0};        // number of words read from buffer
   uint64_t mWordsDumped{0}; // number of words ignored from buffer
-  int mTrackletsFound{0};      // tracklets found in the data block, mostly used for debugging.
+  int mTrackletsFound{0};   // tracklets found in the data block, mostly used for debugging.
   int mPaddingWordsCounter{0}; // count of padding words encoutnered
   Tracklet64 mCurrentTrack; // the current track we are looking at, used to accumulate the possibly 3 tracks from the parsing 4 incoming data words
   bool mVerbose{false};     // user verbose output, put debug statement in output from commandline.

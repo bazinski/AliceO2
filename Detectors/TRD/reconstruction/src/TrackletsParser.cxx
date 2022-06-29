@@ -65,14 +65,14 @@ int TrackletsParser::Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX
   mIgnoreTrackletHCHeader = options[TRDIgnoreTrackletHCHeaderBit];
   mEventRecord = eventrecord;
   mEventRecords = eventrecords;
-  if(std::distance(start,end) > o2::trd::constants::MAXDATAPERLINK32){ // full event is all digits and 3 tracklets per mcm, 
+  if (std::distance(start, end) > o2::trd::constants::MAXDATAPERLINK32) { // full event is all digits and 3 tracklets per mcm,
     //sanity check that the length of data to scan is less the possible maximum for a link
     return -1;
   }
-  if(eventrecord == nullptr){
+  if (eventrecord == nullptr) {
     return -1;
   }
-  if(eventrecords == nullptr){
+  if (eventrecords == nullptr) {
     return -1;
   }
   return Parse();
@@ -165,7 +165,7 @@ int TrackletsParser::Parse()
   int trackletloopcount = 0;
   int headertrackletcount = 0;
   bool ignoreDataTillTrackletEndMarker = false;             // used for when we need to dump the rest of the tracklet data.
-  if(std::distance(mStartParse,mEndParse) > o2::trd::constants::MAXDATAPERLINK32){ // full event is all digits and 3 tracklets per mcm, 
+  if (std::distance(mStartParse, mEndParse) > o2::trd::constants::MAXDATAPERLINK32) { // full event is all digits and 3 tracklets per mcm,
     //sanity check that the length of data to scan is less the possible maximum for a link
     return -1;
   }
@@ -237,7 +237,7 @@ int TrackletsParser::Parse()
         //        LOG(info) << "TrackletHCHeader : " << std::hex << mTrackletHCHeader.word;
         //mTrackletHCHeader = (TrackletHCHeader*)&word;
         //sanity check of trackletheader ??
-        if (!sanityCheckTrackletHCHeader(mTrackletHCHeader,true)) {
+        if (!sanityCheckTrackletHCHeader(mTrackletHCHeader, true)) {
           incParsingError(TRDParsingTrackletHCHeaderSanityCheckFailure);
           LOG(info) << " SANITY CHECK FAILURE on TracklHCHeader 0x" << std::hex << mTrackletHCHeader.word;
         }

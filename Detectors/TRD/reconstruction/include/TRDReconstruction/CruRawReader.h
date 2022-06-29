@@ -75,8 +75,8 @@ class CruRawReader
     mEnableTimeInfo = options[TRDEnableTimeInfoBit];
     mEnableStats = options[TRDEnableStatsBit];
     mOptions = options;
-    mPreviousDigitHCHeadersvnver=0xffffffff;
-    mPreviousDigitHCHeadersvnrver=0xffffffff;
+    mPreviousDigitHCHeadersvnver = 0xffffffff;
+    mPreviousDigitHCHeadersvnrver = 0xffffffff;
   }
 
   void setMaxErrWarnPrinted(int nerr, int nwar)
@@ -150,29 +150,29 @@ class CruRawReader
   int checkDigitHCHeader();
   int checkTrackletHCHeader();
   bool compareRDH(const o2::header::RDHAny* firstrdh, const o2::header::RDHAny* rdh);
-  bool checkRDH(const o2::header::RDHAny*  rdh);
+  bool checkRDH(const o2::header::RDHAny* rdh);
   bool skipRDH();
   void updateLinkErrorGraphs(int currentlinkindex, int supermodule_half, int stack_layer);
-  void incrementErrors(int hist, int sector=-1, int side=0, int stack=0, int layer=0)
+  void incrementErrors(int hist, int sector = -1, int side = 0, int stack = 0, int layer = 0)
   {
     //  LOG(info) << "increment ed parsing error with " << hist << " "<< sectorside/2 <<  " "<< sectorside%2 << " " <<stack*constants::NLAYER+layer << " stack:" << stack << " layer" << layer << " sectorside:" << sectorside;
-    if (sector > 17 ) {
-      LOG(info) << "Parsing error: " << hist << " sector: "<< sector << " side:" << side << " stack:" << stack << " layer:" << layer;
+    if (sector > 17) {
+      LOG(info) << "Parsing error: " << hist << " sector: " << sector << " side:" << side << " stack:" << stack << " layer:" << layer;
       sector = 0;
     }
     if (stack > 4) {
-      LOG(info) << "Parsing error: " << hist << " sector:" << sector<< " side:" << side << " stack:" << stack << " layer:" << layer;
+      LOG(info) << "Parsing error: " << hist << " sector:" << sector << " side:" << side << " stack:" << stack << " layer:" << layer;
       stack = 0;
     }
     if (layer > 5) {
-      LOG(info) << "Parsing error: " << hist << " sector:" << sector << " side:"<< side << " stack:" << stack << " layer:" << layer;
+      LOG(info) << "Parsing error: " << hist << " sector:" << sector << " side:" << side << " stack:" << stack << " layer:" << layer;
       layer = 0;
     }
-    if(sector<-1){
+    if (sector < -1) {
       LOG(info) << "Parsing error: " << hist << " sector:" << sector << " side:" << side << " stack:" << stack << " layer:" << layer;
-      sector=0;
+      sector = 0;
     }
-    mEventRecords.incParsingError(hist, sector, side , stack * constants::NLAYER + layer);
+    mEventRecords.incParsingError(hist, sector, side, stack * constants::NLAYER + layer);
     if (mDataVerbose) {
       LOG(info) << "Parsing error: " << hist << " sector:" << sector << " side:" << side << " stack:" << stack << " layer:" << layer;
     }
@@ -236,7 +236,7 @@ class CruRawReader
   DigitHCHeader1 mDigitHCHeader1;      // this and the next 2 are option are and variable in order, hence
   DigitHCHeader2 mDigitHCHeader2;      // the individual seperation instead of an array.
   DigitHCHeader3 mDigitHCHeader3;
-  uint32_t mPreviousDigitHCHeadersvnver;   // svn ver in the digithalfchamber header, used for validity checks
+  uint32_t mPreviousDigitHCHeadersvnver;  // svn ver in the digithalfchamber header, used for validity checks
   uint32_t mPreviousDigitHCHeadersvnrver; // svn release ver also used for validity checks
   TrackletHCHeader mTrackletHCHeader;  // Tracklet HalfChamber header we are currently on.
   uint16_t mCurrentLink;               // current link within the halfcru we are parsing 0-14

@@ -136,9 +136,9 @@ class TRDDataCountersPerTimeFrame
   std::array<uint16_t, o2::trd::constants::NSECTOR * 60> mLinkWordsRejected{};                         // units of 32 bits the data dumped due to some or other error
                                                                                                        //  std::array<uint16_t, o2::trd::constants::MAXMCMCOUNT> mLinkMCMsWithData{};                            // and its corresponding volume of data.
   std::array<uint16_t, TRDLastParsingError> mParsingErrors{};                                          // errors in parsing, indexed by enum above of ParsingErrors
-  std::array<uint32_t, o2::trd::constants::NSECTOR * 60 * TRDLastParsingError+TRDLastParsingError> mParsingErrorsByLink{}; // errors in parsing, indexed by enum above of ParsingErrors
-                                                                                                       //  std::array<uint16_t, constants::MAXMCMCOUNT> mMCMDigitsFound{}; can be reprocessed in qc rather, save work and space,
-                                                                                                       //  std::array<uint16_t, constants::MAXMCMCOUNT> mMCMTrackletsFound{}; sim as above
+  std::array<uint32_t, o2::trd::constants::NSECTOR * 60 * TRDLastParsingError + TRDLastParsingError> mParsingErrorsByLink{}; // errors in parsing, indexed by enum above of ParsingErrors
+                                                                                                                             //  std::array<uint16_t, constants::MAXMCMCOUNT> mMCMDigitsFound{}; can be reprocessed in qc rather, save work and space,
+                                                                                                                             //  std::array<uint16_t, constants::MAXMCMCOUNT> mMCMTrackletsFound{}; sim as above
   uint16_t mDigitsPerEvent;                                                                            // average digits found per event
   uint16_t mTrackletsPerEvent;                                                                         // average tracklets found per event
                                                                                                        //  std::map<uint16_t, uint16_t> mRdhSize;               // sizes of rdhs read   i think tf sizes are plotted some where so not needed anymore i think.
