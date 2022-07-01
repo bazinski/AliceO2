@@ -461,7 +461,7 @@ int CruRawReader::parseDigitHCHeader()
           // numtimebins is unsigned so no need to check for <1
           return -1;
         }
-        if(mDigitHCHeader1.ptrigphase > 11 ){
+        if (mDigitHCHeader1.ptrigphase > 11) {
           LOG(alarm) << "Digit HC Header 1 Pretrigger phase is out of bounds : 0x" << std::hex << mDigitHCHeader1.ptrigphase << " raw: 0x" << mDigitHCHeader1.word;
           incrementErrors(TRDParsingDigitHCHeaderPreTriggerPhaseOOB);
           return -1;
