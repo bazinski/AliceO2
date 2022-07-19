@@ -52,31 +52,37 @@ class DigitsParser
                           StatePadding,
                           StateDigitEndMarker };
 
-  inline void swapByteOrder(unsigned int& word);
 
   int getDigitsFound() { return mDigitsFound; }
-  bool getVerbose() { return mVerbose; }
-  void setVerbose(bool value, bool header, bool data)
-  {
-    mVerbose = value;
-    mHeaderVerbose = header;
-    mDataVerbose = data;
-  }
-  void setByteSwap(bool byteswap) { mByteOrderFix = byteswap; }
   std::vector<Digit>& getDigits() { return mDigits; }
   void clearDigits() { mDigits.clear(); }
   void clear() { mDigits.clear(); }
   uint64_t getDumpedDataCount() { return mWordsDumped; }
   uint64_t getDataWordsParsed() { return mDataWordsParsed; }
   void OutputIncomingData();
+  void checkNoErr();
+  void checkNoWarn();
 
   void incParsingError(int error)
   {
     if (mOptions[TRDGenerateStats]) {
       mEventRecords->incParsingError(error, mFEEID.supermodule, mHalfChamberSide, mStackLayer);
     }
+    if (mOptions[TRDVerboseErrorsBit]) {
+      LOG(info) << "PEPE Parsing Error : " << o2::trd::ParsingErrorsString[error] << " sector:stack:layer:side :: " << mFEEID.supermodule << ":" << mFEEID.side << ":" << mStack << ":" << mLayer;
+    }
+    if (mOptions[TRDVerboseLinkBit]) {
+      mDumpLink = true;
+    }
   }
-  void checkNoErr();
+  bool dumpLink()
+  {
+    if (mDumpLink) {
+      mDumpLink = false;
+      return true;
+    }
+    return false;
+  }
 
  private:
   int mState;
@@ -86,10 +92,10 @@ class DigitsParser
   int mPaddingWordsCounter;
   bool mSanityCheck{true};
   bool mDumpUnknownData{false}; // if the various sanity checks fail, bail out and dump the rest of the data, keeps stats.
-  bool mByteOrderFix{false}; // simulated data is not byteswapped, real is, so deal with it accodringly.
   bool mReturnVector{true};  // whether we are returing a vector or the raw data buffer.
   // yes this is terrible design but it works,
   int mReturnVectorPos;
+  bool mDumpLink{false};
 
   std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* mData = nullptr; // compressed data return space.
   std::vector<Digit> mDigits;                                              // outgoing parsed digits
@@ -105,10 +111,6 @@ class DigitsParser
   DigitMCMData* mDigitMCMData;
   EventRecord* mEventRecord;
   EventStorage* mEventRecords;
-  bool mVerbose{false};
-  bool mHeaderVerbose{false};
-  bool mDataVerbose{false};
-  bool mvVerbose{false};
   std::bitset<16> mOptions;
   bool mIgnoreDigitHCHeader{false}; // whether to ignore the contents of the half chamber header and take the rdh/cru header as authoritative
 

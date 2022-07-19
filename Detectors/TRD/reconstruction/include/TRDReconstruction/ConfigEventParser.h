@@ -38,21 +38,11 @@ class ConfigEventParser
  public:
   ConfigEventParser() = default;
   ~ConfigEventParser() = default;
-  bool getVerbose() { return mVerbose; }
-  void setVerbose(bool value, bool header, bool data)
-  {
-    mVerbose = value;
-    mHeaderVerbose = header;
-    mDataVerbose = data;
-  }
 
  private:
   int mState;
   int mDataWordsParsed; // count of data wordsin data that have been parsed in current call to parse.
   int mBufferLocation;
-  bool mDataVerbose{false};
-  bool mHeaderVerbose{false};
-  bool mVerbose{false};
 };
 
 } // namespace o2::trd

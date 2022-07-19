@@ -134,29 +134,21 @@ void DataReaderTask::run(ProcessingContext& pc)
     tfCount = dh->tfCounter;
     const char* payloadIn = ref.payload;
     auto payloadInSize = DataRefUtils::getPayloadSize(ref);
-    if (mHeaderVerbose) {
+    if (mOptions[TRDVerboseBit]) {
       LOGP(info, "Found input [{}/{}/{:#x}] TF#{} 1st_orbit:{} Payload {} : ",
            dh->dataOrigin.str, dh->dataDescription.str, dh->subSpecification, dh->tfCounter, dh->firstTForbit, payloadInSize);
     }
-    if (!mCompressedData) { //we have raw data coming in from flp
-      if (mVerbose) {
-        LOG(info) << " parsing non compressed data in the data reader task with a payload of " << payloadInSize << " payload size";
-      }
-      total1 += payloadInSize;
-      total2 += dh->headerSize;
-      mReader.setDataBuffer(payloadIn);
-      mReader.setDataBufferSize(payloadInSize);
-      mReader.configure(mTrackletHCHeaderState, mHalfChamberWords, mHalfChamberMajor, mOptions);
-      //mReader.setStats(&mTimeFrameStats);
-      mReader.run();
-      if (mVerbose) {
-        LOG(info) << "relevant vectors to read : " << mReader.sumTrackletsFound() << " tracklets and " << mReader.sumDigitsFound() << " compressed digits";
-      }
-    } else { // we have compressed data coming in from flp.
-      mCompressedReader.setDataBuffer(payloadIn);
-      mCompressedReader.setDataBufferSize(payloadInSize);
-      mCompressedReader.configure(mOptions);
-      mCompressedReader.run();
+    total1 += payloadInSize;
+    total2 += dh->headerSize;
+    mReader.setDataBuffer(payloadIn);
+    mReader.setDataBufferSize(payloadInSize);
+    mReader.configure(mTrackletHCHeaderState, mHalfChamberWords, mHalfChamberMajor, mOptions);
+    //mReader.setStats(&mTimeFrameStats);
+    mReader.run();
+    mWordsRead += mReader.getWordsRead();
+    mWordsRejected += mReader.getWordsRejected();
+    if (mOptions[TRDVerboseBit]) {
+      LOG(info) << "relevant vectors to read : " << mReader.sumTrackletsFound() << " tracklets and " << mReader.sumDigitsFound() << " compressed digits";
     }
   }
   mWordsRead += mReader.getWordsRead();

@@ -64,9 +64,6 @@ class CruRawReader
   void resetCounters();
   void configure(int tracklethcheader, int halfchamberwords, int halfchambermajor, std::bitset<16> options)
   {
-    mVerbose = options[TRDVerboseBit];
-    mHeaderVerbose = options[TRDHeaderVerboseBit];
-    mDataVerbose = options[TRDDataVerboseBit];
     mFixDigitEndCorruption = options[TRDFixDigitCorruptionBit];
     mTrackletHCHeaderState = tracklethcheader;
     mHalfChamberWords = halfchamberwords;
@@ -92,7 +89,7 @@ class CruRawReader
   void setDataBuffer(const char* val)
   {
     mDataBuffer = val;
-    if (mVerbose) {
+    if (mOptions[TRDVerboseBit]) {
       if (val == nullptr) {
         LOG(error) << "Data buffer is being assigned to a null ptr";
       }
@@ -100,14 +97,11 @@ class CruRawReader
   };
   void setDataBufferSize(long val)
   {
-    if (mVerbose) {
+    if (mOptions[TRDVerboseBit]) {
       LOG(info) << " Setting buffer size to : " << val;
     }
     mDataBufferSize = val;
   };
-  void setVerbose(bool verbose) { mVerbose = verbose; }
-  void setDataVerbose(bool verbose) { mDataVerbose = verbose; }
-  void setHeaderVerbose(bool verbose) { mHeaderVerbose = verbose; }
   inline uint32_t getDecoderByteCounter() const { return reinterpret_cast<const char*>(mDataPointer) - mDataBuffer; };
   bool buildBlobOutput(char* outputbuffer); // should probably go into a writer object.
   // benchmarks
@@ -138,7 +132,9 @@ class CruRawReader
     mTrackletsParser.clear();
     mDigitsParser.clear();
   }
-  void OutputHalfCruRawData();
+  void OutputHalfCruRawData(int offset);
+  void OutputAllLinkRawData();
+  void OutputLinkRawData(int link);
   // void setStats(o2::trd::TRDDataCountersPerTimeFrame* trdstats){mTimeFrameStats=trdstats;}
   //void setHistos(std::array<TH2F*, 10> hist, std::array<TH2F*, constants::MAXPARSEERRORHISTOGRAMS> parsingerrors2d)
 
@@ -146,7 +142,6 @@ class CruRawReader
   bool processHBFs(int datasizealreadyread = 0, bool verbose = false);
   bool buildCRUPayLoad();
   int processHalfCRU(int cruhbfstartoffset, int numberOfPreviousCRU, unsigned int maxdatawrittentobuffer);
-  bool processCRULink();
   int parseDigitHCHeader();
   int checkDigitHCHeader();
   int checkTrackletHCHeader();
@@ -154,8 +149,33 @@ class CruRawReader
   bool checkRDH(const o2::header::RDHAny* rdh);
   bool skipRDH();
   void updateLinkErrorGraphs(int currentlinkindex, int supermodule_half, int stack_layer);
-
-  void incrementErrors(int hist, int sector = -1, int side = 0, int stack = 0, int layer = 0)
+  void errorMessage(std::stringstream& message, bool logthemessage)
+  {
+    if (mMaxErrsPrinted > 0 && logthemessage) {
+      LOG(error) << message.str();
+      checkNoWarn();
+    }
+    if (mOptions[TRDVerboseErrorsBit]) {
+      LOG(error) << message.str();
+    }
+  }
+  void warnMessage(std::stringstream& message, bool logthemessage)
+  {
+    if (mMaxWarnPrinted > 0 && logthemessage) {
+      LOG(warn) << message.str();
+      checkNoWarn();
+    }
+    if (mOptions[TRDVerboseErrorsBit]) {
+      LOG(warn) << message.str();
+    }
+  }
+  void infoMessage(std::stringstream& message, bool logthemessage)
+  {
+    if (mOptions[TRDVerboseErrorsBit]) {
+      LOG(info) << message.str();
+    }
+  }
+  void incrementErrors(int error, std::stringstream& message, int severity, bool logthemessage, int sector = -1, int side = 0, int stack = 0, int layer = 0)
   {
     if (sector > 17 || sector < -1) {
       sector = 0;
@@ -173,25 +193,30 @@ class CruRawReader
       stack = (unsigned int)mFEEID.endpoint;
       // encode the endpoint into the stack for the 2d plots. This is for those situations where you can not know stack/layer at the time of the error.
     }
-    mEventRecords.incParsingError(hist, sector, side, stack * constants::NLAYER + layer);
-    if (mVerbose) {
-      LOG(info) << "Parsing error: " << hist << " sector:" << sector << " side:" << side << " stack:" << stack << " layer:" << layer;
+    mEventRecords.incParsingError(error, sector, side, stack * constants::NLAYER + layer);
+    switch (severity) {
+      case 0: //error
+        errorMessage(message, logthemessage);
+        break;
+      case 1: //warn
+        warnMessage(message, logthemessage);
+        break;
+      case 2: //warn
+        infoMessage(message, logthemessage);
+        break;
     }
   }
   void dumpRDHAndNextHeader(const o2::header::RDHAny* rdh);
 
   inline void rewind()
   {
-    if (mVerbose) {
+    if (mOptions[TRDVerboseBit]) {
       LOG(info) << "rewinding crurawreader incoming data buffer";
     }
     mDataPointer = reinterpret_cast<const uint32_t*>(mDataBuffer);
   };
 
   int mJumpRDH = 0;
-  bool mVerbose{false};
-  bool mHeaderVerbose{false};
-  bool mDataVerbose{false};
   bool mFixDigitEndCorruption{false};
   int mTrackletHCHeaderState{0};
   int mHalfChamberWords{0};
@@ -214,6 +239,7 @@ class CruRawReader
   uint32_t mCurrentHalfCRUDataPosition256; //count of data read for this half cru.
   uint32_t mTotalHalfCRUDataLength;
   uint32_t mTotalHalfCRUDataLength256;
+  uint32_t mHalfCRUStartOffset; // the start of the current HalfCRU header
 
   uint32_t mTotalTrackletsFound{0};
   uint32_t mTotalDigitsFound{0};

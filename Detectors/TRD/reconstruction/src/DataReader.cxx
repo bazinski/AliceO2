@@ -33,13 +33,14 @@ void customize(std::vector<ConfigParamSpec>& workflowOptions)
 {
 
   std::vector<o2::framework::ConfigParamSpec> options{
-    {"trd-datareader-output-desc", VariantType::String, "TRDTLT", {"Output specs description string"}},
-    {"trd-datareader-verbose", VariantType::Bool, false, {"Enable verbose epn data reading"}},
-    {"trd-datareader-headerverbose", VariantType::Bool, false, {"Enable verbose header info"}},
-    {"trd-datareader-dataverbose", VariantType::Bool, false, {"Enable verbose data info"}},
-    {"trd-datareader-compresseddata", VariantType::Bool, false, {"The incoming data is compressed or not"}},
+    {"output-desc", VariantType::String, "TRDTLT", {"Output specs description string."}},
+    {"verbose", VariantType::Bool, false, {"Enable verbose epn data reading."}},
+    {"verbosehalfcru", VariantType::Bool, false, {"Enable verbose for a halfcru, the halfcru contents are dumped out in hex."}},
+    {"verboselink", VariantType::Bool, false, {"Enable verbose for a link, the links contents are dumped out in hex."}},
+    {"verboseword", VariantType::Bool, false, {"Enable verbose for each word seen, as its seen, labeled, identified/rejected, and unpacked."}},
+    {"verboseerrors", VariantType::Bool, false, {"Enable verbose error text, instead of simply updating the spectra."}},
     {"ignore-dist-stf", VariantType::Bool, false, {"do not subscribe to FLP/DISTSUBTIMEFRAME/0 message (no lost TF recovery)"}},
-    {"trd-datareader-fixdigitcorruptdata", VariantType::Bool, false, {"Fix the erroneous data at the end of digits"}},
+    {"fixdigitcorruptdata", VariantType::Bool, false, {"Fix the erroneous data at the end of digits"}},
     {"enable-timing", VariantType::Bool, false, {"enable the timing of tracklet, digit, timeframe, cru processing"}},
     {"enable-stats", VariantType::Bool, false, {"enable the reader stats"}},
     {"enable-root-output", VariantType::Bool, false, {"Write the data to file"}},
@@ -48,11 +49,11 @@ void customize(std::vector<ConfigParamSpec>& workflowOptions)
     {"halfchambermajor", VariantType::Int, 0, {"Fix half chamber for when it is version is 0.0 integer value of major version, ignored if version is not 0.0"}},
     {"ignore-digithcheader", VariantType::Bool, false, {"Ignore the digithalf chamber header for cross referencing, take rdh/cru as authorative."}},
     {"fixforoldtrigger", VariantType::Bool, false, {"Fix for the old data not having a 2 stage trigger stored in the cru header."}},
+    {"onlycalibrationtrigger", VariantType::Bool, false, {"Only permit calibration triggers, used for debugging traclets and their digits, maybe other uses."}},
     {"tracklethcheader", VariantType::Int, 2, {"Status of TrackletHalfChamberHeader 0 off always, 1 iff tracklet data, 2 on always"}},
     {"histogramsfile", VariantType::String, "histos.root", {"Name of the histogram file, so one can run multiple per node"}},
-    {"trd-debugm1", VariantType::Bool, false, {"various output statements specific to debugging m1 problems."}},
-    //{"generate-stats", VariantType::Bool, true, {"Generate the state message sent to qc"}},
-    {"trd-datareader-enablebyteswapdata", VariantType::Bool, false, {"byteswap the incoming data, raw data needs it and simulation does not."}},
+    {"generate-stats", VariantType::Bool, true, {"Generate the state message sent to qc"}},
+    {"enablebyteswapdata", VariantType::Bool, false, {"byteswap the incoming data, raw data needs it and simulation does not."}},
     {"configKeyValues", VariantType::String, "", {"Semicolon separated key=value strings"}}};
   std::swap(workflowOptions, options);
 }
@@ -67,16 +68,8 @@ WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
   //  auto config = cfgc.options().get<std::string>("trd-datareader-config");
   o2::conf::ConfigurableParam::updateFromString(cfgc.options().get<std::string>("configKeyValues"));
   //auto outputspec = cfgc.options().get<std::string>("trd-datareader-outputspec");
-  auto verbose = cfgc.options().get<bool>("trd-datareader-verbose");
-  auto byteswap = cfgc.options().get<bool>("trd-datareader-enablebyteswapdata");
-  auto compresseddata = cfgc.options().get<bool>("trd-datareader-compresseddata");
-  auto headerverbose = cfgc.options().get<bool>("trd-datareader-headerverbose");
-  auto dataverbose = cfgc.options().get<bool>("trd-datareader-dataverbose");
   auto askSTFDist = !cfgc.options().get<bool>("ignore-dist-stf");
-  auto fixdigitcorruption = cfgc.options().get<bool>("trd-datareader-fixdigitcorruptdata");
   auto tracklethcheader = cfgc.options().get<int>("tracklethcheader");
-  auto enabletimeinfo = cfgc.options().get<bool>("enable-timing");
-  auto enablestats = cfgc.options().get<bool>("enable-stats");
   auto halfchamberwords = cfgc.options().get<int>("halfchamberwords");
   auto halfchambermajor = cfgc.options().get<int>("halfchambermajor");
 
@@ -88,21 +81,21 @@ WorkflowSpec defineDataProcessing(ConfigContext const& cfgc)
   //outputs.emplace_back("TRD", "FLPSTAT", 0, Lifetime::Timeframe);
   //
   std::bitset<16> binaryoptions;
-  binaryoptions[o2::trd::TRDVerboseBit] = cfgc.options().get<bool>("trd-datareader-verbose");
-  binaryoptions[o2::trd::TRDHeaderVerboseBit] = cfgc.options().get<bool>("trd-datareader-headerverbose");
-  binaryoptions[o2::trd::TRDDataVerboseBit] = cfgc.options().get<bool>("trd-datareader-dataverbose");
-  binaryoptions[o2::trd::TRDCompressedDataBit] = cfgc.options().get<bool>("trd-datareader-compresseddata");
-  binaryoptions[o2::trd::TRDFixDigitCorruptionBit] = cfgc.options().get<bool>("trd-datareader-fixdigitcorruptdata");
+  binaryoptions[o2::trd::TRDVerboseBit] = cfgc.options().get<bool>("verbose");
+  binaryoptions[o2::trd::TRDVerboseLinkBit] = cfgc.options().get<bool>("verboselink");
+  binaryoptions[o2::trd::TRDVerboseHalfCruBit] = cfgc.options().get<bool>("verbosehalfcru");
+  binaryoptions[o2::trd::TRDVerboseWordBit] = cfgc.options().get<bool>("verboseword");
+  binaryoptions[o2::trd::TRDVerboseErrorsBit] = cfgc.options().get<bool>("verboseerrors");
+  binaryoptions[o2::trd::TRDFixDigitCorruptionBit] = cfgc.options().get<bool>("fixdigitcorruptdata");
   binaryoptions[o2::trd::TRDEnableTimeInfoBit] = cfgc.options().get<bool>("enable-timing");
   binaryoptions[o2::trd::TRDEnableStatsBit] = cfgc.options().get<bool>("enable-stats");
   binaryoptions[o2::trd::TRDIgnoreDigitHCHeaderBit] = cfgc.options().get<bool>("ignore-digithcheader");
   binaryoptions[o2::trd::TRDIgnoreTrackletHCHeaderBit] = cfgc.options().get<bool>("ignore-tracklethcheader");
   binaryoptions[o2::trd::TRDEnableRootOutputBit] = cfgc.options().get<bool>("enable-root-output");
-  binaryoptions[o2::trd::TRDByteSwapBit] = cfgc.options().get<bool>("trd-datareader-enablebyteswapdata");
+  binaryoptions[o2::trd::TRDByteSwapBit] = cfgc.options().get<bool>("enablebyteswapdata");
   binaryoptions[o2::trd::TRDIgnore2StageTrigger] = cfgc.options().get<bool>("fixforoldtrigger");
-  //binaryoptions[o2::trd::TRDGenerateStats] = cfgc.options().get<bool>("generate-stats");
-  binaryoptions[o2::trd::TRDGenerateStats] = true; //cfgc.options().get<bool>("generate-stats");
-  binaryoptions[o2::trd::TRDM1Debug] = cfgc.options().get<bool>("trd-debugm1");
+  binaryoptions[o2::trd::TRDGenerateStats] = cfgc.options().get<bool>("generate-stats");
+  binaryoptions[o2::trd::TRDOnlyCalibrationTriggerBit] = cfgc.options().get<bool>("onlycalibrationtrigger");
   AlgorithmSpec algoSpec;
   algoSpec = AlgorithmSpec{adaptFromTask<o2::trd::DataReaderTask>(tracklethcheader, halfchamberwords, halfchambermajor, cfgc.options().get<std::string>("histogramsfile"), binaryoptions)};
 

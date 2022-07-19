@@ -34,13 +34,6 @@
 namespace o2::trd
 {
 
-inline void DigitsParser::swapByteOrder(unsigned int& word)
-{
-  word = (word >> 24) |
-         ((word << 8) & 0x00FF0000) |
-         ((word >> 8) & 0x0000FF00) |
-         (word << 24);
-}
 int DigitsParser::Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* data, std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator start,
                         std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator end, int detector, int stack, int layer, int side, DigitHCHeader& hcheader, uint16_t timebins,
                         TRDFeeID& feeid, unsigned int linkindex, EventRecord* eventrecord, EventStorage* eventrecords, std::bitset<16> options, bool cleardigits)
@@ -55,21 +48,16 @@ int DigitsParser::Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* 
   mStackLayer = mStack * constants::NLAYER + mLayer;
   mDigitHCHeader = hcheader;
   mFEEID = feeid;
-  setVerbose(options[TRDVerboseBit], options[TRDHeaderVerboseBit], options[TRDDataVerboseBit]);
   if (cleardigits) {
     clearDigits();
   }
-  setByteSwap(options[TRDByteSwapBit]);
   mReturnVectorPos = 0;
   mEventRecord = eventrecord;
   mEventRecords = eventrecords;
   mTimeBins = timebins;
   if (mTimeBins > constants::TIMEBINS) {
     mTimeBins = constants::TIMEBINS;
-    if (mMaxErrsPrinted > 0) {
-      LOG(alarm) << "Time bins DigitHC Header is too large:" << timebins << " > " << constants::TIMEBINS;
-      checkNoErr();
-    }
+    LOG(warn) << "Time bins DigitHC Header is too large:" << timebins << " > " << constants::TIMEBINS;
   }
   return Parse();
 };
@@ -87,12 +75,12 @@ void DigitsParser::OutputIncomingData()
     if (wordcount != 0 && (wordcount % 8 == 0 || word == mEndParse)) {
       LOG(info) << outputstring.str();
       outputstring.str("");
-      outputstring << "digit 0x" << std::hex << std::setfill('0') << std::setw(6) << wordcount << " :: ";
+      outputstring << "digit 0x" << std::hex << std::setfill('0') << std::setw(6) << wordcount;
     }
     if (wordcount == 0) {
-      outputstring << " 0x" << std::hex << std::setfill('0') << std::setw(8) << HelperMethods::swapByteOrderreturn(*word);
+      outputstring << " 0x" << std::hex << std::setfill('0') << std::setw(8) << *word;
     } else {
-      outputstring << " 0x" << std::hex << std::setfill('0') << std::setw(8) << HelperMethods::swapByteOrderreturn(*word);
+      outputstring << " 0x" << std::hex << std::setfill('0') << std::setw(8) << *word;
     }
     word++;
     wordcount++;
@@ -105,7 +93,7 @@ int DigitsParser::Parse(bool verbose)
 
   //we are handed the buffer payload of an rdh and need to parse its contents.
   //producing a vector of digits.
-  mVerbose = verbose;
+  mOptions[TRDVerboseBit] = verbose;
 
   mState = StateDigitMCMHeader;
   mDataWordsParsed = 0; // count of data wordsin data that have been parsed in current call to parse.
@@ -118,9 +106,6 @@ int DigitsParser::Parse(bool verbose)
   int lastmcmread = 0;
   int lastrobread = 0;
   int lasteventcounterread = 0;
-  if (mHeaderVerbose) {
-    OutputIncomingData();
-  }
   int mcmdatacount = 0;
   int digittimebinoffset = 0;
   //mData holds a buffer containing digits parse placing the read digits where they need to be
@@ -130,16 +115,13 @@ int DigitsParser::Parse(bool verbose)
   for (auto word = mStartParse; word < mEndParse; ++word) { // loop over the entire data buffer (a complete link of digits)
     //loop over all the words
     //check for digit end marker
-    if (mByteOrderFix) {
+    if (mOptions[TRDByteSwapBit]) {
       // byte swap if needed.
-      swapByteOrder(*word);
+      HelperMethods::swapByteOrder(*word);
     }
     auto nextword = std::next(word, 1);
     if ((*word) == 0x0 && (*nextword == 0x0)) { // no need to byte swap nextword
       // end of digits marker.
-      if (mHeaderVerbose) {
-        LOG(info) << "*** DigitEndMarker :0x" << std::hex << *word << "::0x" << *nextword << " at offset " << std::distance(mStartParse, word);
-      }
       //state *should* be StateDigitMCMData check that it is
       if (mState == StateDigitMCMData || mState == StateDigitEndMarker || mState == StateDigitHCHeader || mState == StateDigitMCMHeader) {
       } else {
@@ -162,7 +144,7 @@ int DigitsParser::Parse(bool verbose)
         mcmdatacount = 0;
         mCurrentADCChannel = 0;
         mDigitMCMHeader = (DigitMCMHeader*)(word);
-        if (mHeaderVerbose) {
+        if (mOptions[TRDVerboseBit]) {
           printDigitMCMHeader(*mDigitMCMHeader);
         }
         if (!sanityCheckDigitMCMHeader(mDigitMCMHeader)) {
@@ -196,13 +178,13 @@ int DigitsParser::Parse(bool verbose)
           //zero suppressed
           //so we have an adcmask next
           std::advance(word, 1);
-          if (mByteOrderFix) {
+          if (mOptions[TRDByteSwapBit]) {
             // byte swap if needed.
-            swapByteOrder(*word);
+            HelperMethods::swapByteOrder(*word);
           }
           mDigitMCMADCMask = (DigitMCMADCMask*)(word);
           mADCMask = mDigitMCMADCMask->adcmask;
-          if (mHeaderVerbose) {
+          if (mOptions[TRDVerboseBit]) {
             LOG(info) << "**DigitADCMask is " << std::hex << mDigitMCMADCMask->adcmask << " raw form : 0x" << std::hex << mDigitMCMADCMask->word << " at offset " << std::distance(mStartParse, word);
           }
           if (word == mEndParse) {
@@ -246,7 +228,7 @@ int DigitsParser::Parse(bool verbose)
       } else {
         if (mState == StateDigitMCMHeader) { //safety check for some weird data occurances
           unsigned int lastbit = (*word) & 0xf;
-          if (mHeaderVerbose) {
+          if (mOptions[TRDVerboseBit]) {
             LOG(info) << " we bypassed the mcmheader block but the state is MCMHeader ... 0x" << std::hex << *word << " " << lastbit << " should == 0xc";
           }
           incParsingError(TRDParsingDigitMCMHeaderBypassButStateMCMHeader);
@@ -255,7 +237,7 @@ int DigitsParser::Parse(bool verbose)
           mWordsDumped++;
           // carry on parsing we might find an mcm header again
         } else if (*word == o2::trd::constants::CRUPADDING32) {
-          if (mHeaderVerbose) {
+          if (mOptions[TRDVerboseBit]) {
             LOG(info) << "***CRUPADDING32 word : 0x" << std::hex << *word << "  state is:" << mState;
           }
           //another pointer with padding.
@@ -271,7 +253,7 @@ int DigitsParser::Parse(bool verbose)
         } else { // all we are left with is digitmcmdata words.
           if (mState == StateDigitEndMarker) {
 
-            if (mHeaderVerbose) {
+            if (mOptions[TRDVerboseBit]) {
               LOG(info) << "***DigitEndMarker State : " << std::hex << *word << " at offset " << std::distance(mStartParse, word);
               //we are at the end
               // do nothing.
@@ -282,7 +264,7 @@ int DigitsParser::Parse(bool verbose)
           } else {
             //for the case of on flp build a vector of tracklets, then pack them into a data stream with a header.
             //for dpl build a vector and connect it with a triggerrecord.
-            if (mHeaderVerbose) {
+            if (mOptions[TRDVerboseBit]) {
               LOG(info) << "***DigitMCMWord : " << std::hex << *word << " channel:" << std::dec << mCurrentADCChannel << " wordcount:" << mDigitWordCount << " at offset " << std::hex << std::distance(mStartParse, word);
             }
             if (mDigitWordCount == 0 || mDigitWordCount == mTimeBins / 3) {
@@ -298,7 +280,7 @@ int DigitsParser::Parse(bool verbose)
                   LOG(warn) << "invalid bitpattern (read a zero) for this mcm 0x" << std::hex << mADCMask << " at offset " << std::distance(mStartParse, word);
                   incParsingError(TRDParsingDigitADCChannelGT22);
                   mCurrentADCChannel = 100 * bitsinmask + overchannelcount++;
-                  if (mHeaderVerbose) {
+                  if (mOptions[TRDVerboseBit]) {
                     LOG(info) << "EEE " << mDetector << ":" << mROB << ":" << mMCM << ":" << mCurrentADCChannel
                               << " supermodule:stack:layer:side : " << mDigitHCHeader.supermodule << ":" << mDigitHCHeader.stack << ":" << mDigitHCHeader.layer << ":" << mDigitHCHeader.side;
                   }
@@ -339,7 +321,7 @@ int DigitsParser::Parse(bool verbose)
                 mWordsDumped += std::distance(word, mEndParse) - 1;
                 word = mEndParse;
               }
-              if (mVerbose || mDataVerbose) {
+              if (mOptions[TRDVerboseBit] || mOptions[TRDVerboseBit]) {
                 LOG(info) << "digit word count is : " << mDigitWordCount << " digittimebinoffset = " << digittimebinoffset;
               }
               if (mDigitWordCount == mTimeBins / 3) {
@@ -348,7 +330,7 @@ int DigitsParser::Parse(bool verbose)
                 mEventRecord->getDigits().emplace_back(mDetector, mROB, mMCM, mCurrentADCChannel, mADCValues); // outgoing parsed digits
                 mEventRecord->incDigitsFound(1);
                 //mEventRecords->incMCMDigitCount(mDetector, mROB, mMCM, 1);
-                if (mDataVerbose) {
+                if (mOptions[TRDVerboseBit]) {
                   LOG(info) << "DDD " << mDetector << ":" << mROB << ":" << mMCM << ":" << mCurrentADCChannel
                             << " supermodule:stack:layer:side : " << mDigitHCHeader.supermodule << ":" << mDigitHCHeader.stack << ":" << mDigitHCHeader.layer << ":" << mDigitHCHeader.side;
                 }
@@ -373,19 +355,13 @@ int DigitsParser::Parse(bool verbose)
   if (!(mState == StateDigitMCMHeader || mState == StatePadding || mState == StateDigitEndMarker)) {
     incParsingError(TRDParsingDigitParsingExitInWrongState);
   }
-  if (std::distance(mStartParse, mEndParse) != mDataWordsParsed && mHeaderVerbose) {
-    if (mHeaderVerbose) {
+  if (std::distance(mStartParse, mEndParse) != mDataWordsParsed && mOptions[TRDVerboseBit]) {
+    if (mOptions[TRDVerboseBit]) {
       LOG(info) << " we rejected " << mWordsDumped << " word and parse " << mDataWordsParsed << " % loss rate of " << (double)mWordsDumped / (double)mDataWordsParsed * 100.0;
     }
   }
   return mDataWordsParsed;
 }
 
-void DigitsParser::checkNoErr()
-{
-  if (!mVerbose && --mMaxErrsPrinted == 0) {
-    LOG(error) << "Errors limit reached, the following ones will be suppressed";
-  }
-}
 
 } // namespace o2::trd

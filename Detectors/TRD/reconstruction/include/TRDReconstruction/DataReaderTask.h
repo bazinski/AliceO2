@@ -19,7 +19,6 @@
 #include "Framework/Task.h"
 #include "Framework/DataProcessorSpec.h"
 #include "TRDReconstruction/CruRawReader.h"
-#include "TRDReconstruction/CompressedRawReader.h"
 #include "DataFormatsTRD/Tracklet64.h"
 #include "DataFormatsTRD/TriggerRecord.h"
 #include "DataFormatsTRD/Digit.h"
@@ -38,7 +37,7 @@ namespace o2::trd
 class DataReaderTask : public Task
 {
  public:
-  DataReaderTask(int tracklethcheader, int halfchamberwords, int halfchambermajor, std::string histofilename, std::bitset<16> option) : mCompressedData(option[TRDCompressedDataBit]), mByteSwap(option[TRDByteSwapBit]), mFixDigitEndCorruption(option[TRDFixDigitCorruptionBit]), mTrackletHCHeaderState(tracklethcheader), mHalfChamberWords(halfchamberwords), mHalfChamberMajor(halfchambermajor), mHistogramsFilename(histofilename), mVerbose(option[TRDVerboseBit]), mHeaderVerbose(option[TRDHeaderVerboseBit]), mDataVerbose(option[TRDDataVerboseBit]), mEnableTimeInfo(option[TRDEnableTimeInfoBit]), mEnableStats(option[TRDEnableStatsBit]), mRootOutput(option[TRDEnableRootOutputBit]), mIgnoreTrackletHCHeader(option[TRDIgnoreTrackletHCHeaderBit]), mIgnoreDigitHCHeader(option[TRDIgnoreDigitHCHeaderBit]), mOptions(option) {}
+  DataReaderTask(int tracklethcheader, int halfchamberwords, int halfchambermajor, std::string histofilename, std::bitset<16> option) : mTrackletHCHeaderState(tracklethcheader), mHalfChamberWords(halfchamberwords), mHalfChamberMajor(halfchambermajor), mHistogramsFilename(histofilename), mOptions(option) {}
   ~DataReaderTask() override = default;
   void init(InitContext& ic) final;
   void sendData(ProcessingContext& pc, bool blankframe = false);
@@ -49,22 +48,11 @@ class DataReaderTask : public Task
 
  private:
   void updateTimeDependentParams(framework::ProcessingContext& pc);
-  CruRawReader mReader;                  // this will do the parsing, of raw data passed directly through the flp(no compression)
-  CompressedRawReader mCompressedReader; //this will handle the incoming compressed data from the flp
-                                         // in both cases we pull the data from the vectors build message and pass on.
-                                         // they will internally produce a vector of digits and a vector tracklets and associated indexing.
-                                         // TODO templatise this and 2 versions of datareadertask, instantiated with the relevant parser.
+  CruRawReader mReader; // this will do the parsing, of raw data passed directly through the flp(no compression)
+                        // we pull the data from the vectors build message and pass on.
+                        // they will internally produce a vector of digits and a vector tracklets and associated indexing.
+                        // TODO templatise this and 2 versions of datareadertask, instantiated with the relevant parser.
 
-  bool mVerbose{false};          // verbos output general debuggign and info output.
-  bool mDataVerbose{false};      // verbose output of data unpacking
-  bool mHeaderVerbose{false};    // verbose output of headers
-  bool mCompressedData{false};   // are we dealing with the compressed data from the flp (send via option)
-  bool mByteSwap{true};          // whether we are to byteswap the incoming data, mc is not byteswapped, raw data is (too be changed in cru at some point)
-  bool mEnableTimeInfo{false};   // enable the timing of timeframe,cru,digit,tracklet processing.
-  bool mEnableStats{false};      // enable the taking of stats in the rawdatastats class
-  bool mRootOutput{false};       // enable the writing of histos.root, a poor mans qc, mostly for debugging.
-  bool mIgnoreDigitHCHeader{false};    // ignore this header for the purposes of data cross checking use the rdh/cru as authoritative
-  bool mIgnoreTrackletHCHeader{false}; // ignore this header for data validity checks, this and the above are use to parse corrupted data.
   std::bitset<16> mOptions;            // stores the incoming of the above bools, useful to be able to send this on instead of the individual ones above
                                        // the above bools make the code more readable hence still here.
 
