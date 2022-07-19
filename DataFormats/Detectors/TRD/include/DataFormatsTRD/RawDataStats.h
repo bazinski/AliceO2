@@ -53,7 +53,7 @@ enum ParsingErrors { TRDParsingNoError,
                      TRDParsingDigitLayerMismatch,                      // mismatch between rdh and hcheader stack calculation/value
                      TRDParsingDigitHCHeaderMismatch,                   // the half-chamber ID from the digit HC header is not consistent with the one expected from the link ID
                      TRDParsingTrackletCRUPaddingWhileParsingTracklets, // reading a padding word while expecting tracklet data
-                     TRDParsingTrackletBit11NotSetInTrackletHCHeader,   // bit 11 not set in hc header for tracklets.
+                     TRDParsingTrackletTrackletHCHeaderButWrongState,   // read a trackletHCHedaer but not in correct state.
                      TRDParsingTrackletHCHeaderSanityCheckFailure,      // HCHeader sanity check failure, see RawData.cxx for reasons.
                      TRDParsingTrackletMCMHeaderSanityCheckFailure,     // MCMHeader sanity check failure, see RawData.cxx for reasons.
                      TRDParsingTrackletMCMHeaderButParsingMCMData,      // state is still MCMHeader but we are parsing MCMData
@@ -92,21 +92,83 @@ enum ParsingErrors { TRDParsingNoError,
                      TRDLastParsingError
 };
 
-extern std::vector<std::string> ParsingErrorsString;
+//extern std::vector<std::string> ParsingErrorsString;
+static std::vector<std::string> ParsingErrorsString{"TRDParsingNoError",
+                                                    "TRDParsingUnrecognisedVersion",
+                                                    "TRDParsingBadDigt",
+                                                    "TRDParsingBadTracklet",
+                                                    "TRDParsingDigitEndMarkerWrongState",
+                                                    "TRDParsingDigitMCMHeaderSanityCheckFailure",
+                                                    "TRDParsingDigitROBDecreasing",
+                                                    "TRDParsingDigitMCMNotIncreasing",
+                                                    "TRDParsingDigitADCMaskMismatch",
+                                                    "TRDParsingDigitADCMaskAdvanceToEnd",
+                                                    "TRDParsingDigitMCMHeaderBypassButStateMCMHeader",
+                                                    "TRDParsingDigitEndMarkerStateButReadingMCMADCData",
+                                                    "TRDParsingDigitADCChannel21",
+                                                    "TRDParsingDigitADCChannelGT22",
+                                                    "TRDParsingDigitGT10ADCs",
+                                                    "TRDParsingDigitSanityCheck",
+                                                    "TRDParsingDigitExcessTimeBins",
+                                                    "TRDParsingDigitParsingExitInWrongState",
+                                                    "TRDParsingDigitStackMisMatch",
+                                                    "TRDParsingDigitLayerMisMatch",
+                                                    "TRDParsingDigitSectorMisMatch",
+                                                    "TRDParsingTrackletCRUPaddingWhileParsingTracklets",
+                                                    "TRDParsingTrackletBit11NotSetInTrackletHCHeader",
+                                                    "TRDParsingTrackletHCHeaderSanityCheckFailure",
+                                                    "TRDParsingTrackletMCMHeaderSanityCheckFailure",
+                                                    "TRDParsingTrackletMCMHeaderButParsingMCMData",
+                                                    "TRDParsingTrackletStateMCMHeaderButParsingMCMData",
+                                                    "TRDParsingTrackletTrackletCountGTThatDeclaredInMCMHeader",
+                                                    "TRDParsingTrackletInvalidTrackletCount",
+                                                    "TRDParsingTrackletPadRowIncreaseError",
+                                                    "TRDParsingTrackletColIncreaseError",
+                                                    "TRDParsingTrackletNoTrackletEndMarker",
+                                                    "TRDParsingTrackletExitingNoTrackletEndMarker",
+                                                    "TRDParsingDigitHeaderCountGT3",
+                                                    "TRDParsingDigitHeaderWrong1",
+                                                    "TRDParsingDigitHeaderWrong2",
+                                                    "TRDParsingDigitHeaderWrong3",
+                                                    "TRDParsingDigitHeaderWrong4",
+                                                    "TRDParsingDigitDataStillOnLink",
+                                                    "TRDParsingTrackletIgnoringDataTillEndMarker",
+                                                    "TRDParsingGarbageDataAtEndOfHalfCRU",
+                                                    "TRDParsingHalfCRUSumLength",
+                                                    "TRDParsingBadRDHFEEID",
+                                                    "TRDParsingBadRDHEndPoint",
+                                                    "TRDParsingBadRDHOrbit",
+                                                    "TRDParsingBadRDHCRUID",
+                                                    "TRDParsingBadRDHPacketCounter",
+                                                    "TRDParsingHalfCRUCorrupt",
+                                                    "TRDParsingDigitHCHeader1",
+                                                    "TRDParsingDigitHCHeader2",
+                                                    "TRDParsingDigitHCHeader3",
+                                                    "TRDProcessingBadPayloadOrOffset",
+                                                    "TRDParsingDigitHCHeaderSVNMismatch",
+                                                    "TRDParsingBadLinkstartend",
+                                                    "TRDParsingTrackletsReturnedMinusOne",
+                                                    "TRDFEEIDIsFFFF",
+                                                    "TRDFEEIDBadSector",
+                                                    "TRDParsingDigitHCHeaderPreTriggerPhaseOOB",
+                                                    "TRDParsingHalfCRUBadBC",
+                                                    "TRDLastParsingError"};
 
 //enumerations for the options, saves on having a long parameter list.
 enum OptionBits {
   TRDByteSwapBit,
   TRDVerboseBit,
-  TRDHeaderVerboseBit,
-  TRDDataVerboseBit,
-  TRDCompressedDataBit,
+  TRDVerboseHalfCruBit,
+  TRDVerboseLinkBit,
+  TRDVerboseWordBit,
+  TRDVerboseErrorsBit,
   TRDFixDigitCorruptionBit,
   TRDIgnoreDigitHCHeaderBit,
   TRDIgnoreTrackletHCHeaderBit,
   TRDIgnore2StageTrigger,
   TRDGenerateStats,
-};
+  TRDOnlyCalibrationTriggerBit
+}; // this is currently 16 options, the array is 16, if you add here you need to change the 16;
 
 //Data to be stored and accumulated on an event basis.
 //events are spread out with in the data coming in with a halfcruheader per event, per ... half cru.
