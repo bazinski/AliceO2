@@ -81,7 +81,7 @@ class CruRawReader
   void checkNoWarn();
   void checkNoErr();
 
-  void setBlob(bool returnblob) { mReturnBlob = returnblob; }; //set class to produce blobs and not vectors. (compress vs pass through)`
+  void setBlob(bool returnblob) { mReturnBlob = returnblob; }; // set class to produce blobs and not vectors. (compress vs pass through)`
   void setDataBuffer(const char* val)
   {
     mDataBuffer = val;
@@ -132,7 +132,7 @@ class CruRawReader
   void OutputAllLinkRawData();
   void OutputLinkRawData(int link);
   // void setStats(o2::trd::TRDDataCountersPerTimeFrame* trdstats){mTimeFrameStats=trdstats;}
-  //void setHistos(std::array<TH2F*, 10> hist, std::array<TH2F*, constants::MAXPARSEERRORHISTOGRAMS> parsingerrors2d)
+  // void setHistos(std::array<TH2F*, 10> hist, std::array<TH2F*, constants::MAXPARSEERRORHISTOGRAMS> parsingerrors2d)
 
  protected:
   bool processHBFs(int datasizealreadyread = 0, bool verbose = false);
@@ -191,13 +191,13 @@ class CruRawReader
     }
     mEventRecords.incParsingError(error, sector, side, stack * constants::NLAYER + layer);
     switch (severity) {
-      case 0: //error
+      case 0: // error
         errorMessage(message, logthemessage);
         break;
-      case 1: //warn
+      case 1: // warn
         warnMessage(message, logthemessage);
         break;
-      case 2: //warn
+      case 2: // warn
         infoMessage(message, logthemessage);
         break;
     }
@@ -219,16 +219,16 @@ class CruRawReader
   std::bitset<16> mOptions;
   const char* mDataBuffer = nullptr;
   static const uint32_t mMaxHBFBufferSize = o2::trd::constants::HBFBUFFERMAX;
-  std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX> mHBFPayload; //this holds the O2 payload held with in the HBFs to pass to parsing.
-  uint32_t mHalfCRUPayLoadRead{0};                                    // the words current read in for the currnt cru payload.
-  uint32_t mO2PayLoadRead{0};                                         // the words current read in for the currnt cru payload.
+  std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX> mHBFPayload;                      // this holds the O2 payload held with in the HBFs to pass to parsing.
+  uint32_t mHalfCRUPayLoadRead{0};                                                         // the words current read in for the currnt cru payload.
+  uint32_t mO2PayLoadRead{0};                                                              // the words current read in for the currnt cru payload.
   std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator mStartParse, mEndParse; // limits of parsing, start and end points for parsing.
   std::array<uint16_t, constants::TIMEBINS> mADCValues{};
   int mCurrentHalfCRULinkHeaderPoisition = 0;
   // no need to waste time doing the copy  std::array<uint32_t,8> mCurrentCRUWord; // data for a cru comes in words of 256 bits.
   uint32_t mCurrentLinkDataPosition256;    // count of data read for current link in units of 256 bits
   uint32_t mCurrentLinkDataPosition;       // count of data read for current link in units of 256 bits
-  uint32_t mCurrentHalfCRUDataPosition256; //count of data read for this half cru.
+  uint32_t mCurrentHalfCRUDataPosition256; // count of data read for this half cru.
   uint32_t mTotalHalfCRUDataLength;
   uint32_t mTotalHalfCRUDataLength256;
   uint32_t mHalfCRUStartOffset; // the start of the current HalfCRU header
@@ -249,18 +249,18 @@ class CruRawReader
   uint8_t mDataNextWordStep = 2;
 
   const o2::header::RDHAny* mDataRDH;
-  HalfCRUHeader mCurrentHalfCRUHeader; // are we waiting for new header or currently parsing the payload of on
+  HalfCRUHeader mCurrentHalfCRUHeader;  // are we waiting for new header or currently parsing the payload of on
   HalfCRUHeader mPreviousHalfCRUHeader; // are we waiting for new header or currently parsing the payload of on
-  DigitHCHeader mDigitHCHeader;        // Digit HalfChamber header we are currently on.
-  DigitHCHeader1 mDigitHCHeader1;      // this and the next 2 are option are and variable in order, hence
-  DigitHCHeader2 mDigitHCHeader2;      // the individual seperation instead of an array.
+  DigitHCHeader mDigitHCHeader;         // Digit HalfChamber header we are currently on.
+  DigitHCHeader1 mDigitHCHeader1;       // this and the next 2 are option are and variable in order, hence
+  DigitHCHeader2 mDigitHCHeader2;       // the individual seperation instead of an array.
   DigitHCHeader3 mDigitHCHeader3;
   uint16_t mTimeBins;
   uint32_t mPreviousDigitHCHeadersvnver;  // svn ver in the digithalfchamber header, used for validity checks
   uint32_t mPreviousDigitHCHeadersvnrver; // svn release ver also used for validity checks
-  TrackletHCHeader mTrackletHCHeader;  // Tracklet HalfChamber header we are currently on.
-  uint16_t mCurrentLink;               // current link within the halfcru we are parsing 0-14
-  uint16_t mCRUEndpoint;               // the upper or lower half of the currently parsed cru 0-14 or 15-29
+  TrackletHCHeader mTrackletHCHeader;     // Tracklet HalfChamber header we are currently on.
+  uint16_t mCurrentLink;                  // current link within the halfcru we are parsing 0-14
+  uint16_t mCRUEndpoint;                  // the upper or lower half of the currently parsed cru 0-14 or 15-29
   uint16_t mCRUID;
   uint16_t mHCID;
   TRDFeeID mFEEID; // current Fee ID working on
@@ -295,18 +295,18 @@ class CruRawReader
   uint32_t mTotalTrackletWordsRead = 0;
   uint32_t mWordsRejected = 0; // those words rejected before tracklet and digit parsing together with the digit and tracklet rejected words;
   uint32_t mWordsAccepted = 0; // those words before before tracklet and digit parsing together with the digit and tracklet rejected words;
-  //pointers to the data as we read them in, again no point in copying.
+  // pointers to the data as we read them in, again no point in copying.
   HalfCRUHeader* mhalfcruheader;
 
   bool checkerCheck();
   void checkerCheckRDH();
   int mState; // basic state machine for where we are in the parsing.
   // we parse rdh to rdh but data is cru to cru.
-  //the relevant parsers. Not elegant but we need both so pointers to base classes and sending them in with templates or some other such mechanism seems impossible, or its just late and I cant think.
-  //TODO think of a more elegant way of incorporating the parsers.
+  // the relevant parsers. Not elegant but we need both so pointers to base classes and sending them in with templates or some other such mechanism seems impossible, or its just late and I cant think.
+  // TODO think of a more elegant way of incorporating the parsers.
   TrackletsParser mTrackletsParser;
   DigitsParser mDigitsParser;
-  //used to surround the outgoing data with a coherent rdh coming from the incoming stream.
+  // used to surround the outgoing data with a coherent rdh coming from the incoming stream.
   const o2::header::RDHAny* mOpenRDH;
   const o2::header::RDHAny* mCloseRDH;
 
@@ -317,7 +317,7 @@ class CruRawReader
   EventStorage mEventRecords; // store data range indexes into the above vectors.
   EventRecord* mCurrentEvent; // the current event we are looking at, info extracted from cru half chamber header.
 
-  bool mReturnBlob{0};        // whether to return blobs or vectors;
+  bool mReturnBlob{0}; // whether to return blobs or vectors;
   o2::trd::TRDDataCountersRunning mStatCountersRunning;
 };
 
