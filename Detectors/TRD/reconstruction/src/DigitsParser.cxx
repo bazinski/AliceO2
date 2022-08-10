@@ -120,8 +120,8 @@ int DigitsParser::Parse(bool verbose)
       HelperMethods::swapByteOrder(*word);
     }
 
-    if(mOptions[TRDVerboseWordBit]){
-      LOGF(info,"parsing word:0x%08x\n",*word);
+    if (mOptions[TRDVerboseWordBit]) {
+      LOGF(info, "parsing word:0x%08x\n", *word);
     }
     auto nextword = std::next(word, 1);
     if ((*word) == 0x0 && (*nextword == 0x0)) { // no need to byte swap nextword
@@ -130,8 +130,8 @@ int DigitsParser::Parse(bool verbose)
       if (mState == StateDigitMCMData || mState == StateDigitEndMarker || mState == StateDigitHCHeader || mState == StateDigitMCMHeader) {
       } else {
         incParsingError(TRDParsingDigitEndMarkerWrongState);
-        if(mOptions[TRDVerboseWordBit]){
-          LOGF(info,"Wrong state word : 0x%08x",*word);
+        if (mOptions[TRDVerboseWordBit]) {
+          LOGF(info, "Wrong state word : 0x%08x", *word);
         }
       }
       //only thing that can remain is the padding.

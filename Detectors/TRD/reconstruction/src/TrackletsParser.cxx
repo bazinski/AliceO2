@@ -154,19 +154,18 @@ int TrackletsParser::Parse()
   int headertrackletcount = 0;
   bool ignoreDataTillTrackletEndMarker = false;
   // used for when we need to dump the rest of the tracklet data.
-  if (std::distance(mStartParse, mEndParse) > o2::trd::constants::MAXDATAPERLINK32) { 
+  if (std::distance(mStartParse, mEndParse) > o2::trd::constants::MAXDATAPERLINK32) {
     // full event is all digits and 3 tracklets per mcm, and all associated headers,
     LOG(warn) << "Attempt to parse a block of data for tracklets that is longer than a \
-                  link can poossibly be : " << std::distance(mStartParse, mEndParse) <<
-                  " should be less than : " << o2::trd::constants::MAXDATAPERLINK32 <<
-                  " dumping this data.";
+                  link can poossibly be : "
+              << std::distance(mStartParse, mEndParse) << " should be less than : " << o2::trd::constants::MAXDATAPERLINK32 << " dumping this data.";
     // sanity check that the length of data to scan is less the possible maximum for a link
     return -1;
   }
-  for (auto word = mStartParse; word < mEndParse; ++word) { 
+  for (auto word = mStartParse; word < mEndParse; ++word) {
     // loop over the entire data buffer (a complete link of tracklets and digits)
-    if(mOptions[TRDVerboseWordBit]){
-      LOGF(info,"parsing word:0x%08x\n",*word);
+    if (mOptions[TRDVerboseWordBit]) {
+      LOGF(info, "parsing word:0x%08x\n", *word);
     }
 
     if (mState == StateFinished) {
@@ -235,16 +234,16 @@ int TrackletsParser::Parse()
         }
         // we actually have a header word.
         mTrackletHCHeader.word = *word;
-        if(mOptions[TRDVerboseWordBit]){
+        if (mOptions[TRDVerboseWordBit]) {
           TrackletHCHeader a;
-          a.word= *word;
+          a.word = *word;
           printTrackletHCHeader(a);
         }
         // sanity check of trackletheader ??
         if (!sanityCheckTrackletHCHeader(mTrackletHCHeader)) {
           incParsingError(TRDParsingTrackletHCHeaderSanityCheckFailure);
           TrackletHCHeader a;
-          a.word= *word;
+          a.word = *word;
           printTrackletHCHeader(a);
           // now dump and run
         }
@@ -254,7 +253,7 @@ int TrackletsParser::Parse()
         if (isTrackletMCMHeader(*word) && mState == StateTrackletMCMHeader) { // TrackletMCMHeader has the bits on either end always 1
           // mcmheader
           mTrackletMCMHeader = (TrackletMCMHeader*)&(*word);
-          if(mOptions[TRDVerboseWordBit]){
+          if (mOptions[TRDVerboseWordBit]) {
             TrackletMCMHeader a;
             a.word = *word;
             printTrackletMCMHeader(a);
@@ -280,12 +279,12 @@ int TrackletsParser::Parse()
             // if we are here something is wrong, dump the data. The else of line 227 should imply we are in StateTrackletMCMData;
             ignoreDataTillTrackletEndMarker = true;
             incParsingError(TRDParsingTrackletStateMCMHeaderButParsingMCMData);
-            if(mOptions[TRDVerboseErrorsBit]){
-              LOGF(info,"parsing MCMDATA but state is MCMHeader and word is : Raw0x%08x",*word);
+            if (mOptions[TRDVerboseErrorsBit]) {
+              LOGF(info, "parsing MCMDATA but state is MCMHeader and word is : Raw0x%08x", *word);
               TrackletMCMData a;
-              TrackletMCMHeader b; 
-              a.word=*word;
-              b.word=*word;
+              TrackletMCMHeader b;
+              a.word = *word;
+              b.word = *word;
               printTrackletMCMData(a);
               printTrackletMCMHeader(b);
             }
@@ -314,9 +313,8 @@ int TrackletsParser::Parse()
           // take the header and this data word and build the underlying 64bit tracklet.
           int q0, q1, q2;
           if (mcmtrackletcount > 2) {
-            LOG(info) << "mcmtrackletcount is not in [0:2] count=" << mcmtrackletcount <<
-                         " headertrackletcount=" << headertrackletcount << " something very \
-                         wrong parsing the TrackletMCMData fields with data of : 0x" 
+            LOG(info) << "mcmtrackletcount is not in [0:2] count=" << mcmtrackletcount << " headertrackletcount=" << headertrackletcount << " something very \
+                         wrong parsing the TrackletMCMData fields with data of : 0x"
                       << std::hex << *word;
             incParsingError(TRDParsingTrackletInvalidTrackletCount);
             // this should have been caught above by the headertrackletcount to mcmtrackletcount
