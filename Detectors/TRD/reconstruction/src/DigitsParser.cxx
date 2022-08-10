@@ -119,6 +119,10 @@ int DigitsParser::Parse(bool verbose)
       // byte swap if needed.
       HelperMethods::swapByteOrder(*word);
     }
+
+    if(mOptions[TRDVerboseWordBit]){
+      LOGF(info,"parsing word:0x%08x\n",*word);
+    }
     auto nextword = std::next(word, 1);
     if ((*word) == 0x0 && (*nextword == 0x0)) { // no need to byte swap nextword
       // end of digits marker.
@@ -126,6 +130,9 @@ int DigitsParser::Parse(bool verbose)
       if (mState == StateDigitMCMData || mState == StateDigitEndMarker || mState == StateDigitHCHeader || mState == StateDigitMCMHeader) {
       } else {
         incParsingError(TRDParsingDigitEndMarkerWrongState);
+        if(mOptions[TRDVerboseWordBit]){
+          LOGF(info,"Wrong state word : 0x%08x",*word);
+        }
       }
       //only thing that can remain is the padding.
       //now read padding words till end.
@@ -144,13 +151,13 @@ int DigitsParser::Parse(bool verbose)
         mcmdatacount = 0;
         mCurrentADCChannel = 0;
         mDigitMCMHeader = (DigitMCMHeader*)(word);
-        if (mOptions[TRDVerboseBit]) {
+        if (mOptions[TRDVerboseWordBit]) {
           printDigitMCMHeader(*mDigitMCMHeader);
         }
         if (!sanityCheckDigitMCMHeader(mDigitMCMHeader)) {
           incParsingError(TRDParsingDigitMCMHeaderSanityCheckFailure);
+          printDigitMCMHeader(*mDigitMCMHeader);
           // we dump the remainig data pending better options.
-          // we can try a 16 bit bitshift...
           mWordsDumped = std::distance(word, mEndParse) - 1;
           word = mEndParse;
           continue;
@@ -162,7 +169,6 @@ int DigitsParser::Parse(bool verbose)
           if (mDigitMCMHeader->rob < lastrobread) {
             incParsingError(TRDParsingDigitROBDecreasing);
             // we dump the remainig data pending better options.
-            // we can try a 16 bit bitshift...
             mWordsDumped += std::distance(word, mEndParse) - 1;
             word = mEndParse;
           }

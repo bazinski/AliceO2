@@ -288,11 +288,9 @@ void printTrackletMCMData(o2::trd::TrackletMCMData& tracklet)
 }
 void printTrackletMCMHeader(o2::trd::TrackletMCMHeader& mcmhead)
 {
-  LOG(info) << " about to print mcm raw header";
   LOGF(info, "MCMRawHeader: Raw:0x%08x 1:%d padrow: 0x%02x col: 0x%01x pid2 0x%02x pid1: 0x%02x pid0: 0x%02x 1:%d",
        mcmhead.word, mcmhead.onea, mcmhead.padrow, mcmhead.col,
        mcmhead.pid2, mcmhead.pid1, mcmhead.pid0, mcmhead.oneb);
-  LOG(info) << " printed mcm raw header";
 }
 
 void printHalfCRUHeader(o2::trd::HalfCRUHeader& halfcru)
