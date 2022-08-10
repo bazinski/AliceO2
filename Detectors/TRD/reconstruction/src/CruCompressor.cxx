@@ -30,13 +30,13 @@ void customize(std::vector<ConfigParamSpec>& workflowOptions)
   auto config = ConfigParamSpec{"trd-crucompressor-config", VariantType::String, "A:TRD/RAWDATA", {"TRD raw data config"}};
   auto outputDesc = ConfigParamSpec{"trd-crucompressor-output-desc", VariantType::String, "TRDTLT", {"Output specs description string"}};
   auto verbosity = ConfigParamSpec{"trd-crucompressor-verbose", VariantType::Bool, false, {"Enable verbose compressor"}};
-  auto verboseheaders = ConfigParamSpec{"trd-crucompressor-hedaerverbose", VariantType::Bool, false, {"Enable header verbose compressor"}};
+  auto verboseheaders = ConfigParamSpec{"trd-crucompressor-headerverbose", VariantType::Bool, false, {"Enable header verbose compressor"}};
   auto verbosedata = ConfigParamSpec{"trd-crucompressor-dataverbose", VariantType::Bool, false, {"Enable data verbose compressor"}};
 
   auto digithcheader = ConfigParamSpec{"trd-crucompressor-digitheader", VariantType::Bool, true, {"using digit half chamber headers"}};
   auto tracklethcheader = ConfigParamSpec{"trd-crucompressor-tracklethcheader", VariantType::Bool, true, {"using tracklet half chamber headers"}};
   auto trackletformat = ConfigParamSpec{"trd-crucompressor-trackletformat", VariantType::Int, 0, {"0: no pid scale factor, 1: pid scale factor"}};
-  auto digitformat = ConfigParamSpec{"trd-crucompressor-digitformat", VariantType::Int, 1, {"0: zero supressed digits, 1: non zero suppressed digits "}};
+  auto digitformat = ConfigParamSpec{"trd-crucompressor-digitformat", VariantType::Int, 1, {"0: zero suppressed digits, 1: non zero suppressed digits "}};
 
   workflowOptions.push_back(config);
   workflowOptions.push_back(outputDesc);
