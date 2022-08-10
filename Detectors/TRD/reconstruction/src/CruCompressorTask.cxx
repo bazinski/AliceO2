@@ -50,18 +50,18 @@ void CruCompressorTask::init(InitContext& ic)
 
 uint64_t CruCompressorTask::buildEventOutput()
 {
-  //mReader holds the vectors of tracklets and digits.
-  // tracklets are 64 bit
-  // digits are DigitMCMHeader and DigitMCMData
+  // mReader holds the vectors of tracklets and digits.
+  //  tracklets are 64 bit
+  //  digits are DigitMCMHeader and DigitMCMData
 
   uint64_t currentpos = 0;
   uint64_t trailer = 0xeeeeeeeeeeeeeeeeLL;
-  //first we write a start rdh block
+  // first we write a start rdh block
   CompressedRawHeader* trackletheader = (CompressedRawHeader*)&mOutBuffer[0];
   trackletheader->format = 1;
   trackletheader->eventtime = 99;
   currentpos = 1;
-  //write the
+  // write the
   std::vector<o2::trd::TriggerRecord> ir;
   std::vector<o2::trd::Tracklet64> tracklets;
   std::vector<o2::trd::Digit> digits;
@@ -76,7 +76,7 @@ uint64_t CruCompressorTask::buildEventOutput()
     LOG(warn) << "TRD CruCompressor: Sum of Tracklets in Eventrecords (" << sumTracklets << "does not match those found by the Reader (" << readerNTracklets << ")";
   }
   for (auto tracklet : mReader.getTracklets(ir[0].getBCData())) {
-    //convert tracklet to 64 bit and add to blob
+    // convert tracklet to 64 bit and add to blob
     mOutBuffer[currentpos++] = tracklet.getTrackletWord();
   }
   CompressedRawTrackletDigitSeperator* tracklettrailer = (CompressedRawTrackletDigitSeperator*)&mOutBuffer[currentpos];
@@ -97,14 +97,14 @@ uint64_t CruCompressorTask::buildEventOutput()
     mcmheader.yearflag = 1;
     mcmheader.eventcount = 1;
     mcmheader.res = 0xc; // formst is reservedto be 1100 binary
-    //unpack the digit.
+    // unpack the digit.
     mcmheader.word = (*word) >> 32;
     currentpos++;
   }
   CompressedRawTrackletDigitSeperator* digittrailer = (CompressedRawTrackletDigitSeperator*)&mOutBuffer[currentpos];
   digittrailer->word = trailer;
   currentpos++;
-  //as far as I can tell this is almost always going to be blank.
+  // as far as I can tell this is almost always going to be blank.
   CompressedRawHeader* configheader = (CompressedRawHeader*)&mOutBuffer[currentpos];
   currentpos++;
   configheader->size = 2;
@@ -112,7 +112,7 @@ uint64_t CruCompressorTask::buildEventOutput()
   configheader->eventtime = 99;
   CompressedRawTrackletDigitSeperator* configtrailer = (CompressedRawTrackletDigitSeperator*)&mOutBuffer[currentpos];
   configtrailer->word = trailer;
-  //finally we write a stop rdh block
+  // finally we write a stop rdh block
 
   return currentpos;
 }
@@ -130,7 +130,7 @@ void CruCompressorTask::run(ProcessingContext& pc)
     if (!iit.isValid()) {
       continue;
     }
-    //LOG(info) << "iit.mInputs  " << iit.mInputs.
+    // LOG(info) << "iit.mInputs  " << iit.mInputs.
     /* prepare output parts */
     fair::mq::Parts parts;
 
@@ -158,7 +158,7 @@ void CruCompressorTask::run(ProcessingContext& pc)
       }
       int numberofpiecestocutinto = payloadOutSizeBytes / (32 * 1024);
       int segmentsize = 32 * 1024 - 0x40; // 0x40 is the size of the rdh header in bytes.
-      //the above will drop the decimal due to int.
+      // the above will drop the decimal due to int.
       numberofpiecestocutinto++;
       for (int datasegment = 0; datasegment < numberofpiecestocutinto; ++datasegment) {
         auto payloadMessage = device->NewMessage(payloadOutSize);
@@ -169,7 +169,7 @@ void CruCompressorTask::run(ProcessingContext& pc)
         headerOut.dataDescription = "CDATA";
         headerOut.payloadSize = payloadOutSizeBytes;
         // what to do about the packet count?
-        //headerOut.packetCounter;
+        // headerOut.packetCounter;
         o2::header::Stack headerStack{headerOut, dataProcessingHeaderOut};
         auto headerMessage = device->NewMessage(headerStack.size());
         std::memcpy(headerMessage->GetData(), headerStack.data(), headerStack.size());
