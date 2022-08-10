@@ -26,7 +26,7 @@
 #include <fstream>
 #include <bitset>
 
-//using namespace o2::framework;
+// using namespace o2::framework;
 
 namespace o2::trd
 {
@@ -51,7 +51,6 @@ class DigitsParser
                           StateDigitMCMData,
                           StatePadding,
                           StateDigitEndMarker };
-
 
   size_t getDigitsFound() { return mDigitsFound; }
   std::vector<Digit>& getDigits() { return mDigits; }
@@ -87,12 +86,12 @@ class DigitsParser
  private:
   int mState;
   int mDataWordsParsed; // count of data wordsin data that have been parsed in current call to parse.
-  size_t mDigitsFound;     // digits found in the data block, mostly used for debugging.
+  size_t mDigitsFound;  // digits found in the data block, mostly used for debugging.
   int mBufferLocation;
   int mPaddingWordsCounter;
   bool mSanityCheck{true};
   bool mDumpUnknownData{false}; // if the various sanity checks fail, bail out and dump the rest of the data, keeps stats.
-  bool mReturnVector{true};  // whether we are returing a vector or the raw data buffer.
+  bool mReturnVector{true};     // whether we are returing a vector or the raw data buffer.
   // yes this is terrible design but it works,
   int mReturnVectorPos;
   bool mDumpLink{false};
@@ -123,7 +122,7 @@ class DigitsParser
   uint16_t mLayer;
   uint16_t mSector;
   uint16_t mHalfChamberSide;
-  uint16_t mStackLayer; //store these values to prevent numerous recalculation;
+  uint16_t mStackLayer; // store these values to prevent numerous recalculation;
   uint16_t mTimeBins;   // timebins used defaults is constants::TIMEBINS
 
   uint16_t mEventCounter;
