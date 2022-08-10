@@ -123,8 +123,8 @@ class EventStorage
   EventRecord& getEventRecord(InteractionRecord& ir);
   //this could replace by keeing a running total on addition TODO
   void sumTrackletsDigitsTriggers(uint64_t& tracklets, uint64_t& digits, uint64_t& triggers);
-  int sumTracklets();
-  int sumDigits();
+  size_t sumTracklets();
+  size_t sumDigits();
   std::vector<Tracklet64>& getTracklets(InteractionRecord& ir);
   std::vector<Digit>& getDigits(InteractionRecord& ir);
   void printIR();

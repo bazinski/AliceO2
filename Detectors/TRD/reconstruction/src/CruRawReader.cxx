@@ -526,7 +526,7 @@ void CruRawReader::updateLinkErrorGraphs(int currentlinkindex, int supermodule_h
   }
 }
 
-int CruRawReader::processHalfCRU(int cruhbfstartoffset, int numberOfPreviousCRU, unsigned int maxdatawrittentobuffer)
+int CruRawReader::processHalfCRU(uint32_t cruhbfstartoffset, int numberOfPreviousCRU, unsigned int maxdatawrittentobuffer)
 {
   //It will clean this code up *alot*
   // process a halfcru
@@ -666,7 +666,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset, int numberOfPreviousCRU,
     OutputHalfCruRawData(cruhbfstartoffset);
   }
   std::array<uint32_t, 1024>::iterator linkstart, linkend;
-  int dataoffsetstart32 = sizeof(mCurrentHalfCRUHeader) / 4 + cruhbfstartoffset; // in uint32
+  uint32_t dataoffsetstart32 = sizeof(mCurrentHalfCRUHeader) / sizeof(dataoffsetstart32) + cruhbfstartoffset; // in uint32
   //CHECK 1 does rdh endpoint match cru header end point.
   if (mCRUEndpoint != mCurrentHalfCRUHeader.EndPoint) {
     if (mMaxWarnPrinted > 0) {
@@ -689,9 +689,9 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset, int numberOfPreviousCRU,
     mSector[0] = mFEEID.supermodule;
     mEndPoint[0] = mFEEID.endpoint;
     mSide[0] = mFEEID.side; // side of detector A/C
-    int hbfoffsetatstartoflink = mHBFoffset32;
+    uint32_t hbfoffsetatstartoflink = mHBFoffset32;
     //stack layer and side map to ori
-    int oriindex = currentlinkindex + constants::NLINKSPERHALFCRU * mEndPoint[0]; // endpoint denotes the pci side, upper or lower for the pair of 15 fibres.
+    uint32_t oriindex = currentlinkindex + constants::NLINKSPERHALFCRU * mEndPoint[0]; // endpoint denotes the pci side, upper or lower for the pair of 15 fibres.
     FeeParam::unpackORI(oriindex, mSide[0], mStack[1], mLayer[1], mHalfChamberSide[1]);
     //sadly not all the data is redundant, probably a good thing, so stack and layer and halfchamber side is derived from the ori.
     mLayer[0] = mLayer[1];
@@ -702,7 +702,7 @@ int CruRawReader::processHalfCRU(int cruhbfstartoffset, int numberOfPreviousCRU,
     mDetector[0] = mStack[0] * constants::NLAYER + mLayer[0] + mSector[0] * constants::NLAYER * constants::NSTACK;
     mDetector[1] = mStack[1] * constants::NLAYER + mLayer[1] + mSector[1] * constants::NLAYER * constants::NSTACK;
     int supermodule_half = mSector[0] * 2 + mHalfChamberSide[0]; // will just go with the rdh one here its only for the hack graphing purposes.
-    float stack_layer;
+    int stack_layer;
     stack_layer = mStack[0] * constants::NLAYER + mLayer[0]; // similarly this is also only for graphing so just use the rdh ones for now.
     updateLinkErrorGraphs(currentlinkindex, supermodule_half, stack_layer);
 

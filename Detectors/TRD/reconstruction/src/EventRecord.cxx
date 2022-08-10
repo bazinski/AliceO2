@@ -241,17 +241,17 @@ void EventStorage::accumulateStats()
   }
 }
 
-int EventStorage::sumTracklets()
+size_t EventStorage::sumTracklets()
 {
-  int sum = 0;
+  size_t sum = 0;
   for (auto event : mEventRecords) {
     sum += event.getTracklets().size();
   }
   return sum;
 }
-int EventStorage::sumDigits()
+size_t EventStorage::sumDigits()
 {
-  int sum = 0;
+  size_t sum = 0;
   for (auto event : mEventRecords) {
     sum += event.getDigits().size();
   }

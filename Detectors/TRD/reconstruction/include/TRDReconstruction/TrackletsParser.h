@@ -37,11 +37,11 @@ class TrackletsParser
   ~TrackletsParser() = default;
   void setData(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* data) { mData = data; }
   int Parse(); // presupposes you have set everything up already.
-  int Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* data, std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator start, std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator end, TRDFeeID feeid, int robside,
-            int detector, int stack, int layer, EventRecord* eventrecord, EventStorage* eventrecords, std::bitset<16> option, bool cleardigits = false, int usetracklethcheader = 0);
+  int Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* data, std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator start, std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator end, TRDFeeID feeid, uint32_t robside,
+            uint32_t detector, uint32_t stack, uint32_t layer, EventRecord* eventrecord, EventStorage* eventrecords, std::bitset<16> option, bool cleardigits = false, int usetracklethcheader = 0);
   int getDataWordsRead() { return mWordsRead; }
   int getDataWordsDumped() { return mWordsDumped; }
-  int getTrackletsFound() { return mTrackletsFound; }
+  size_t getTrackletsFound() { return mTrackletsFound; }
   void setIgnoreTrackletHCHeader(bool ignore) { mIgnoreTrackletHCHeader = ignore; }
   bool getIgnoreTrackletHCHeader() { return mIgnoreTrackletHCHeader; }
   enum TrackletParserState { StateTrackletHCHeader, // always the start of a half chamber.
@@ -107,7 +107,7 @@ class TrackletsParser
   int mState{0};                       // state that the parser is currently in.
   int mWordsRead{0};                   // number of words read from buffer
   uint64_t mWordsDumped{0};            // number of words ignored from buffer
-  int mTrackletsFound{0};              // tracklets found in the data block, mostly used for debugging.
+  size_t mTrackletsFound{0};              // tracklets found in the data block, mostly used for debugging.
   int mPaddingWordsCounter{0};         // count of padding words encoutnered
   Tracklet64 mCurrentTrack;            // the current track we are looking at, used to accumulate the possibly 3 tracks from the parsing 4 incoming data words
   int mTrackletHCHeaderState{0};       //what to with the tracklet half chamber header 0,1,2
@@ -125,10 +125,10 @@ class TrackletsParser
   uint16_t mCRUEndpoint{0}; // the upper or lower half of the currently parsed cru 0-14 or 15-29
   uint16_t mCRUID{0};
   uint16_t mHCID{0};
-  uint16_t mDetector{0};
-  uint16_t mHalfChamberSide{0};
-  uint16_t mStack{0};
-  uint16_t mLayer{0};
+  uint32_t mDetector{0};
+  uint32_t mHalfChamberSide{0};
+  uint32_t mStack{0};
+  uint32_t mLayer{0};
   TRDFeeID mFEEID; // current Fee ID working on
   uint16_t mMCM{0};
   uint16_t mROB{0};

@@ -53,7 +53,7 @@ class DigitsParser
                           StateDigitEndMarker };
 
 
-  int getDigitsFound() { return mDigitsFound; }
+  size_t getDigitsFound() { return mDigitsFound; }
   std::vector<Digit>& getDigits() { return mDigits; }
   void clearDigits() { mDigits.clear(); }
   void clear() { mDigits.clear(); }
@@ -87,7 +87,7 @@ class DigitsParser
  private:
   int mState;
   int mDataWordsParsed; // count of data wordsin data that have been parsed in current call to parse.
-  int mDigitsFound;     // digits found in the data block, mostly used for debugging.
+  size_t mDigitsFound;     // digits found in the data block, mostly used for debugging.
   int mBufferLocation;
   int mPaddingWordsCounter;
   bool mSanityCheck{true};

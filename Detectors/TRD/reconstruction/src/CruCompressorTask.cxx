@@ -69,7 +69,12 @@ uint64_t CruCompressorTask::buildEventOutput()
   trackletheader->bc = ir[0].getBCData().bc;
   trackletheader->orbit = ir[0].getBCData().orbit;
   trackletheader->padding = 0xeeee;
-  trackletheader->size = mReader.sumTrackletsFound() * 8; // to get to bytes. TODO compare to getTrackletsFound
+  auto sumTracklets = mReader.sumTrackletsFound();
+  auto readerNTracklets = mReader.getTrackletsFound();
+  trackletheader->size = sumTracklets * 8;
+  if (sumTracklets != readerNTracklets) {
+    LOG(warn) << "TRD CruCompressor: Sum of Tracklets in Eventrecords (" << sumTracklets << "does not match those found by the Reader (" << readerNTracklets << ")";
+  }
   for (auto tracklet : mReader.getTracklets(ir[0].getBCData())) {
     //convert tracklet to 64 bit and add to blob
     mOutBuffer[currentpos++] = tracklet.getTrackletWord();

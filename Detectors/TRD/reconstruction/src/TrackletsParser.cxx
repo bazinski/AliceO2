@@ -35,7 +35,7 @@ namespace o2::trd
 int TrackletsParser::Parse(std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>* data,
                            std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator start,
                            std::array<uint32_t, o2::trd::constants::HBFBUFFERMAX>::iterator end,
-                           TRDFeeID feeid, int halfchamberside, int detector, int stack, int layer,
+                           TRDFeeID feeid, uint32_t halfchamberside, uint32_t detector, uint32_t stack, uint32_t layer,
                            EventRecord* eventrecord, EventStorage* eventrecords, std::bitset<16> options, bool cleardigits, int usetracklethcheader)
 {
   mStartParse = start;

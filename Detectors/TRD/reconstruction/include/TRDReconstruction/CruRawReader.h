@@ -62,7 +62,7 @@ class CruRawReader
 
   void checkSummary();
   void resetCounters();
-  void configure(int tracklethcheader, int halfchamberwords, int halfchambermajor, std::bitset<16> options)
+  void configure(uint32_t tracklethcheader, uint32_t halfchamberwords, uint32_t halfchambermajor, std::bitset<16> options)
   {
     mFixDigitEndCorruption = options[TRDFixDigitCorruptionBit];
     mTrackletHCHeaderState = tracklethcheader;
@@ -114,10 +114,10 @@ class CruRawReader
   void getParsedObjects(std::vector<Tracklet64>& tracklets, std::vector<Digit>& cdigits, std::vector<TriggerRecord>& triggers);
   void getParsedObjectsandClear(std::vector<Tracklet64>& tracklets, std::vector<Digit>& digits, std::vector<TriggerRecord>& triggers);
   void buildDPLOutputs(o2::framework::ProcessingContext& outputs);
-  int getDigitsFound() { return mTotalDigitsFound; }
-  int getTrackletsFound() { return mTotalTrackletsFound; }
-  int sumTrackletsFound() { return mEventRecords.sumTracklets(); }
-  int sumDigitsFound() { return mEventRecords.sumDigits(); }
+  size_t getDigitsFound() { return mTotalDigitsFound; }
+  size_t getTrackletsFound() { return mTotalTrackletsFound; }
+  size_t sumTrackletsFound() { return mEventRecords.sumTracklets(); }
+  size_t sumDigitsFound() { return mEventRecords.sumDigits(); }
   int getWordsRead() { return mWordsAccepted + mTotalDigitWordsRead + mTotalTrackletWordsRead; }
   int getWordsRejected() { return mWordsRejected + mTotalDigitWordsRejected + mTotalTrackletWordsRejected; }
 
@@ -141,7 +141,7 @@ class CruRawReader
  protected:
   bool processHBFs(int datasizealreadyread = 0, bool verbose = false);
   bool buildCRUPayLoad();
-  int processHalfCRU(int cruhbfstartoffset, int numberOfPreviousCRU, unsigned int maxdatawrittentobuffer);
+  int processHalfCRU(uint32_t cruhbfstartoffset, int numberOfPreviousCRU, unsigned int maxdatawrittentobuffer);
   int parseDigitHCHeader();
   int checkDigitHCHeader();
   int checkTrackletHCHeader();
@@ -219,8 +219,8 @@ class CruRawReader
   int mJumpRDH = 0;
   bool mFixDigitEndCorruption{false};
   int mTrackletHCHeaderState{0};
-  int mHalfChamberWords{0};
-  int mHalfChamberMajor{0};
+  uint32_t mHalfChamberWords{0};
+  uint32_t mHalfChamberMajor{0};
   bool mRootOutput{0};
   bool mEnableTimeInfo{0};
   bool mEnableStats{0};
@@ -241,8 +241,8 @@ class CruRawReader
   uint32_t mTotalHalfCRUDataLength256;
   uint32_t mHalfCRUStartOffset; // the start of the current HalfCRU header
 
-  uint32_t mTotalTrackletsFound{0};
-  uint32_t mTotalDigitsFound{0};
+  size_t mTotalTrackletsFound{0};
+  size_t mTotalDigitsFound{0};
 
   int mMaxErrsPrinted = 20;
   int mMaxWarnPrinted = 20;
@@ -274,12 +274,12 @@ class CruRawReader
   TRDFeeID mFEEID; // current Fee ID working on
   // the store of the 3 ways we can determine this information, link,rdh,halfchamber
   std::array<int, 3> mDetector;
-  std::array<int, 3> mSector;
-  std::array<int, 3> mStack;
-  std::array<int, 3> mLayer;
-  std::array<int, 3> mSide;
+  std::array<uint32_t, 3> mSector;
+  std::array<uint32_t, 3> mStack;
+  std::array<uint32_t, 3> mLayer;
+  std::array<uint32_t, 3> mSide;
   std::array<int, 3> mEndPoint;
-  std::array<int, 3> mHalfChamberSide;
+  std::array<uint32_t, 3> mHalfChamberSide;
   int mWhichData; // index used into the above arrays once decided on which source is "correct"
   o2::InteractionRecord mIR;
   std::array<uint32_t, 15> mCurrentHalfCRULinkLengths;

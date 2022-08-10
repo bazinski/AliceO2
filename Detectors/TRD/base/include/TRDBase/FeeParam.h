@@ -67,7 +67,7 @@ class FeeParam
 
   // wiring
   static int getORI(int detector, int readoutboard);
-  static void unpackORI(int link, int side, int& stack, int& layer, int& halfchamberside);
+  static void unpackORI(uint32_t link, uint32_t side, uint32_t& stack, uint32_t& layer, uint32_t& halfchamberside);
   //  void createORILookUpTable();
 
   // tracklet simulation

@@ -388,7 +388,7 @@ void FeeParam::createORILookUpTable()
 }
 */
 
-void FeeParam::unpackORI(int link, int side, int& stack, int& layer, int& halfchamberside)
+void FeeParam::unpackORI(uint32_t link, uint32_t side, uint32_t& stack, uint32_t& layer, uint32_t& halfchamberside)
 {
   // given the link 0-29 and the side A/C 0/1 return the stack layer and halfchamber side
   if (side == 0) {
