@@ -597,6 +597,7 @@ int CruRawReader::processHalfCRU(uint32_t cruhbfstartoffset, int numberOfPreviou
       std::stringstream message;
       message << numberOfPreviousCRU << " current endpont : " << mCurrentHalfCRUHeader.EndPoint << " previous end point : " << mPreviousHalfCRUHeader.EndPoint;
       incrementErrors(TRDParsingHalfCRUCorrupt, message, 1, true);
+      mWordsRejected += mTotalHalfCRUDataLength32;
       return -2;
     }
     // event type can change wit in a
