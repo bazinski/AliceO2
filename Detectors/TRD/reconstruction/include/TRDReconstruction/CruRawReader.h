@@ -261,9 +261,9 @@ class CruRawReader
   HalfCRUHeader mPreviousHalfCRUHeader; // are we waiting for new header or currently parsing the payload of on
   DigitHCHeader mDigitHCHeader;        // Digit HalfChamber header we are currently on.
   DigitHCHeader1 mDigitHCHeader1;      // this and the next 2 are option are and variable in order, hence
-  uint16_t mTimeBins;
   DigitHCHeader2 mDigitHCHeader2;      // the individual seperation instead of an array.
   DigitHCHeader3 mDigitHCHeader3;
+  uint16_t mTimeBins;
   uint32_t mPreviousDigitHCHeadersvnver;  // svn ver in the digithalfchamber header, used for validity checks
   uint32_t mPreviousDigitHCHeadersvnrver; // svn release ver also used for validity checks
   TrackletHCHeader mTrackletHCHeader;  // Tracklet HalfChamber header we are currently on.
