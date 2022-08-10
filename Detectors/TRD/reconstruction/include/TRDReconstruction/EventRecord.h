@@ -54,22 +54,22 @@ class EventRecord
   const BCData& getBCData() const { return mBCData; }
   BCData& getBCData() { return mBCData; }
 
-  //Digit information
+  // Digit information
   std::vector<Digit>& getDigits();
   void addDigits(Digit& digit);
   void addDigits(std::vector<Digit>::iterator& start, std::vector<Digit>::iterator& end);
 
-  //tracklet information
+  // tracklet information
   std::vector<Tracklet64>& getTracklets();
   void addTracklet(Tracklet64& tracklet);
   void addTracklets(std::vector<Tracklet64>::iterator& start, std::vector<Tracklet64>::iterator& end);
   void addTracklets(std::vector<Tracklet64>& tracklets);
   void popTracklets(int popcount);
-  //void printStream(std::ostream& stream) const;
+  // void printStream(std::ostream& stream) const;
   void sortByHCID();
 
-  //statistics stuff these get passed to the per tf data at the end of the timeframe,
-  //but as we read in per link, events are seperated hence these counters
+  // statistics stuff these get passed to the per tf data at the end of the timeframe,
+  // but as we read in per link, events are seperated hence these counters
   void clearStats();
   void incTrackletTime(double timeadd) { mEventStats.mTimeTakenForTracklets += timeadd; }
 
@@ -82,7 +82,7 @@ class EventRecord
   void setDataPerLink(int link, int length)
   { /* mEventStats.mLinkLength[link] = length;*/
   }
-  //std::array<uint8_t, 1080> mLinkErrorFlag{}; //status of the error flags for this event, 8bit values from cru halfchamber header.
+  // std::array<uint8_t, 1080> mLinkErrorFlag{}; //status of the error flags for this event, 8bit values from cru halfchamber header.
   bool operator==(const EventRecord& o) const
   {
     return mBCData == o.mBCData; //&& mDigits == o.mDigits && mTracklets == o.mTracklets ;
@@ -100,18 +100,18 @@ class EventRecord
   BCData mBCData;                       /// orbit and Bunch crossing data of the physics trigger
   std::vector<Digit> mDigits{};         /// digit data, for this event
   std::vector<Tracklet64> mTracklets{}; /// tracklet data, for this event
-  //statistics stuff these get passed to the per tf data at the end of the timeframe,
-  //but as we read in per link, events are seperated hence these counters
+  // statistics stuff these get passed to the per tf data at the end of the timeframe,
+  // but as we read in per link, events are seperated hence these counters
 };
 
 class EventStorage
 {
-  //store a timeframes events for later collating sending on as a message
+  // store a timeframes events for later collating sending on as a message
  public:
   EventStorage() = default;
   ~EventStorage() = default;
-  //storage of eventrecords
-  //a vector of eventrecords and the associated funationality to go with it.
+  // storage of eventrecords
+  // a vector of eventrecords and the associated funationality to go with it.
   void clear() { mEventRecords.clear(); }
   void addDigits(InteractionRecord& ir, Digit& digit);
   void addDigits(InteractionRecord& ir, std::vector<Digit>::iterator start, std::vector<Digit>::iterator end);
@@ -121,7 +121,7 @@ class EventStorage
   void unpackData(std::vector<TriggerRecord>& triggers, std::vector<Tracklet64>& tracklets, std::vector<Digit>& digits);
   void sendData(o2::framework::ProcessingContext& pc, bool generatestats);
   EventRecord& getEventRecord(InteractionRecord& ir);
-  //this could replace by keeing a running total on addition TODO
+  // this could replace by keeing a running total on addition TODO
   void sumTrackletsDigitsTriggers(uint64_t& tracklets, uint64_t& digits, uint64_t& triggers);
   size_t sumTracklets();
   size_t sumDigits();
@@ -130,7 +130,7 @@ class EventStorage
   void printIR();
   //  void setHisto(TH1F* packagetime) { mPackagingTime = packagetime; }
 
-  //statistics to keep
+  // statistics to keep
   void incTrackletTime(double timeadd) { mTFStats.mTimeTakenForTracklets += timeadd; }
   void incDigitTime(double timeadd) { mTFStats.mTimeTakenForDigits += timeadd; }
   void incTrackletsFound(int count) { mTFStats.mTrackletsFound += count; }
@@ -161,7 +161,7 @@ class EventStorage
       mTFStats.mParsingErrors[error]++;
       if (sm >= 0) { // sm=-1 is reserved for those errors where we dont know or cant know the underlying source.
         if ((sm * 2 + side) * 30 * TRDLastParsingError + TRDLastParsingError * stacklayer + error < o2::trd::constants::NSECTOR * 60 * TRDLastParsingError) {
-          //prevent bounding errors
+          // prevent bounding errors
           mTFStats.mParsingErrorsByLink[(sm * 2 + side) * 30 * TRDLastParsingError + TRDLastParsingError * stacklayer + error]++;
         }
       }
@@ -172,7 +172,7 @@ class EventStorage
 
  private:
   std::vector<EventRecord> mEventRecords;
-  //these 2 are hacks to be able to send back a blank vector if interaction record is not found.
+  // these 2 are hacks to be able to send back a blank vector if interaction record is not found.
   std::vector<Tracklet64> mDummyTracklets;
   std::vector<Digit> mDummyDigits;
 

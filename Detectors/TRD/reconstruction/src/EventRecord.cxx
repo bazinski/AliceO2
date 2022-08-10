@@ -44,12 +44,12 @@
 namespace o2::trd
 {
 
-//Digit information
+// Digit information
 std::vector<Digit>& EventRecord::getDigits() { return mDigits; }
 void EventRecord::addDigits(Digit& digit) { mDigits.push_back(digit); }
 void EventRecord::addDigits(std::vector<Digit>::iterator& start, std::vector<Digit>::iterator& end) { mDigits.insert(std::end(mDigits), start, end); }
 
-//tracklet information
+// tracklet information
 std::vector<Tracklet64>& EventRecord::getTracklets() { return mTracklets; }
 void EventRecord::addTracklet(Tracklet64& tracklet) { mTracklets.push_back(tracklet); }
 void EventRecord::addTracklets(std::vector<Tracklet64>::iterator& start, std::vector<Tracklet64>::iterator& end)
@@ -84,7 +84,7 @@ void EventStorage::addDigits(InteractionRecord& ir, Digit& digit)
   bool added = false;
   for (int count = 0; count < mEventRecords.size(); ++count) {
     if (ir == mEventRecords[count].getBCData()) {
-      //TODO replace this with a hash/map not a vector
+      // TODO replace this with a hash/map not a vector
       mEventRecords[count].addDigits(digit);
       added = true;
     }
@@ -100,7 +100,7 @@ void EventStorage::addDigits(InteractionRecord& ir, std::vector<Digit>::iterator
   bool added = false;
   for (int count = 0; count < mEventRecords.size(); ++count) {
     if (ir == mEventRecords[count].getBCData()) {
-      //TODO replace this with a hash/map not a vector
+      // TODO replace this with a hash/map not a vector
       mEventRecords[count].addDigits(start, end);
       added = true;
     }
@@ -116,7 +116,7 @@ void EventStorage::addTracklet(InteractionRecord& ir, Tracklet64& tracklet)
   bool added = false;
   for (int count = 0; count < mEventRecords.size(); ++count) {
     if (ir == mEventRecords[count].getBCData()) {
-      //TODO replace this with a hash/map not a vector
+      // TODO replace this with a hash/map not a vector
       mEventRecords[count].addTracklet(tracklet);
       added = true;
     }
@@ -134,8 +134,8 @@ void EventStorage::addTracklets(InteractionRecord& ir, std::vector<Tracklet64>& 
   int count = 0;
   for (int count = 0; count < mEventRecords.size(); ++count) {
     if (ir == mEventRecords[count].getBCData()) {
-      //TODO replace this with a hash/map not a vector
-      mEventRecords[count].addTracklets(tracklets); //mTracklets.insert(mTracklets.back(),start,end);
+      // TODO replace this with a hash/map not a vector
+      mEventRecords[count].addTracklets(tracklets); // mTracklets.insert(mTracklets.back(),start,end);
       added = true;
     }
   }
@@ -150,8 +150,8 @@ void EventStorage::addTracklets(InteractionRecord& ir, std::vector<Tracklet64>::
   bool added = false;
   for (int count = 0; count < mEventRecords.size(); ++count) {
     if (ir == mEventRecords[count].getBCData()) {
-      //TODO replace this with a hash/map not a vector
-      mEventRecords[count].addTracklets(start, end); //mTracklets.insert(mTracklets.back(),start,end);
+      // TODO replace this with a hash/map not a vector
+      mEventRecords[count].addTracklets(start, end); // mTracklets.insert(mTracklets.back(),start,end);
       added = true;
     }
   }
@@ -177,7 +177,7 @@ void EventStorage::unpackData(std::vector<TriggerRecord>& triggers, std::vector<
 
 void EventStorage::sendData(o2::framework::ProcessingContext& pc, bool generatestats)
 {
-  //at this point we know the total number of tracklets and digits and triggers.
+  // at this point we know the total number of tracklets and digits and triggers.
   auto dataReadStart = std::chrono::high_resolution_clock::now();
   uint64_t trackletcount = 0;
   uint64_t digitcount = 0;
@@ -190,16 +190,16 @@ void EventStorage::sendData(o2::framework::ProcessingContext& pc, bool generates
   std::vector<TriggerRecord> triggers;
   triggers.reserve(triggercount);
   for (auto& event : mEventRecords) {
-    //sort tracklets
+    // sort tracklets
     event.sortByHCID();
-    //TODO do this sort in parallel over the events
+    // TODO do this sort in parallel over the events
     tracklets.insert(std::end(tracklets), std::begin(event.getTracklets()), std::end(event.getTracklets()));
     digits.insert(std::end(digits), std::begin(event.getDigits()), std::end(event.getDigits()));
     triggers.emplace_back(event.getBCData(), digitcount, event.getDigits().size(), trackletcount, event.getTracklets().size());
     digitcount += event.getDigits().size();
     trackletcount += event.getTracklets().size();
   }
-  //TODO change to adopt instead of having this additional copy.
+  // TODO change to adopt instead of having this additional copy.
   //
   pc.outputs().snapshot(o2::framework::Output{o2::header::gDataOriginTRD, "DIGITS", 0, o2::framework::Lifetime::Timeframe}, digits);
   pc.outputs().snapshot(o2::framework::Output{o2::header::gDataOriginTRD, "TRACKLETS", 0, o2::framework::Lifetime::Timeframe}, tracklets);
@@ -218,8 +218,8 @@ void EventStorage::accumulateStats()
   int eventcount = mEventRecords.size();
   int sumtracklets = 0;
   int sumdigits = 0;
-  //std::chrono::duration sumdigittime=std::chrono::steady_clock::duration::zero();
-  //std::chrono::duration sumtracklettime=std::chrono::steady_clock::duration::zero();
+  // std::chrono::duration sumdigittime=std::chrono::steady_clock::duration::zero();
+  // std::chrono::duration sumtracklettime=std::chrono::steady_clock::duration::zero();
   int sumdigittime = 0;
   int sumtracklettime = 0;
   int sumtime = 0;
@@ -306,13 +306,13 @@ void EventStorage::printIR()
 
 EventRecord& EventStorage::getEventRecord(InteractionRecord& ir)
 {
-  //now find the event record in question
+  // now find the event record in question
   for (auto& event : mEventRecords) {
     if (event == ir) {
       return event;
     }
   }
-  //oops its new, so add it
+  // oops its new, so add it
   mEventRecords.push_back(EventRecord(ir));
   return mEventRecords.back();
 }
