@@ -338,15 +338,16 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
 
 int CruRawReader::checkTrackletHCHeader()
 {
-  // index 0 is rdh data, index 1 is ori calculated data
-  auto currentsector = mTrackletHCHeader.supermodule;
-  auto currentlayer = mTrackletHCHeader.layer;
-  auto currentstack = mTrackletHCHeader.stack;
-  auto currentside = mTrackletHCHeader.side;
   if (!mOptions[TRDIgnoreTrackletHCHeaderBit]) { // we take half chamber header as authoritive
     return 0;
   }
-  return 0; // for now always ignore, something is wrong with it, yet to be determined, tdp and header dont match.  FIXME!
+
+  // check if HCHeader is ok.
+  if (!sanityCheckTrackletHCHeader(mTrackletHCHeader, mOptions[TRDVerboseErrorsBit])) {
+    return 1;
+  }
+
+  return 0;
 }
 
 int CruRawReader::checkDigitHCHeader()
