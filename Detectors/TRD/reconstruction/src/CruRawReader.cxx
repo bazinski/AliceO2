@@ -864,7 +864,7 @@ int CruRawReader::processHalfCRU(uint32_t cruhbfstartoffset, int numberOfPreviou
             }
             if (mDigitWordsRead + mDigitWordsRejected != std::distance(linkstart, linkend)) {
               //we have the data corruption problem of a pile of stuff at the end of a link, jump over it.
-              if (mFixDigitEndCorruption) {
+              if (mOptions[TRDFixDigitCorruptionBit]) {
                 mDigitWordsRead = std::distance(linkstart, linkend);
               } else {
                 std::stringstream message;

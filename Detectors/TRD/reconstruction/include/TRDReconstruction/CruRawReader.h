@@ -64,13 +64,9 @@ class CruRawReader
   void resetCounters();
   void configure(uint32_t tracklethcheader, uint32_t halfchamberwords, uint32_t halfchambermajor, std::bitset<16> options)
   {
-    mFixDigitEndCorruption = options[TRDFixDigitCorruptionBit];
     mTrackletHCHeaderState = tracklethcheader;
     mHalfChamberWords = halfchamberwords;
     mHalfChamberMajor = halfchambermajor;
-    mRootOutput = options[TRDEnableRootOutputBit];
-    mEnableTimeInfo = options[TRDEnableTimeInfoBit];
-    mEnableStats = options[TRDEnableStatsBit];
     mOptions = options;
     mTimeBins = constants::TIMEBINS; // set to value from constants incase the DigitHCHeader1 header is not present.
     mPreviousDigitHCHeadersvnver = 0xffffffff;
@@ -217,13 +213,9 @@ class CruRawReader
   };
 
   int mJumpRDH = 0;
-  bool mFixDigitEndCorruption{false};
   int mTrackletHCHeaderState{0};
   uint32_t mHalfChamberWords{0};
   uint32_t mHalfChamberMajor{0};
-  bool mRootOutput{0};
-  bool mEnableTimeInfo{0};
-  bool mEnableStats{0};
   std::bitset<16> mOptions;
   const char* mDataBuffer = nullptr;
   static const uint32_t mMaxHBFBufferSize = o2::trd::constants::HBFBUFFERMAX;
