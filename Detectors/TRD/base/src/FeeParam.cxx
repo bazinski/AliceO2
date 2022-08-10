@@ -72,7 +72,6 @@ FeeParam* FeeParam::instance()
   } // end omp critical block
 }
 
-
 //_____________________________________________________________________________
 FeeParam::FeeParam()
 {
@@ -88,8 +87,6 @@ FeeParam::FeeParam()
 
   fillPad2MCMLookUpTable();
 }
-
-
 
 //_____________________________________________________________________________
 int FeeParam::getPadRowFromMCM(int irob, int imcm)
@@ -396,7 +393,7 @@ void FeeParam::unpackORI(uint32_t link, uint32_t side, uint32_t& stack, uint32_t
     layer = 5 - link % 6;
     halfchamberside = (link / 6) % 2;
   } else {
-    //c side
+    // c side
     stack = 4 - link / 12;
     layer = 5 - link % 6;
     halfchamberside = (link / 6) % 2;
