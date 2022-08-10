@@ -574,8 +574,8 @@ int CruRawReader::processHalfCRU(uint32_t cruhbfstartoffset, int numberOfPreviou
   }
   auto crustart = std::chrono::high_resolution_clock::now();
   // well then read the halfcruheader.
-  memcpy((char*)&mCurrentHalfCRUHeader, (void*)(&mHBFPayload[cruhbfstartoffset]), sizeof(mCurrentHalfCRUHeader));
-  mHBFoffset32 += sizeof(mCurrentHalfCRUHeader) / 4; // advance past the header.
+  memcpy((char*)&mCurrentHalfCRUHeader, (char*)(&mHBFPayload[cruhbfstartoffset]), sizeof(mCurrentHalfCRUHeader));
+  mHBFoffset32 += sizeof(mCurrentHalfCRUHeader) / sizeof(mHBFoffset32); // advance past the header.
   if (mOptions[TRDVerboseWordBit]) {
     //output the cru half chamber header : raw/parsed
     //
@@ -608,7 +608,7 @@ int CruRawReader::processHalfCRU(uint32_t cruhbfstartoffset, int numberOfPreviou
       return -2;
     }
   }
-  memcpy((char*)&mPreviousHalfCRUHeader, (void*)(&mHBFPayload[cruhbfstartoffset]), sizeof(mCurrentHalfCRUHeader));
+  memcpy((char*)&mPreviousHalfCRUHeader, (char*)(&mHBFPayload[cruhbfstartoffset]), sizeof(mCurrentHalfCRUHeader));
   //can this half cru length fit into the available space of the rdh accumulated payload
   if (mTotalHalfCRUDataLength32 > mTotalHBFPayLoad - mHBFoffset32) {
     std::stringstream message;
