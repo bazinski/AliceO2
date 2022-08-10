@@ -1,4 +1,4 @@
-//:w Copyright 2019-2020 CERN and copyright holders of ALICE O2.
+// Copyright 2019-2020 CERN and copyright holders of ALICE O2.
 // See https://alice-o2.web.cern.ch/copyright for details of the copyright holders.
 // All rights not expressly granted are reserved.
 //
@@ -107,10 +107,10 @@ class TrackletsParser
   int mState{0};                       // state that the parser is currently in.
   int mWordsRead{0};                   // number of words read from buffer
   uint64_t mWordsDumped{0};            // number of words ignored from buffer
-  size_t mTrackletsFound{0};              // tracklets found in the data block, mostly used for debugging.
+  size_t mTrackletsFound{0};           // tracklets found in the data block, mostly used for debugging.
   int mPaddingWordsCounter{0};         // count of padding words encoutnered
   Tracklet64 mCurrentTrack;            // the current track we are looking at, used to accumulate the possibly 3 tracks from the parsing 4 incoming data words
-  int mTrackletHCHeaderState{0};       //what to with the tracklet half chamber header 0,1,2
+  int mTrackletHCHeaderState{0};       // what to with the tracklet half chamber header 0,1,2
   bool mIgnoreTrackletHCHeader{false}; // Is the data with out the tracklet HC Header? defaults to having it in.
   std::bitset<16> mOptions;
   bool mTrackletParsingBad{false}; // store weather we should dump the rest of the link buffer after working through this tracklet buffer.

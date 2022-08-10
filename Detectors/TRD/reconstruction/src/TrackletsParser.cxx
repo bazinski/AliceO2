@@ -100,7 +100,7 @@ int TrackletsParser::Parse()
   // producing a vector of tracklets.
 
   mTrackletParsingBad = false;
-  //mData holds a buffer containing tracklets parse placing tracklets in the output vector.
+  // mData holds a buffer containing tracklets parse placing tracklets in the output vector.
   mCurrentLink = 0;
   mWordsRead = 0;
   mTrackletsFound = 0;
@@ -121,7 +121,7 @@ int TrackletsParser::Parse()
       hcheader.word = *mStartParse;
       uint32_t tmpheader = *mStartParse;
       if (!sanityCheckTrackletHCHeader(hcheader)) {
-        //we dont have a tracklethcheader so no tracklet data.
+        // we dont have a tracklethcheader so no tracklet data.
         if (mOptions[TRDVerboseBit]) {
           LOG(info) << "Returning 0 from tracklet parsing " << std::hex << (tmpheader & 0x3) << " supermodule : " << ((tmpheader >> 9) & 0x1f);
         }
@@ -228,7 +228,7 @@ int TrackletsParser::Parse()
         if (mState != StateTrackletHCHeader) {
           incParsingError(TRDParsingTrackletBit11NotSetInTrackletHCHeader);
         }
-        //read the header
+        // read the header
         if (mOptions[TRDVerboseBit]) {
           LOG(info) << "*** TrackletHCHeader : 0x" << std::hex << *word << " at offset :0x" << std::distance(mStartParse, word);
         }
@@ -349,7 +349,7 @@ int TrackletsParser::Parse()
                           << mTrackletMCMHeader->col;
               }
             }
-            //TODO cross reference hcid to somewhere for a check. mDetector is assigned at the time of parser init.
+            // TODO cross reference hcid to somewhere for a check. mDetector is assigned at the time of parser init.
             if (mOptions[TRDVerboseBit]) {
               LOG(info) << "TTT format : " << (int)mTrackletHCHeader.format << " hcid: " << hcid
                         << " padrow:" << padrow << " col:" << col << " pos:" << pos << " slope:"
