@@ -29,7 +29,7 @@
 #include "TH2F.h"
 #include "TFile.h"
 
-//using namespace o2::framework;
+// using namespace o2::framework;
 
 namespace o2::trd
 {
@@ -67,8 +67,8 @@ void DataReaderTask::sendData(ProcessingContext& pc, bool blankframe)
   if (!blankframe) {
     mReader.buildDPLOutputs(pc);
   } else {
-    //ensure the objects we are sending back are indeed blank.
-    //TODO maybe put this in buildDPLOutputs so sending all done in 1 place, not now though.
+    // ensure the objects we are sending back are indeed blank.
+    // TODO maybe put this in buildDPLOutputs so sending all done in 1 place, not now though.
     std::vector<Tracklet64> tracklets;
     std::vector<Digit> digits;
     std::vector<o2::trd::TriggerRecord> triggers;
@@ -115,13 +115,13 @@ bool DataReaderTask::isTimeFrameEmpty(ProcessingContext& pc)
 
 void DataReaderTask::run(ProcessingContext& pc)
 {
-  //NB this is run per time frame on the epn.
+  // NB this is run per time frame on the epn.
   LOG(info) << "TRD Translator Task run";
   updateTimeDependentParams(pc);
   auto dataReadStart = std::chrono::high_resolution_clock::now();
 
   if (isTimeFrameEmpty(pc)) {
-    sendData(pc, true); //send the empty tf data.
+    sendData(pc, true); // send the empty tf data.
     return;
   }
   uint64_t total1 = 0, total2 = 0;
@@ -142,7 +142,7 @@ void DataReaderTask::run(ProcessingContext& pc)
     mReader.setDataBuffer(ref.payload);
     mReader.setDataBufferSize(payloadInSize);
     mReader.configure(mTrackletHCHeaderState, mHalfChamberWords, mHalfChamberMajor, mOptions);
-    //mReader.setStats(&mTimeFrameStats);
+    // mReader.setStats(&mTimeFrameStats);
     mReader.run();
     mWordsRead += mReader.getWordsRead();
     mWordsRejected += mReader.getWordsRejected();
