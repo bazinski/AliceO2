@@ -259,13 +259,10 @@ size_t EventStorage::sumDigits()
 }
 void EventStorage::sumTrackletsDigitsTriggers(uint64_t& tracklets, uint64_t& digits, uint64_t& triggers)
 {
-  int digitsum = 0;
-  int trackletsum = 0;
-  int triggersum = 0;
   for (auto event : mEventRecords) {
-    digitsum += event.getDigits().size();
-    trackletsum += event.getTracklets().size();
-    triggersum++;
+    digits += event.getDigits().size();
+    tracklets += event.getTracklets().size();
+    triggers++;
   }
 }
 
