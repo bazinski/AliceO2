@@ -941,8 +941,6 @@ bool CruRawReader::run()
   mTotalDigitWordsRejected = 0;
   mTotalTrackletWordsRead = 0;
   mTotalTrackletWordsRejected = 0;
-  uint32_t* bufferptr;
-  bufferptr = (uint32_t*)mDataBuffer;
   do {
     mDatareadfromhbf = 0;
     auto goodprocessing = processHBFs(totaldataread);
