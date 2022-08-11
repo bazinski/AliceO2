@@ -132,7 +132,6 @@ void DataReaderTask::run(ProcessingContext& pc)
     auto inputprocessingstart = std::chrono::high_resolution_clock::now(); // measure total processing time
     const auto* dh = DataRefUtils::getHeader<o2::header::DataHeader*>(ref);
     tfCount = dh->tfCounter;
-    const char* payloadIn = ref.payload;
     auto payloadInSize = DataRefUtils::getPayloadSize(ref);
     if (mOptions[TRDVerboseBit]) {
       LOGP(info, "Found input [{}/{}/{:#x}] TF#{} 1st_orbit:{} Payload {} : ",
@@ -140,7 +139,7 @@ void DataReaderTask::run(ProcessingContext& pc)
     }
     total1 += payloadInSize;
     total2 += dh->headerSize;
-    mReader.setDataBuffer(payloadIn);
+    mReader.setDataBuffer(ref.payload);
     mReader.setDataBufferSize(payloadInSize);
     mReader.configure(mTrackletHCHeaderState, mHalfChamberWords, mHalfChamberMajor, mOptions);
     //mReader.setStats(&mTimeFrameStats);
