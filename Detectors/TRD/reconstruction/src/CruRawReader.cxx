@@ -261,9 +261,12 @@ bool CruRawReader::processHBFs(int datasizealreadyread, bool verbose)
     if (memorySize == 0) {
       LOG(warn) << "rdh memory size is zero";
       return false; // get out of here if the rdh says it has nothing.
+    } else if (memorySize < headerSize) {
+      LOG(error) << "RDH payload memory is negative: memorySize(" << memorySize << ") - headerSize(" << headerSize << ")";
+      return false; // this does not make sense and should probably not happen
     }
     auto offsetToNext = o2::raw::RDHUtils::getOffsetToNext(rdh);
-    auto rdhpayload = memorySize - headerSize;
+    size_t rdhpayload = memorySize - headerSize;
     mFEEID.word = o2::raw::RDHUtils::getFEEID(rdh);       // TODO change this and just carry around the curreht RDH
     mCRUEndpoint = o2::raw::RDHUtils::getEndPointID(rdh); // the upper or lower half of the currently parsed cru 0-14 or 15-29
     mCRUID = o2::raw::RDHUtils::getCRUID(rdh);
