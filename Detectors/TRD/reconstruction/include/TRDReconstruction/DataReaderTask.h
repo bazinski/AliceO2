@@ -37,7 +37,7 @@ namespace o2::trd
 class DataReaderTask : public Task
 {
  public:
-  DataReaderTask(int tracklethcheader, int halfchamberwords, int halfchambermajor, std::string histofilename, std::bitset<16> option) : mTrackletHCHeaderState(tracklethcheader), mHalfChamberWords(halfchamberwords), mHalfChamberMajor(halfchambermajor), mHistogramsFilename(histofilename), mOptions(option) {}
+  DataReaderTask(int tracklethcheader, uint32_t halfchamberwords, uint32_t halfchambermajor, std::string histofilename, std::bitset<16> option) : mTrackletHCHeaderState(tracklethcheader), mHalfChamberWords(halfchamberwords), mHalfChamberMajor(halfchambermajor), mHistogramsFilename(histofilename), mOptions(option) {}
   ~DataReaderTask() override = default;
   void init(InitContext& ic) final;
   void sendData(ProcessingContext& pc, bool blankframe = false);
@@ -54,13 +54,12 @@ class DataReaderTask : public Task
                         // TODO templatise this and 2 versions of datareadertask, instantiated with the relevant parser.
 
   std::bitset<16> mOptions;            // stores the incoming of the above bools, useful to be able to send this on instead of the individual ones above
-                                       // the above bools make the code more readable hence still here.
 
   uint64_t mWordsRead = 0;
   uint64_t mWordsRejected = 0;
   int mTrackletHCHeaderState{0}; // what to do about tracklethcheader, 0 never there, 2 always there, 1 there iff tracklet data, i.e. only there if next word is *not* endmarker 10001000.
-  int mHalfChamberWords{0};      // if the halfchamber header is effectively blanked major.minor = 0.0 and halfchamberwords=0 then this value is used as the number of additional words to try recover the data
-  int mHalfChamberMajor{0};      // if the halfchamber header is effectively blanked major.minor = 0.0 and halfchamberwords=0 then this value is used as the major version to try recover the data
+  uint32_t mHalfChamberWords{0};      // if the halfchamber header is effectively blanked major.minor = 0.0 and halfchamberwords=0 then this value is used as the number of additional words to try recover the data
+  uint32_t mHalfChamberMajor{0};      // if the halfchamber header is effectively blanked major.minor = 0.0 and halfchamberwords=0 then this value is used as the major version to try recover the data
   std::string mHistogramsFilename; // filename to use for histograms.
   o2::header::DataDescription mUserDataDescription = o2::header::gDataDescriptionInvalid; // alternative user-provided description to pick
   bool mFixDigitEndCorruption{false};                                                     // fix the parsing of corrupt end of digit data. bounce over it.
