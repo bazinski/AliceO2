@@ -238,11 +238,11 @@ int getChargesFromRawHeaders(const o2::trd::TrackletHCHeader& hcheader, const o2
       uint32_t pidoffset = ((pidword >> 18) & 0x3); // used for dynamic ranged charge windows, may or may not be used below.
       if (!dynamicq) {
         q[2] = (pidword >> 14) & 0x3f; // 6 bits at the top of all of pid (MSB)
-          } else {
-            q[2] = (pidword >> 12) & 0x3f; // 6 bits of Q2 and a shift
-            q[2] |= pidoffset << 6;
-            // LOG(info) << "Q2 pid : " << std::hex << pid << " pidoffset: "  << pidoffset;
-          }
+      } else {
+        q[2] = (pidword >> 12) & 0x3f; // 6 bits of Q2 and a shift
+        q[2] |= pidoffset << 6;
+        // LOG(info) << "Q2 pid : " << std::hex << pid << " pidoffset: "  << pidoffset;
+      }
           if (!dynamicq) {
             q[1] = (pidword >> 7) & 0x7f; // 7 bits Q1 above the 7 bits of Q0
           } else {
