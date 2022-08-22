@@ -749,7 +749,7 @@ int CruRawReader::processHalfCRU(int iteration)
           if (mDigitsParser.dumpLink()) {
             //dump the link that cause the error
             // the call to dumpLink resets the boolean to false;
-           outputLinkRawData(currentlinkindex);
+            outputLinkRawData(currentlinkindex);
           }
           if (mOptions[TRDVerboseBit]) {
             LOG(info) << "FEEID: " << mFEEID.word << " LINK #" << linkIdxGlobal << " bad datacount:"
