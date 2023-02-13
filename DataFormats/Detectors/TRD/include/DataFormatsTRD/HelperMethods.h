@@ -157,10 +157,17 @@ struct HelperMethods {
     return getORIinSuperModule(hcid) + constants::NHCPERSEC * sector;
   }
 
-  static int getMCMID(int sector, int stack, int layer, int rob, int mcm)
+  static int getMCMId(int sector, int stack, int layer, int rob, int mcm)
   {
     // return the mcmid of the indexed mcm
     int mcmid = (sector * constants::NSTACK * constants::NLAYER + stack * constants::NLAYER + layer) * constants::NROBC1 * constants::NMCMROB + rob * constants::NMCMROB + mcm;
+    return mcmid;
+  }
+
+  static int getMCMId(int det, int rob, int mcm)
+  {
+    // return the mcmid of the indexed mcm
+    int mcmid = det * constants::NROBC1 * constants::NMCMROB + rob * constants::NMCMROB + mcm;
     return mcmid;
   }
 };

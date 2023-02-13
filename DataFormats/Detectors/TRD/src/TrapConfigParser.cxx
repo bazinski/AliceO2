@@ -37,27 +37,10 @@ using namespace o2::trd;
 TrapConfigParser::TrapConfigParser()
 {
   // default constructor
-
-  // initialize and reset the TRAP registers
-  //initRegs();
 }
 
 TrapConfigParser::~TrapConfigParser() = default;
 
-/* void TrapConfigParser::dumpTrapConfig2File(const std::string filename)
-{
-  std::ofstream outfile(filename);
-  outfile << "Trap Registers : " << std::endl;
-  for (int regvalue = 0; regvalue < kLastReg; regvalue++) {
-    outfile << " Trap : " << mRegisterValue[regvalue].getName()
-            << " at : 0x " << std::hex << mRegisterValue[regvalue].getAddr() << std::dec
-            << " with nbits : " << mRegisterValue[regvalue].getNbits()
-            << " and reset value of : " << mRegisterValue[regvalue].getResetValue() << std::endl;
-    // now for the inherited AliTRDtrapValue members;
-    PrintRegisterValue3(&mTrapRegisters[regvalue], outfile);
-  }
-}
-*/
 
 bool TrapConfigParser::checkRegister(uint16_t& registeraddr, int& registerbase, int& registeroffset, int& lastregisterindex, int& currentregisterindex, int& registerscount,
                                      int& registererrorgap, uint32_t& lastregisteraddressread, int& registerwordscount, int& lastregidx, uint32_t& registerdata, int mcmid, int hcid, int mcm, int rob)
@@ -75,12 +58,9 @@ bool TrapConfigParser::checkRegister(uint16_t& registeraddr, int& registerbase, 
     for (int miss = lastregidx; miss < newregidx; ++miss) {
       mMissedReg[miss]++; // count the gaps, we count the start and stop point of gaps elsewhere
     }
-    //      LOGP(info," get mTrapConfig.getRegNameByAddr( {:08x} ) at func:{} line:{}",registeraddr,__func__,__LINE__);
     LOGP(warn, " register step mismatch : went from {:06x} ({}) i:{} to {:06x} ({}) i:{} and mcmid: {} mcmid size : {} mMcmParsingStatus[{}]=5", lastregisteraddressread, mTrapConfig.getRegNameByAddr(lastregisteraddressread), lastregidx, registeraddr, mTrapConfig.getRegNameByAddr(registeraddr), newregidx, registerdata, mcmid, mMcmParsingStatus.size(), mcmid);
-    //      LOGP(info," got mTrapConfig.getRegNameByAddr( {:08x} ) at func:{} line:{}",registeraddr,__func__,__LINE__);
   }
   lastregidx = newregidx; //TODO rename lastregidx as its different from lastregisterindex :-(
-                          //        LOGP(warn, "line {}   bits:{} regname:{}  newregidx:{} ",__LINE__,numberbits,regname,newregidx);
   if (numberbits >= 0 || regname != "" || newregidx >= 0) {
     //this is a bogus or unknown register
     LOGP(debug, "good register : name:{} newregindex:{} numberofbits:{}, lastregindex:{} registeraddr:{:08x} ?= ", regname, newregidx, numberbits, lastregisterindex, registeraddr);
@@ -133,13 +113,13 @@ void TrapConfigParser::compareToTrackletsHCID(std::bitset<1080> trackletshcid)
   for (int i = 0; i < 1080; ++i) {
     if (mHCIDhasConfig.test(i)) {
       if (trackletshcid.test(i)) {
-        LOGP(info, "Config event had tracklets for hcid {}", i);
+        LOGP(/*info*/debug, "Config event had tracklets for hcid {}", i);
       } else {
-        LOGP(info, "Config event had no tracklets for hcid {}", i);
+        LOGP(/*info*/debug, "Config event had no tracklets for hcid {}", i);
       }
     } else {
       if (trackletshcid.test(i) && !mHCIDhasConfig.test(i)) {
-        LOGP(info, "No Config event but we have tracklets for HCID  {}", i);
+        LOGP(/*info*/debug, "No Config event but we have tracklets for HCID  {}", i);
       }
     }
   }
@@ -158,7 +138,7 @@ void TrapConfigParser::FillHistograms(int eventnum)
   // 1 hist per layer, 6 layers
   TH2F* layerconfig[6];
   std::unique_ptr<TFile> file(TFile::Open(Form("Event_%d_Histograms.root", eventnum), "RECREATE"));
-  LOGP(info, "Now to fill Event_%i_Histograms.root", eventnum);
+  LOGP(/*info*/debug, "Now to fill Event_%i_Histograms.root", eventnum);
   TH1F *missed, *start, *stop, *regcounts;
   missed = new TH1F(Form("MissedRegistersEvent_%d", eventnum), Form("Missed registers for mcm that read out in event %d;register;count", eventnum), 500, -0.5, 499.5);
   start = new TH1F(Form("StartRegistersEvent_%d", eventnum), Form("Starting registers for mcm that read out in event %d;register;count", eventnum), 500, -0.5, 499.5);
@@ -202,9 +182,7 @@ void TrapConfigParser::FillHistograms(int eventnum)
     int row = rob + sm * 8;
     int col = stack * 16 + mcm;
     layerconfig[layer]->SetBinContent(col, row, mMcmParsingStatus[mcmid]);
-    //   LOGP(info,"Fill : hcid : {} mcmid: {} layer : {}",detector,mcmid,layer);
-    //      if(mMcmParsingStatus[mcmid]!=0){
-    //       LOGP(info,"mcmindex : {} is non zero mcmid:{} col:{} row:{} event:{}",mMcmParsingStatus[mcmid],mcmid,col,row,eventnum);
+    //       LOGP(/*info*/debug,"mcmindex : {} is non zero mcmid:{} col:{} row:{} event:{}",mMcmParsingStatus[mcmid],mcmid,col,row,eventnum);
     //    }
   }
   std::unique_ptr<TCanvas> canvas(new TCanvas("canvas", "Config Event parsing problems"));
@@ -225,7 +203,7 @@ void TrapConfigParser::FillHistograms(int eventnum)
   for (auto& regmap : mTrapRegistersFrequencyMap) {
     LOG(info) << "Register : " << regcount << " " << mTrapConfig.getRegNameByIdx(regcount) << " with " << regmap.size() << " entries";
     for (const auto& elem : regmap) {
-      LOGP(info, "[{:08x}] = {}", elem.first, elem.second);
+      LOGP(/*info*/debug, "[{:08x}] = {}", elem.first, elem.second);
     }
     regcount++;
   }
@@ -246,7 +224,7 @@ void TrapConfigParser::printMCMRegisterCount(int hcid)
     roboffset = 0;
   }
   std::stringstream errorMCM;
-  LOGP(info, "bp rob for hcid : {}....", hcid);
+  LOGP(/*info*/debug, "bp rob for hcid : {}....", hcid);
   for (int robidx = roboffset; robidx < 8; robidx += 2) {
     std::stringstream display;
     display << "bp rob:" << robidx << " ";
@@ -307,7 +285,7 @@ int TrapConfigParser::parseLink(std::array<uint32_t, o2::trd::constants::HBFBUFF
   bool endmarker = false;
   bool fastforward = false;
   // for (idx=start;idx<end/2;++idx) {
-  //   LOGP(info, " data[{} = {:08x}]", idx, data[idx]);
+  //   LOGP(/*info*/debug, " data[{} = {:08x}]", idx, data[idx]);
   // }
   idx = start;
   auto whileloopstart = std::chrono::high_resolution_clock::now();
@@ -322,7 +300,7 @@ int TrapConfigParser::parseLink(std::array<uint32_t, o2::trd::constants::HBFBUFF
       // c : end of data
       while (data[idx] && fastforward) {
         if (firstfastforward) {
-          LOGP(info, "fastforwaring from idx:{} for mcm {}", idx, mcmid);
+          LOGP(/*info*/debug, "fastforwaring from idx:{} for mcm {}", idx, mcmid);
           firstfastforward = false;
         }
         //read until we find an end marker, ignoring the data coming in so as not to pollute the configs.
@@ -402,9 +380,6 @@ int TrapConfigParser::parseLink(std::array<uint32_t, o2::trd::constants::HBFBUFF
           err += ((data_hi ^ (registerdata | 1)) & 0xFFFF) != 0;
           registerdata = (data_hi & 0xFFFF0000) | registerdata;
         }
-        //if (registeraddr == 0x3050) {
-        //  LOGP(info, "ADCMSK is : {:08x}  registercount:{}", registerdata,registerscount);
-        //}
         auto badreg = checkRegister(registeraddr, registerbase, registeroffset, previousregisterindex, currentregisterindex, registerscount, registererrorgap, previousregisterread, registerwordscount, lastregidx, registerdata, mcmid, hcid, mcmheader.mcm, mcmheader.rob);
         if (badreg == true) {
           fastforward = true;
@@ -425,7 +400,7 @@ int TrapConfigParser::parseLink(std::array<uint32_t, o2::trd::constants::HBFBUFF
             mCurrentMCMRegisters[mcmid * kLastReg + registerscount - 1] = regdata;
             //TODO this is not saving it to the CCDBConfig at all !
             //  if(mTrapConfig.getRegNameByIdx(registerscount-1) == "ADCMSK"){
-            //  LOGP(info,"** just added {:08x} data to _ADCMSK for mcmid {}",registerdata,mcmid);
+            //  LOGP(/*info*/debug,"** just added {:08x} data to _ADCMSK for mcmid {}",registerdata,mcmid);
             //  }
           }
           mRegisterCount[mTrapConfig.getRegIndexByAddr(registeraddr)]++; // keep a count of seen and accepted registers
@@ -553,7 +528,7 @@ int TrapConfigParser::parseLink(std::array<uint32_t, o2::trd::constants::HBFBUFF
     } // end block case
   }   // end while
   std::chrono::duration<double, std::micro> configparsingtime = std::chrono::high_resolution_clock::now() - whileloopstart;
-  LOGP(info, "Config while parsing took {} end of loop at line : {}", (double)std::chrono::duration_cast<std::chrono::microseconds>(configparsingtime).count(), __LINE__);
+  LOGP(/*info*/debug, "Config while parsing took {} end of loop at line : {}", (double)std::chrono::duration_cast<std::chrono::microseconds>(configparsingtime).count(), __LINE__);
   //loop over which mcms never sent data.
   printMCMRegisterCount(hcid);
   return false; // only if the max length of the block reached!

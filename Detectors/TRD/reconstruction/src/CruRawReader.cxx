@@ -611,7 +611,7 @@ bool CruRawReader::processHalfCRU(int iteration)
           LOGP(info, "Config event for : on eventnum {} : hcid : {}  link: {} -- Difference from last IR : {}us bc: {} orbit:{} timediff : {} Trackletwords : {}", mConfigEventCount, halfChamberId, currentlinkindex, timediff, mIR.bc, mIR.orbit, timediff, trackletWordsRead);
           auto configparsingstart = std::chrono::high_resolution_clock::now();
           mTrapConfigParser.parseLink(mHBFPayload, mHBFoffset32, endOfCurrentLink, halfChamberId);
-          //mEventRecords.addConfigEvent(mHBFPayload,mHBFoffset32,endOfCurrentLink, mDigitHCHeader.word ,configeventlength*8);
+          mEventRecords.addConfigEvent(mHBFPayload,mHBFoffset32,endOfCurrentLink, mDigitHCHeader.word ,configeventlength*8);
           mHBFoffset32 = hbfOffsetTmp + currentlinksize32;
           std::chrono::duration<double, std::micro> configparsingtime = std::chrono::high_resolution_clock::now() - configparsingstart;
           mTotalConfigTime += configparsingtime;

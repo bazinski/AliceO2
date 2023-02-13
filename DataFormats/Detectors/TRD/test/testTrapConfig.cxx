@@ -174,5 +174,51 @@ BOOST_AUTO_TEST_CASE(TRDTrapConfig3GetSet)
     trapregcheck(trapconfig, mcm);
   }
 }
+BOOST_AUTO_TEST_CASE(TRDTrapConfig3ConfigRetrieval)
+{
+
+  TrapConfig3* trapconfig = new trd::TrapConfig3();
+
+  // setup the resgisters we will look at chosen for various reasons, size, on the edges, changes of register bit size
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3180)); //TPL00 the first register
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3185)); // TPL05 last register for the first 32 bit word
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x31ff)); // TPL7F
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x30A0)); // FGA0
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x30A4)); // last 6 bit reg in a 32bit word
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x30A5)); // the next 6 bit register first in the subsequent 32 bit word
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x30B4)); // last 6 bit register
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3080)); // first 10 bit register
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x308C)); // next 2 are 10 bit registers spanning a 32 bit data word
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x308D));
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x313F)); //
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3000));
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3002));
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3003));
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x300F));
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3020));
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3022)); // last 10 bit word
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3028)); // first 15 bit register after the above 10bit
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x302A)); // last 15 bit
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3030)); // first 10bit after the 15bitregisters
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3050)); // a lone 32 bit register
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3051)); // 2 5 bit registers
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3052));
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x3053)); // then a 32 bit register again
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x0B6C)); // first 15 bitreg
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x0B6D)); // last 15 bit reg in the 32 bit word
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x0B6E)); // first
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x0B6F)); // second
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x0B80)); // lone 32 bit reg
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x0B81)); // lone 16 bit reg
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0xD000)); // first 10 after a 16
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0xD001)); // middle 10 in a 32 bit word
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0xD002)); // last 10 bit in a 32 bit word
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0xD003)); // 10 bit in the subsequent 32 bit word
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x0D40));
+  trd::registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(0x0D41));
+  for (auto& mcm : mcmids) {
+    trapregcheck(trapconfig, mcm);
+  }
+}
 } // namespace trd
 } // namespace o2

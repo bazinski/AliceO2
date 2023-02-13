@@ -116,10 +116,10 @@ class TrapConfigParser
   std::array<uint32_t, o2::trd::constants::MAXMCMCOUNT> mMCMLastSeen;                           // timestamp
   std::array<uint32_t, o2::trd::constants::MAXMCMCOUNT> mMCMSeenSinceLastWritten;               // timestamp
   std::array<uint32_t, o2::trd::constants::MAXMCMCOUNT> mMCMFrequencyInAccumulation;            // frequency in accumulation.
-  std::array<int, 8 * 16> mcmSeen;                                                              // the mcm has been seen with or with out error, local to a double link
-  std::array<int, 8 * 16> mcmMCM;                                                               // the mcm has been seen with or with out error, local to a double link
-  std::array<int, 8 * 16> mcmROB;                                                               // the mcm has been seen with or with out error, local to a double link
-  std::array<int, 8 * 16> mcmSeenMissedRegister;                                                // the mcm does not have a complete set of registers, local to a double link
+  std::array<int, 8 * 16> mcmSeen;                                                              // the mcm has been seen with or with out error, local to a link
+  std::array<int, 8 * 16> mcmMCM;                                                               // the mcm has been seen with or with out error, local to a link
+  std::array<int, 8 * 16> mcmROB;                                                               // the mcm has been seen with or with out error, local to a link
+  std::array<int, 8 * 16> mcmSeenMissedRegister;                                                // the mcm does not have a complete set of registers, local to a link
   std::array<std::bitset<kLastReg>, 8 * 16> mcmMissedRegister;                                  // bitpattern of which registers were seen and not seen for a given mcm.
                                                                                                 //  static bool mRegisterAddressMapInitialised;
   InteractionRecord mIR;
@@ -132,10 +132,9 @@ class TrapConfigParser
   std::string mTrapConfigName;                 //TOOD figure how to pull this in or seperately put it in the CCDB
   std::string mTrapConfigVersion;
   TrapConfig3 mTrapConfig;
+  std::array<std::map<uint32_t, uint32_t>, kLastReg> mTrapRegistersFrequencyMap;
   // TrapConfig3& operator=(const TrapConfig3& rhs); // not implemented
   // TrapConfig3(const TrapConfig3& cfg);            // not implemented
-  // std::array<std::map(int,std::vector<uint32_t>),kLastReg> mRegisterValueFrequency;
-  std::array<std::map<uint32_t, uint32_t>, kLastReg> mTrapRegistersFrequencyMap;
 
   ClassDefNV(TrapConfigParser, 1);
 };

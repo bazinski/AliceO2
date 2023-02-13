@@ -490,26 +490,22 @@ void TrapConfig3::initRegs()
   mTrapRegisters[kNCUT].init("NCUT", 0x0D4C, 32, 148, 0, false, 32);
   mTrapRegisters[kPASACHM].init("PASACHM", 0x315C, 32, 149, 0, false, 19);
   //mTrapRegisters[kSMCMD].init("SMCMD", 0x0A04, 16, 0x0000);
-  // reindex to speed things up, this time by address:
-  mTrapRegistersAddressIndex.fill(-1);
+
+  // reindex to speed things up, this time by address, map instead of a rather large lookup table.
   for (int reg = 0; reg < kLastReg; ++reg) {
     int addr = mTrapRegisters[reg].getAddr();
-    mTrapRegistersAddressIndex[addr] = reg;
     mTrapRegistersAddressIndexMap[addr] = reg;
   }
 }
 
 uint32_t TrapConfig3::getRegisterValue(const uint32_t regidx, const int mcmidx)
-{ // get the register value based on the address of the register;
+{ 
+  // get the register value based on the address of the register;
   // find register in mTrapRegisters.
   // calculate the offset from the base for the register and get the mask.
   if ((regidx < 0) || (regidx >= kLastReg) || (mcmidx < 0 || mcmidx >= o2::trd::constants::MAXMCMCOUNT)) {
-    //LOGP(warn, "indices out of bounds regidx:{}  mcmidx:{} is out of bounds for {}", regidx, mcmidx, __func__);
     return -1;
   }
-  /*  if(getRegNameByIdx(regidx) == "ADCMSK"){
-    LOGP(info,"** requesting value for ADCMSK for mcmid {}",mcmidx);
-  }*/
 
   int mcmoffset = mcmidx * kTrapRegistersSize;                   // get the start offset for this mcm
   auto trapreg = &mTrapRegisters[regidx];                        // get the static information for this register
@@ -517,17 +513,13 @@ uint32_t TrapConfig3::getRegisterValue(const uint32_t regidx, const int mcmidx)
   int regoffset = regbase + trapreg->getWordNumber();            // get the offset to the register in question
   uint32_t data = mConfigData[regoffset] >> trapreg->getShift(); // get the data and shift it as needed
   data &= trapreg->getMask();                                    // mask the data off as need be.
-                                                                 //  if(getRegNameByIdx(regidx) == "ADCMSK"){
-                                                                 //    LOGP(info,"** requesting value for ADCMSK for mcmid {} data is {:08x} mcmoffset:{} regbase:{} regoffset:{} mask:{:08x} shift:{:08x} raw:{:08x} raw-1:{:08x} raw+1:{:08x}",mcmidx,data,mcmoffset,regbase,regoffset,trapreg->getMask(),trapreg->getShift(), mConfigData[regoffset],mConfigData[regoffset-1],mConfigData[regoffset+1]);
-                                                                 //  }
   return data;
 }
 
 uint32_t TrapConfig3::setRegisterValue(uint32_t data, uint32_t regidx, int mcmidx)
 {
   if ((regidx < 0) || (regidx >= kLastReg) || (mcmidx < 0 || mcmidx >= o2::trd::constants::MAXMCMCOUNT)) {
-    //LOGP(warn, "indices out of bounds regidx:{}  mcmidx:{} is out of bounds for {}", regidx, mcmidx, __func__);
-    return -1; // return -1;
+    return -1;
   }
 
   int mcmoffset = mcmidx * kTrapRegistersSize;        // get the start offset for this mcm
@@ -539,10 +531,6 @@ uint32_t TrapConfig3::setRegisterValue(uint32_t data, uint32_t regidx, int mcmid
   uint32_t notdatamask = ~(trapreg->getMask() << trapreg->getShift());
   mConfigData[regoffset] = mConfigData[regoffset] & notdatamask;
   mConfigData[regoffset] = mConfigData[regoffset] | data;
-  //d=d&(0xfff0)|c
-  //  if(getRegNameByIdx(regidx) == "ADCMSK"){
-  //    LOGP(info,"** setting value for ADCMSK for mcmid {} data is {:08x} mcmoffset:{} regbase:{} regoffset:{} mask:{:08x} shift:{:08x} raw:{:08x} raw-1:{:08x} raw+1:{:08x}",mcmidx,data,mcmoffset,regbase,regoffset,trapreg->getMask(),trapreg->getShift(), mConfigData[regoffset],mConfigData[regoffset-1],mConfigData[regoffset+1]);
-  //  }
   return data;
 }
 
@@ -586,13 +574,13 @@ uint32_t TrapConfig3::setRegisterValueByName(uint32_t data, const std::string& r
 
 uint32_t TrapConfig3::getRegisterValueByIdx(uint32_t regidx, int sector, int stack, int layer, int rob, int mcm)
 {
-  int mcmidx = HelperMethods::getMCMID(sector, stack, layer, rob, mcm);
+  int mcmidx = HelperMethods::getMCMId(sector, stack, layer, rob, mcm);
   return getRegisterValueByIdx(regidx, mcmidx);
 }
 
 uint32_t TrapConfig3::getRegisterValueByAddr(uint32_t regaddr, int sector, int stack, int layer, int rob, int mcm)
 {
-  int mcmidx = HelperMethods::getMCMID(sector, stack, layer, rob, mcm);
+  int mcmidx = HelperMethods::getMCMId(sector, stack, layer, rob, mcm);
   return getRegisterValueByAddr(regaddr, mcmidx);
 }
 
@@ -611,23 +599,16 @@ uint32_t TrapConfig3::getRegisterValueByAddr(uint32_t regaddr, int detector, int
 
 std::string TrapConfig3::getRegNameByAddr(uint16_t addr)
 {
-  //  LOGP(info,"getRegNameByAddr ( {:08x} ) ",addr);
-  //  LOGP(info,"getRegNameByAddr ( {:08x} index is : {} ) ",addr,mTrapRegistersAddressIndexMap[addr]);
   std::string name = "";
   if (auto search = mTrapRegistersAddressIndexMap.find(addr); search != mTrapRegistersAddressIndexMap.end()) {
     name = mTrapRegisters.at(mTrapRegistersAddressIndexMap[addr]).getName();
   }
-  //  LOGP(info,"getRegNameByAddr ( {:08x} ) name is : ",addr,name);
   return name;
 }
 
 std::string TrapConfig3::getRegNameByIdx(unsigned int regidx)
 {
-  //  LOGP(info,"getRegNameByIdx ( {} ) ",regidx);
   if ((regidx >= 0) && (regidx < kLastReg)) {
-    //  LOGP(info,"getRegNameByIdx ( {} ) ",regidx);
-    //  LOGP(info,"getRegNameByIdx ( {} ) {:08x}",regidx,mTrapRegisters[regidx].getAddr());
-    //  LOGP(info,"getRegNameByIdx ( {} ) ",regidx);
     return mTrapRegisters[regidx].getName();
   } else
     return "";
@@ -635,7 +616,6 @@ std::string TrapConfig3::getRegNameByIdx(unsigned int regidx)
 
 int32_t TrapConfig3::getRegIndexByAddr(unsigned int addr)
 {
-  //LOGP(info,"getRegIndexByAddr ( {:08x} ) ",addr);
   return mTrapRegistersAddressIndexMap[addr];
 }
 
@@ -673,13 +653,10 @@ int32_t TrapConfig3::getRegAddrByName(const std::string& name)
 
 o2::trd::TrapRegInfo* TrapConfig3::getTrapRegInfoByAddr(uint32_t addr)
 {
-  //LOGP(info,"{}( address : {:08x})",__func__, addr);
   int regidx = mTrapRegistersAddressIndexMap[addr];
   if ((regidx < 0) && (regidx > kLastReg)) {
-    // LOGP(warn,"register index {} is out of bounds for {}",regidx,__func__);
     return nullptr; //&mTrapRegisters[0];
   }
-  //LOGP(info,"{} returning the pointer to the trapreg info at index : {}",__func__, regidx);
   return &mTrapRegisters[regidx];
 }
 
@@ -693,33 +670,20 @@ o2::trd::TrapRegInfo* TrapConfig3::getTrapRegInfoByIdx(uint32_t idx)
 
 void TrapConfig3::getRegisterByAddr(uint32_t registeraddr, std::string& regname, int32_t& newregidx, int32_t& numberbits)
 {
-  LOGP(debug, "entering {} at line {}", __func__, __LINE__);
   int idx = -1;
   idx = getRegIndexByAddr(registeraddr);
-  LOGP(debug, "regRegisterByAddr( address : {:08x})", registeraddr);
   if (idx >= 0) {
-    LOGP(debug, "inside if statement");
     regname = mTrapRegisters[idx].getName();
     numberbits = mTrapRegisters[idx].getNbits();
     newregidx = idx;
-    LOGP(debug, "finished if statement");
   } else {
-    LOGP(debug, "inside else statement");
     regname = "";
     numberbits = -1;
     newregidx = -1;
-    LOGP(debug, "finished else statement");
   }
-
-  //  LOGP(info,"leaving {} at line {}",__func__,__LINE__);
 }
 
-void TrapConfig3::getAllRegistersPacked(int mcmidx, std::array<uint32_t, kTrapRegistersSize>& mcmregisters)
-{
-  //  std::copy(mConfigData.at(mcmidx * kTrapRegistersSize), mConfigData.at((mcmidx + 1) * kTrapRegistersSize), std::back_inserter(mcmregisters));
-}
-
-void TrapConfig3::getAllRegistersUnPacked(int mcmidx, std::array<uint32_t, kLastReg>& mcmregisters)
+void TrapConfig3::getAllRegisters(int mcmidx, std::array<uint32_t, kLastReg>& mcmregisters)
 {
   for (int reg = 0; reg < kLastReg; ++reg) {
     mcmregisters[reg] = getRegisterValueByIdx(reg, mcmidx);
@@ -730,7 +694,6 @@ void TrapConfig3::getAllRegistersUnPacked(int mcmidx, std::array<uint32_t, kLast
 void TrapConfig3::getAllMCMByIndex(int regidx, std::array<uint32_t, o2::trd::constants::MAXMCMCOUNT>& mcms)
 {
   if ((regidx >= 0) && (regidx < kLastReg)) {
-    //   LOGP(warn, "register index {} is out of bounds for {}", regidx, __func__);
   }
   for (int mcm = 0; mcm < o2::trd::constants::MAXMCMCOUNT; ++mcm) {
     mcms[mcm] = getRegisterValueByIdx(regidx, mcm);
@@ -752,18 +715,24 @@ void TrapConfig3::getAllMCMByAddress(int registeraddress, std::array<uint32_t, o
   }
 }
 
+void TrapConfig3::getAll(std::array<uint32_t, kLastReg * o2::trd::constants::MAXMCMCOUNT> configdata)
+{
+  for (int mcm = 0; mcm < constants::MAXMCMCOUNT; ++mcm) {
+    for (int reg = 0; reg < kLastReg; ++reg) {
+      configdata[mcm*constants::MAXMCMCOUNT+reg] = getRegisterValueByIdx(reg, mcm);
+    }
+  }
+}
+
 bool TrapConfig3::printRegister(TrapRegInfo* reg, int det, int rob, int mcm)
 {
   // print the value stored in the given register
   // if it is individual a valid MCM has to be specified
-  //TODO
   if ((det >= 0 && det < o2::trd::constants::MAXCHAMBER) &&
       (rob >= 0 && rob < o2::trd::constants::NROBC1) &&
       (mcm >= 0 && mcm < o2::trd::constants::NMCMROB + 2)) {
-    int mcmid = det * 128 + rob * 16 + mcm;
-    // LOGP(info, "{} ({} bits) at {:08x} is {:08x} ", getRegName((TrapReg)reg), getRegNBits((TrapReg)reg), getRegAddress((TrapReg)reg), mRegisterValue[reg].getValue(det, rob, mcm));
+    int mcmid = HelperMethods::getMCMId(det,rob,mcm);
   } else {
-    //  LOGP(error,"Register value is MCM-specific: Invalid detector, ROB or MCM requested ({},{},{})",det,rob,mcm);
     return false;
   }
 
@@ -777,13 +746,14 @@ bool TrapConfig3::printRegister(int addr, int det, int rob, int mcm)
   return printRegister(reg, det, rob, mcm);
 }
 
-//void TrapConfig3::writeFile()
-//{
-//}
-
 TrapRegInfo::TrapRegInfo()
 {
   // default constructor
+}
+
+TrapRegInfo::TrapRegInfo(const std::string& name, int addr, int nBits, int base, int wordoffset, bool ignorechange, uint32_t max)
+{
+ init(name, addr,nBits, base, wordoffset, ignorechange, max);
 }
 
 TrapRegInfo::~TrapRegInfo() = default;
@@ -792,8 +762,7 @@ TrapRegInfo::~TrapRegInfo() = default;
 void TrapRegInfo::init(const std::string& name, int addr, int nbits, int base, int wordoffset, bool ignorechange, uint32_t max)
 {
   // initialise a TRAP register information
-
-  //uint32_t mNbits,mBase,mWordNumber,mShift,tmp,mMask;
+  // uint32_t mNbits,mBase,mWordNumber,mShift,tmp,mMask;
   int bitoffset;
   int gapbits = 0;
   int bitwordoffset32; // the beginning of the 32 bit word containing this reg
@@ -804,7 +773,7 @@ void TrapRegInfo::init(const std::string& name, int addr, int nbits, int base, i
     mNbits = nbits;
     mBase = base;
     mWordNumber = wordoffset;
-    mMax = (2UL << max) - 1;
+    mMax = (2UL << max) - 1; // this can be different from the mask, not sure why.
     packedwordsize = 30;
     if (mNbits > 30 || mNbits == 16 || mNbits == 4) { // these are 32 bit aligned the rest are 30 bit aligned.
       packedwordsize = 32;
@@ -823,15 +792,11 @@ void TrapRegInfo::init(const std::string& name, int addr, int nbits, int base, i
       mShift = 1;
     }
   } else {
-    LOGP(warn, "Re-initialising an existing TRAP register ");
+    LOGP(warn, "Initialising an TRAP register with address of {:08x} ",addr);
   }
-  LOG(debug) << " wordnumber : " << mWordNumber << " dataword : " << mDataWordNumber << " bitoffset " << bitoffset << std::endl;
-  LOG(debug) << " bigger:" << wordoffset * (nbits) << " smaller:" << mDataWordNumber * packedwordsize << std::endl;
-  LOG(debug) << " datamask :" << std::hex << mMask << " bit shift : " << std::dec << mShift << std::endl;
 }
 
 void TrapRegInfo::logTrapRegInfo()
 {
-
   LOGP(info, " TrapReg : {} with nbits={} addr {:08x} mask {:04x} word number {} and baseword {}", getName(), getNbits(), getAddr(), getMask(), getWordNumber(), getBase());
 }
