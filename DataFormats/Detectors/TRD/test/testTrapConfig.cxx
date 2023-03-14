@@ -29,7 +29,7 @@
 namespace o2::trd
 {
 
-//structs to make defining the tests easier.
+// structs to make defining the tests easier.
 struct mcmIndexing {
   uint mSector;
   uint mStack;
@@ -45,7 +45,7 @@ struct addresstest {
   addresstest(uint32_t address, uint32_t value) : mAddress(address), mValue(value){};
 };
 
-//vectors of what and where we want to test.
+// vectors of what and where we want to test.
 std::vector<int> mcmids = {0, 1, 127, 128, 12917, 69119, 69120, 69130};
 std::vector<mcmIndexing> mcmfullindex = {{0, 0, 0, 0, 0}, {0, 0, 0, 0, 1}, {0, 0, 0, 7, 15}, {0, 0, 1, 0, 0}, {3, 1, 4, 7, 5}, {17, 4, 5, 7, 15}, {17, 4, 5, 8, 15}, {18, 0, 0, 1, 2}}; // decomposition of the line above, last 2 of course being fictitious
 
@@ -54,8 +54,8 @@ std::vector<addresstest> registervalues;       // index by address,value
 
 void trapregCheck(std::unique_ptr<TrapConfig3>& trapconfig, uint32_t mcmidx, int mcmidxcount)
 {
-  //loop over the mcm
-  //loop over the register
+  // loop over the mcm
+  // loop over the register
   for (const auto& [key, value] : registervalues) {
     uint32_t address = key;
     uint32_t index = trapconfig->getRegIndexByAddr(address);
@@ -126,9 +126,9 @@ BOOST_AUTO_TEST_CASE(TRDTrapConfig3GetSet)
 
   std::vector<uint32_t> registerAddressToLookAt = {
     0x3180, // first register TPL00
-    0x3185, //TPL05 last reg of first 32 bit word
-    0x3186, //TPL06 first reg of second 32 bit word
-    0x3187, //TPL07 second reg of second 32 bit word
+    0x3185, // TPL05 last reg of first 32 bit word
+    0x3186, // TPL06 first reg of second 32 bit word
+    0x3187, // TPL07 second reg of second 32 bit word
     0x31ff, // TPL7F last TPL register
     0x30A0, // FGA0 first reg after TPL7f
     0x30A4, // last 6bit reg in a 32 bit word
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(TRDTrapConfig3GetSet)
   // setup the resgisters we will look at chosen for various reasons, size, on the edges, changes of register bit size
   for (auto& reg : registerAddressToLookAt) {
     registersOfInterest.push_back(trapconfig->getTrapRegInfoByAddr(reg));
-    //add a zero value, value of 1, mid point and its max.
+    // add a zero value, value of 1, mid point and its max.
     auto max = trapconfig->getTrapRegInfoByAddr(reg)->getMax();
     registervalues.emplace_back(addresstest(reg, 0));
     registervalues.emplace_back(addresstest(reg, 1));
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(TRDTrapConfig3GetSet)
     registervalues.emplace_back(addresstest(reg, max));
   }
 
-  //walk through map and print
+  // walk through map and print
   int count = 0;
   for (auto& mcm : mcmids) {
     trapregCheck(trapconfig, mcm, count);
@@ -192,15 +192,15 @@ BOOST_AUTO_TEST_CASE(TRDTrapConfig3GetSet)
   std::memset(&allregisters->at(0), 0, sizeof(uint32_t));
   std::memset(&allregisterdata->at(0), 0, sizeof(uint32_t));
   std::memset(&allmcmregisters->at(0), 0, sizeof(uint32_t));
-  //loop over all registers written in trapregcheck and check the incoming array that those values are set.
+  // loop over all registers written in trapregcheck and check the incoming array that those values are set.
   int registerindex = 0;
   uint32_t registerreadvalue = 0;
   for (int valuecount = 0; valuecount < 4; ++valuecount) {
-    //loop over each of the value sets 0,1,mid, max
+    // loop over each of the value sets 0,1,mid, max
     std::vector<uint32_t> addressesseen;
     std::map<uint32_t, uint32_t> setValues;
-    //loop through all registers for pulling out the valuecount instance of each, put data in and then check against the regall;
-    //its sorted so we know a key will come 4 times sequentially, and use valuecount to denote which value we are working with.
+    // loop through all registers for pulling out the valuecount instance of each, put data in and then check against the regall;
+    // its sorted so we know a key will come 4 times sequentially, and use valuecount to denote which value we are working with.
     for (int regtest = valuecount; regtest < registervalues.size(); regtest += 4) { // loop over the 4th elements to pull out like values, 0,1,max/2,max
       registerreadvalue = registervalues[regtest].mValue;
       for (auto& mcmidx : mcmids) {
@@ -211,19 +211,19 @@ BOOST_AUTO_TEST_CASE(TRDTrapConfig3GetSet)
         uint32_t retval = trapconfig->setRegisterValueByIdx(registerreadvalue, index, mcmidx);
       }
     }
-    //all registers now written to ccdbconfig for this value set
+    // all registers now written to ccdbconfig for this value set
     int elemcount = 0;
-    //now check the values that were written
+    // now check the values that were written
     trapconfig->getAll(*allregisters);
-    //check done in next double for loop
+    // check done in next double for loop
     uint32_t value = 0;
     int registersofinterestindex = 0;
     for (auto& reg : registersOfInterest) {
-      //pull out the values on for a register
+      // pull out the values on for a register
       trapconfig->getAllMCMByAddress(reg->getAddr(), *allregisterdata);
       // check the values are set correctly
       for (auto& mcmidx : mcmids) {
-        //loop over all mcm for the given register
+        // loop over all mcm for the given register
         if (mcmidx < constants::MAXMCMCOUNT) {
           auto regidx = trapconfig->getRegIndexByAddr(reg->getAddr());
           value = registervalues[registersofinterestindex * 4 + valuecount].mValue;
@@ -236,12 +236,12 @@ BOOST_AUTO_TEST_CASE(TRDTrapConfig3GetSet)
 
     for (auto& mcmidx : mcmids) {
       if (mcmidx < constants::MAXMCMCOUNT) {
-        //pull out the values on for a specific mcm
+        // pull out the values on for a specific mcm
         trapconfig->getAllRegisters(mcmidx, *allmcmregisters);
         // check the values are set correctly
         int regcount = 0;
         for (auto& reg : registersOfInterest) {
-          //loop over all registers for the given mcmq
+          // loop over all registers for the given mcmq
           uint32_t regindex = trapconfig->getRegIndexByAddr(reg->getAddr());
           value = registervalues[regcount * 4 + valuecount].mValue;
           BOOST_CHECK_EQUAL(allmcmregisters->at(trapconfig->getRegIndexByAddr(reg->getAddr())), value);

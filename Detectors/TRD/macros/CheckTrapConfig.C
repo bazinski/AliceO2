@@ -57,8 +57,8 @@ void ccdbDownload(unsigned int runNumber, std::string ccdb, timePoint queryInter
   for (timePoint time = startTime; time < endTime; time += queryInterval) {
     ccdbMgr.setTimestamp(time);
     std::cout << "Downloading TrapConfig at time " << time << std::endl;
-    //std::unique_ptr<TrapConfig3> trapconfig3 = std::make_unique<TrapConfig3>(ccdbMgr.get<o2::trd::TrapConfig3>("TRD/TrapConfig3/TrapConfig3"));
-    //trapConfigMap[time].push_back(trapconfig3);
+    // std::unique_ptr<TrapConfig3> trapconfig3 = std::make_unique<TrapConfig3>(ccdbMgr.get<o2::trd::TrapConfig3>("TRD/TrapConfig3/TrapConfig3"));
+    // trapConfigMap[time].push_back(trapconfig3);
     trapConfigMap[time].push_back(std::make_unique<o2::trd::TrapConfig3>(ccdbMgr.get<o2::trd::TrapConfig3>("TRD/TrapConfig3/TrapConfig3")));
     /*    for (int iDet = 0; iDet < 540; ++iDet) {
       vmap[iDet].push_back(std::make_tuple(

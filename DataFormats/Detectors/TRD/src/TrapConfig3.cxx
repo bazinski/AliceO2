@@ -475,7 +475,7 @@ void TrapConfig3::initialiseRegisters()
   mTrapRegisters[kNTP].init("NTP", 0x0D46, 31, 147, 0, false, 31);
   mTrapRegisters[kNCUT].init("NCUT", 0x0D4C, 32, 148, 0, false, 32);
   mTrapRegisters[kPASACHM].init("PASACHM", 0x315C, 32, 149, 0, false, 19);
-  //mTrapRegisters[kSMCMD].init("SMCMD", 0x0A04, 16, 0x0000);
+  // mTrapRegisters[kSMCMD].init("SMCMD", 0x0A04, 16, 0x0000);
 
   // reindex to speed things up, this time by address, map instead of a rather large lookup table.
   for (int reg = 0; reg < kLastReg; ++reg) {
@@ -575,7 +575,7 @@ uint32_t TrapConfig3::getRegisterValueByIdx(uint32_t regidx, int detector, int r
 
 uint32_t TrapConfig3::getRegisterValueByAddr(uint32_t regaddr, int detector, int rob, int mcm)
 {
-  //TODO put this calculation in helpermethods
+  // TODO put this calculation in helpermethods
   int mcmidx = detector * o2::trd::constants::NROBC1 * o2::trd::constants::NMCMROB + rob * o2::trd::constants::NROBC1 + mcm;
   return getRegisterValueByAddr(regaddr, mcmidx);
 }
@@ -773,7 +773,7 @@ TrapRegInfo::TrapRegInfo(const std::string& name, int addr, int nBits, int base,
 
 TrapRegInfo::~TrapRegInfo() = default;
 
-//void TrapRegister::init(const char* name, int addr, int nBits, int resetValue)
+// void TrapRegister::init(const char* name, int addr, int nBits, int resetValue)
 void TrapRegInfo::init(const std::string& name, int addr, int nbits, int base, int wordnumber, bool ignorechange, uint32_t max)
 {
   // initialise a TRAP register information

@@ -509,7 +509,7 @@ bool CruRawReader::processHalfCRU(int iteration)
       int trackletWordsRejected = 0;
       int trackletWordsRead = parseTrackletLinkData(currentlinksize32, halfChamberId, trackletWordsRejected);
       std::chrono::duration<double, std::micro> trackletparsingtime = std::chrono::high_resolution_clock::now() - trackletparsingstart;
-      //LOGP(info,"Tracklet parsing took {}",(double)std::chrono::duration_cast<std::chrono::microseconds>(trackletparsingtime).count());
+      // LOGP(info,"Tracklet parsing took {}",(double)std::chrono::duration_cast<std::chrono::microseconds>(trackletparsingtime).count());
       if (trackletWordsRead == -1) {
         // something went wrong bailout of here.
         mHBFoffset32 = hbfOffsetTmp + linksizeAccum32;
@@ -571,21 +571,21 @@ bool CruRawReader::processHalfCRU(int iteration)
         }
 
         mEventRecords.incMajorVersion(mDigitHCHeader.major); // 127 is max histogram goes to 256
-        //LOGP(info, " Major version {} ", (uint)mDigitHCHeader.major);
-        //uint32_t tmparray[3];
-        //printDigitHCHeader(mDigitHCHeader, tmparray);
+        // LOGP(info, " Major version {} ", (uint)mDigitHCHeader.major);
+        // uint32_t tmparray[3];
+        // printDigitHCHeader(mDigitHCHeader, tmparray);
 
         if (mDigitHCHeader.major == 0x47) {
           // config event so ignore for now and bail out of parsing.
           //advance data pointers to the end;
           auto configeventlength = mCurrentHalfCRULinkLengths[currentlinkindex];
-          //linkend = linkstart + configeventlength * 8; // 256 bit to 32
-          //mHBFoffset32 = hbfOffsetTmp + currentlinksize32;
-          // linkbuffer vector now holds the whole config event for the current link
+          // linkend = linkstart + configeventlength * 8; // 256 bit to 32
+          // mHBFoffset32 = hbfOffsetTmp + currentlinksize32;
+          //  linkbuffer vector now holds the whole config event for the current link
         } else {
           auto digitsparsingstart = std::chrono::high_resolution_clock::now();
           int digitWordsRejected = 0;
-          //TODO remove this before comitting, its to speed up the parsing to get to the config events.
+          // TODO remove this before comitting, its to speed up the parsing to get to the config events.
           int digitWordsRead = parseDigitLinkData(endOfCurrentLink - mHBFoffset32, halfChamberId, digitWordsRejected);
           std::chrono::duration<double, std::micro> digitsparsingtime = std::chrono::high_resolution_clock::now() - digitsparsingstart;
           if (digitWordsRead == -1) {

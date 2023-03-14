@@ -537,7 +537,7 @@ class TrapConfig3
   TrapConfig3();
   ~TrapConfig3() = default;
 
-  //get a config register value by index, addr, and name, via mcm index
+  // get a config register value by index, addr, and name, via mcm index
   uint32_t getRegisterValue(uint32_t regidx, int mcmidx);
   bool setRegisterValue(uint32_t data, uint32_t regidx, int mcmidx);
   uint32_t getRegisterValueByIdx(uint32_t regidx, int mcmidx);
@@ -547,26 +547,26 @@ class TrapConfig3
   uint32_t getRegisterValueByName(const std::string& name, int mcmidx);
   bool setRegisterValueByName(uint32_t data, const std::string& regname, int mcmidx);
 
-  //get a config register value by index, addr, and name, via sector/stack/layer/rob/mcm
-  //no setters for sector/stack/layer/rob/mcm as writing, we only write from retrieved config events.
+  // get a config register value by index, addr, and name, via sector/stack/layer/rob/mcm
+  // no setters for sector/stack/layer/rob/mcm as writing, we only write from retrieved config events.
   uint32_t getRegisterValueByIdx(uint32_t regix, int sector, int stack, int layer, int rob, int mcm);
   uint32_t getRegisterValueByAddr(uint32_t regaddr, int sector, int stack, int layer, int rob, int mcm);
   uint32_t getRegisterValueByIdx(uint32_t regix, int detector, int rob, int mcm);
   uint32_t getRegisterValueByAddr(uint32_t regaddr, int detector, int rob, int mcm);
 
-  //get a registers name by addres and index;
+  // get a registers name by addres and index;
   std::string getRegNameByAddr(uint16_t addr);
   std::string getRegNameByIdx(unsigned int regidx);
 
-  //get a registers index (enum value) by address or name
+  // get a registers index (enum value) by address or name
   int32_t getRegIndexByAddr(unsigned int addr);
   int32_t getRegIndexByName(const std::string& name);
 
-  //get a registers address by index or name
+  // get a registers address by index or name
   int32_t getRegAddrByIdx(unsigned int regidx);
   int32_t getRegAddrByName(const std::string& name);
 
-  //retrieve the trap register info for a particular register, no need to index into det/rob/mcm as these are constant over a config
+  // retrieve the trap register info for a particular register, no need to index into det/rob/mcm as these are constant over a config
   o2::trd::TrapRegInfo* getTrapRegInfoByAddr(uint32_t addr);
   o2::trd::TrapRegInfo* getTrapRegInfoByIdx(uint32_t idx);
 
@@ -594,7 +594,7 @@ class TrapConfig3
 
   const std::array<o2::trd::TrapRegInfo, kLastReg>& getTrapRegisters() { return mTrapRegisters; }
 
-  //population pending
+  // population pending
   void setConfigVersion(uint32_t version) { mTrapConfigVersion = version; }           // these must some how be gotten from git or wingdb.
   void setConfigNumber(uint32_t number) { mTrapConfigNumber = number; }               // these must be gotten from git or wingdb.
   void setConfigSavedVersion(uint16_t version) { mTrapConfigSavedVersion = version; } // the version that is saved, for the ability to later save the config differently.
