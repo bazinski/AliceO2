@@ -16,8 +16,9 @@
 #define O2_TRD_CALIBRATORNOISE_H
 
 #include "DataFormatsTRD/NoiseCalibration.h"
-#include "DataFormatsTRD/Digit.h"
 #include "DataFormatsTRD/Constants.h"
+#include "DataFormatsTRD/TrapConfigEvent.h"
+
 #include "TRDCalibration/CalibrationParams.h"
 #include "CCDB/CcdbObjectInfo.h"
 #include "Rtypes.h"

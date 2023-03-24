@@ -1,0 +1,119 @@
+// Copyright 2019-2020 CERN and copyright holders of ALICE O2.
+// See https://alice-o2.web.cern.ch/copyright for details of the copyright holders.
+// All rights not expressly granted are reserved.
+//
+// This software is distributed under the terms of the GNU General Public
+// License v3 (GPL Version 3), copied verbatim in the file "COPYING".
+//
+// In applying this license CERN does not waive the privileges and immunities
+// granted to it by virtue of its status as an Intergovernmental Organization
+// or submit itself to any jurisdiction.
+
+/// \file CalibratorVdExB.h
+/// \brief TimeSlot-based calibration of vDrift and ExB
+/// \author Ole Schmidt
+
+#ifndef O2_TRD_CALIBRATORCONFIGEVENTS_H
+#define O2_TRD_CALIBRATORCONFIGEVENTS_H
+
+//#include "DetectorsCalibration/TimeSlotCalibration.h"
+//#include "DetectorsCalibration/TimeSlot.h"
+#include "DataFormatsTRD/Constants.h"
+#include "DataFormatsTRD/TrapConfigEvent.h"
+#include "CCDB/CcdbObjectInfo.h"
+#include "DataFormatsTRD/CalVdriftExB.h"
+#include "TRDCalibration/CalibrationParams.h"
+
+#include "Rtypes.h"
+#include "TProfile.h"
+#include "TFile.h"
+#include "TTree.h"
+
+#include <array>
+#include <cstdlib>
+#include <memory>
+
+namespace o2::trd
+{
+class CalibratorConfigEvents
+{
+
+ public:
+  CalibratorConfigEvents() = default;
+  ~CalibratorConfigEvents() = default;
+
+  bool hasEnoughData() const;
+  void initOutput();
+
+  void createFile();
+
+  void closeFile();
+
+  // Add information from incoming partial trapconfig events that have been accumulated for 1 epn and 1 tf.
+  void process(const gsl::span<const TrapConfigEvent>& trapconfigevents);
+
+  /// Initialize the fit values once with the previous valid ones if they are
+  /// available.
+  void retrievePrev(o2::framework::ProcessingContext& pc);
+  
+  const TrapConfigEvent& getCcdbObject() const { return mCCDBObject; }
+
+ private:
+  bool mInitCompleted;
+  uint32_t mTimeBeforeComparison{mParams.configEventAccumulationTime};       ///< time of accumulating data and before comparison will be done
+  bool mEnableOutput{false};                                               ///< enable output of configevent to a root file instead of the ccdb
+  bool mSaveAllChanges = false;                                            ///< Do we save all the changes to configs as they come in.
+  o2::ccdb::CcdbObjectInfo mCCDBInfo;                                      ///< CCDB infos filled with CCDB description of accompanying CCDB calibration object
+  o2::trd::TrapConfigEvent mCCDBObject;                                    ///< CCDB calibration  object of TrapConfigEvent
+  std::map<uint32_t, std::map<uint32_t, uint32_t>> mTrapValueFrequencyMap; //!< count of different value in the registers for a mcm,register used to find most frequent value for then collapsing into the TrapConfigEvent.
+  
+  const TRDCalibParams& mParams{TRDCalibParams::Instance()}; ///< reference to calibration parameters
+  
+  ClassDefNV(CalibratorConfigEvents, 1);
+};
+
+/*class CalibratorConfigEvents final : public o2::calibration::TimeSlotCalibration<o2::trd::TrapConfigEventTimeSlot>
+{
+  using Slot = o2::calibration::TimeSlot<o2::trd::TrapConfigEventTimeSlot>;
+
+ public:
+  CalibratorConfigEvents() = default;
+  ~CalibratorConfigEvents() final = default;
+
+  bool hasEnoughData(const Slot& slot) const final;
+  void initOutput() final;
+  void finalizeSlot(Slot& slot) final;
+  Slot& emplaceNewSlot(bool front, TFType tStart, TFType tEnd) final;
+
+  void createFile();
+
+  void closeFile();
+
+  const std::vector<o2::trd::TrapConfigEventTimeSlot>& getCcdbObjectVector() const { return mObjectVector; }
+  std::vector<o2::ccdb::CcdbObjectInfo>& getCcdbObjectInfoVector() { return mInfoVector; }
+
+  void initProcessing();
+
+  /// Initialize the fit values once with the previous valid ones if they are
+  /// available.
+  void retrievePrev(o2::framework::ProcessingContext& pc);
+
+ private:
+  bool mInitCompleted;
+  const TRDCalibParams& mParams{TRDCalibParams::Instance()};         ///< reference to calibration parameters
+  size_t mTimeBeforeComparison{mParams.configEventAccumulationTime}; ///< time of accumulating data and before comparison will be done
+  bool mEnableOutput{false};                                         ///< enable output of configevent to a root file instead of the ccdb
+  bool mSaveAllChanges = false;                                      ///< Do we save all the changes to configs as they come in.
+  std::unique_ptr<TFile> mOutFile{nullptr};                          ///< output file
+  std::unique_ptr<TTree> mOutTree{nullptr};                          ///< output tree
+  o2::ccdb::CcdbObjectInfo mCCDBInfo;                                ///< CCDB infos filled with CCDB description of accompanying CCDB calibration object
+  o2::trd::TrapConfigEvent mCCDBObject;                              ///< CCDB calibration  object of TrapConfigEvent
+  std::vector<o2::ccdb::CcdbObjectInfo> mInfoVector;                 ///< vector of CCDB infos; each element is filled with CCDB description of accompanying CCDB calibration object
+  std::vector<o2::trd::TrapConfigEventTimeSlot> mObjectVector;       ///< vector of CCDB calibration objects waiting to be merged
+  std::map<uint32_t, std::map<uint32_t, uint32_t>> mTrapValueFrequencyMap; //!< count of different value in the registers for a mcm,register used to find most frequent value for then collapsing into the TrapConfigEvent.
+  ClassDefOverride(CalibratorConfigEvents, 1);
+};*/
+
+} // namespace o2::trd
+
+#endif // O2_TRD_CALIBRATORVDEXB_H
