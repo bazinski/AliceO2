@@ -175,7 +175,7 @@ double PadPlane::getPad(double y, double z) const
     tiltOffsetPad = tiltOffsetY * mInverseWidthIPad;
     pad += tiltOffsetPad;
   }
-
+  LOGP(info," pad : {} ",pad);
   assert(!(pad < 0.0 || pad > double(mNcols)));
 
   return pad;
