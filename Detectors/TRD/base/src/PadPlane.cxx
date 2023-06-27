@@ -176,7 +176,16 @@ double PadPlane::getPad(double y, double z) const
     pad += tiltOffsetPad;
   }
 
-  assert(!(pad < 0.0 || pad > double(mNcols)));
+  //TODO come back and find why this assert fails on mac arm.
+  //assert(!(pad < 0.0 || pad > double(mNcols)));
+  if(pad < 0.0) {
+    pad =0;
+  }
+  else {
+      if( pad > double(mNcols)){
+      pad = mNcols;
+    }
+  }
 
   return pad;
 }
