@@ -26,6 +26,7 @@
 #include "TRDBase/PadPlane.h"
 #include "DetectorsBase/GeometryManager.h"
 #include "TRDBase/Geometry.h"
+#include <fairlogger/Logger.h>
 
 namespace o2
 {
