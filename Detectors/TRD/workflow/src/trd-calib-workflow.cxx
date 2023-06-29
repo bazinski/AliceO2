@@ -13,7 +13,6 @@
 #include "TRDWorkflowIO/TRDCalibReaderSpec.h"
 #include "TRDWorkflowIO/TRDDigitReaderSpec.h"
 #include "TRDWorkflowIO/TRDConfigEventReaderSpec.h"
-#include "TRDWorkflow/TrapConfigEventSpec.h"
 #include "TRDWorkflow/VdAndExBCalibSpec.h"
 #include "TRDWorkflow/GainCalibSpec.h"
 #include "TRDWorkflow/NoiseCalibSpec.h"

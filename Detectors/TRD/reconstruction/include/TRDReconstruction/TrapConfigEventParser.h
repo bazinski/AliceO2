@@ -160,7 +160,7 @@ class TrapConfigEventParser
   // TrapConfigEvent mTrapConfigEvent;
   // TrapConfigEvent mCCDBTrapConfigEvent;
   // std::shared_ptr<TrapConfigEventMessage> mTrapConfigEventMessage;
-  std::shared_ptr<TrapConfigEvent> mTrapConfigEvent;
+  std::shared_ptr<TrapConfigEvent> mTrapConfigEvent;   // emptry trap config to store the register information.
   // std::shared_ptr<TrapConfigEvent> mCCDBTrapConfigEvent;
   std::array<std::map<uint32_t, uint32_t>, TrapConfigEvent::kLastReg> mTrapRegistersFrequencyMap; // frequency map for values in the respective registers
   std::map<uint32_t, std::map<uint32_t, uint32_t>> mTrapValueFrequencyMap;                        // count of different value in the registers for a mcm,register used to find most frequent value.   Not needed here, as this is now 1 time frame, it will be used in the aggregator.

@@ -60,20 +60,20 @@ class ConfigEventCalibDevice : public o2::framework::Task
 
   void run(o2::framework::ProcessingContext& pc) final
   {
-    const auto& tinfo = pc.services().get<o2::framework::TimingInfo>();
-    if (tinfo.globalRunNumberChanged) { // new run is starting
+    const TimingInfo& timeframeinfo = pc.services().get<o2::framework::TimingInfo>();
+    auto trapConfigEvent = pc.inputs().get<const gsl::span<const o2::trd::TrapConfigEvent>>("input");
+
+    LOG(detail) << "Processing TF ";
+    if (timeframeinfo.globalRunNumberChanged) { // new run is starting
       mRunStopRequested = false;
-      mCalibrator->retrievePrev(pc); // SOR initialization is performed here
+      mCalibrator->process(trapConfigEvent); // SOR initialization is performed here
     }
-    if (mRunStopRequested) {
-      return;
-    }
-    o2::base::GRPGeomHelper::instance().checkUpdates(pc);
-    auto /*trd::TrapConfigEvent*/ trapConfigEvent = pc.inputs().get<gsl::span<o2::trd::TrapConfigEvent>>("input");
-    o2::base::TFIDInfoHelper::fillTFIDInfo(pc, mCalibrator->getCurrentTFInfo());
-    LOG(detail) << "Processing TF " << mCalibrator->getCurrentTFInfo().tfCounter << " with "; // << trapConfigEvent.getNEntries() << " ConfigEventSlot entries";
-    trd::TrapConfigEventTimeSlot mtrapconfigeventtimeslot;
-    mCalibrator->process(mtrapconfigeventtimeslot);
+    
+      o2::base::GRPGeomHelper::instance().checkUpdates(pc);
+
+    o2::dataformats::TFIDInfo timeframeinfo;
+    o2::base::TFIDInfoHelper::fillTFIDInfo(pc, timeframeinfo);
+
     if (pc.transitionState() == TransitionHandlingState::Requested) {
       LOG(info) << "Run stop requested, finalizing";
       mRunStopRequested = true;
