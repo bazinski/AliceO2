@@ -60,19 +60,35 @@ class ConfigEventCalibDevice : public o2::framework::Task
 
   void run(o2::framework::ProcessingContext& pc) final
   {
-    const TimingInfo& timeframeinfo = pc.services().get<o2::framework::TimingInfo>();
-    auto trapConfigEvent = pc.inputs().get<const gsl::span<const o2::trd::TrapConfigEvent>>("input");
-
-    LOG(detail) << "Processing TF ";
-    if (timeframeinfo.globalRunNumberChanged) { // new run is starting
-      mRunStopRequested = false;
-      mCalibrator->process(trapConfigEvent); // SOR initialization is performed here
+    auto trapConfigEvent = pc.inputs().get<const gsl::span<const o2::trd::TrapConfigEvent> >("input");
+    const auto& tinfo = pc.services().get<o2::framework::TimingInfo>();
+    // Obtain rough time from the data header (done only once)
+    if (mStartTime == 0) {
+      o2::dataformats::TFIDInfo ti;
+      o2::base::TFIDInfoHelper::fillTFIDInfo(pc, ti);
+      if (!ti.isDummy()) {
+        mStartTime = ti.creation;
+      }
     }
+
+    // consume the incoming partial configuration events.
+    if (!mCalibrator.timeLimitReached()) {
+      mCalibrator.process(trapConfigEvent);
+    } else {
+      if (!mHaveSentOutput) {
+        LOGP(important, "Enough data received after {} TFs seen, finalizing noise calibration", mNTFsProcessed);
+        mCalibrator.collapseRegisterValues();
+        sendOutput(pc.outputs());
+        mHaveSentOutput = true;
+      } else {
+        if ((mNTFsProcessed % 200) == 0) {
+          LOGP(important, "Not processing anymore. Seen {} TFs in total. Run can be stopped", mNTFsProcessed);
+        }
+      }
+    }
+    ++mNTFsProcessed;
     
       o2::base::GRPGeomHelper::instance().checkUpdates(pc);
-
-    o2::dataformats::TFIDInfo timeframeinfo;
-    o2::base::TFIDInfoHelper::fillTFIDInfo(pc, timeframeinfo);
 
     if (pc.transitionState() == TransitionHandlingState::Requested) {
       LOG(info) << "Run stop requested, finalizing";
