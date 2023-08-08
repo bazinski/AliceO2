@@ -19,6 +19,7 @@ o2_add_library(TRDCalibration
                        src/T0Fit.cxx
                        src/PadCalibCCDBBuilder.cxx
                        src/KrClusterFinder.cxx
+                       src/CalibratorConfigEvents.cxx
                        src/DCSProcessor.cxx
                        src/CalibrationParams.cxx
                        src/PulseHeight.cxx
@@ -40,6 +41,7 @@ o2_add_library(TRDCalibration
                                    include/TRDCalibration/PadCalibCCDBBuilder.h
                                    include/TRDCalibration/KrClusterFinder.h
                                    include/TRDCalibration/PulseHeight.h
+                                   include/TRDCalibration/CalibratorConfigEvents.h
                                    include/TRDCalibration/DCSProcessor.h)
 
 o2_add_executable(trd-dcs-sim-workflow
