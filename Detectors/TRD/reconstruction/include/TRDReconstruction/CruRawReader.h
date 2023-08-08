@@ -22,6 +22,8 @@
 #include <set>
 #include <utility>
 #include <array>
+#include <TH2F.h>
+#include <TFile.h>
 #include "Headers/RAWDataHeader.h"
 #include "Headers/RDHAny.h"
 #include "DetectorsRaw/RDHUtils.h"
@@ -164,6 +166,7 @@ class CruRawReader
   HalfCRUHeader mPreviousHalfCRUHeader; // are we waiting for new header or currently parsing the payload of on
   bool mPreviousHalfCRUHeaderSet;       // flag, whether we can use mPreviousHalfCRUHeader for additional sanity checks
   DigitHCHeader mDigitHCHeader;         // Digit HalfChamber header we are currently on.
+  DigitHCHeaderAll mDigitHCHeaderAll;   // Store all the possible parts of the Digit HC Header
   uint16_t mTimeBins{constants::TIMEBINS}; // the number of time bins to be read out (default 30, can be overwritten from digit HC header)
   bool mHaveSeenDigitHCHeader3{false};     // flag, whether we can compare an incoming DigitHCHeader3 with a header we have seen before
   uint32_t mPreviousDigitHCHeadersvnver;  // svn ver in the digithalfchamber header, used for validity checks
@@ -181,6 +184,10 @@ class CruRawReader
   std::array<uint16_t, 15> mCurrentHalfCRULinkLengths;
   std::array<uint8_t, 15> mCurrentHalfCRULinkErrorFlags;
 
+  bool mFirstConfigIR{true};
+  o2::InteractionRecord mLastConfigIR;
+  std::chrono::duration<double, std::micro> mTotalConfigTime;
+
   const LinkToHCIDMapping* mLinkMap = nullptr; // to retrieve HCID from Link ID
 
   // these counters are reset after every TF
@@ -193,6 +200,7 @@ class CruRawReader
   uint32_t mWordsRejected = 0;         // those words rejected before tracklet and digit parsing could start
 
   EventRecordContainer mEventRecords; // store data range indexes into the above vectors.
+
 };
 
 } // namespace o2::trd

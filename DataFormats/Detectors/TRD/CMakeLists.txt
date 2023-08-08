@@ -25,6 +25,8 @@ o2_add_library(DataFormatsTRD
                        src/Digit.cxx
                        src/KrCluster.cxx
                        src/NoiseCalibration.cxx
+                       src/MCMEvent.cxx
+                       src/TrapConfigEvent.cxx
                PUBLIC_LINK_LIBRARIES O2::CommonDataFormat O2::SimulationDataFormat)
 
 o2_target_root_dictionary(DataFormatsTRD
@@ -53,7 +55,12 @@ o2_target_root_dictionary(DataFormatsTRD
                        include/DataFormatsTRD/CalT0.h
                        include/DataFormatsTRD/SignalArray.h
                        include/DataFormatsTRD/CompressedDigit.h
-                       include/DataFormatsTRD/CompressedHeader.h)
+                       include/DataFormatsTRD/CompressedHeader.h
+                       include/DataFormatsTRD/TrapConfigEvent.h
+                       include/DataFormatsTRD/MCMEvent.h
+                       include/DataFormatsTRD/TrapRegInfo.h
+                       include/DataFormatsTRD/TrapConfigEventQC.h
+                       include/DataFormatsTRD/TrapConfigEvent.h)
 
 o2_add_test(Digit
             COMPONENT_NAME trd
@@ -70,3 +77,11 @@ o2_add_test(RawData
             ENVIRONMENT O2_ROOT=${CMAKE_BINARY_DIR}/stage
             LABELS trd
             )
+
+o2_add_test(TrapConfigEvent
+            COMPONENT_NAME trd
+            PUBLIC_LINK_LIBRARIES O2::DataFormatsTRD
+            SOURCES test/testTrapConfigEvent.cxx
+            ENVIRONMENT O2_ROOT=${CMAKE_BINARY_DIR}/stage
+            LABELS trd
+)

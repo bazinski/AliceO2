@@ -37,6 +37,8 @@ class HalfChamberStatusQC
   void maskHalfChamberA(int sec, int stack, int ly);
   void maskHalfChamberB(int sec, int stack, int ly);
   bool isMasked(int hcId) const { return mStatus.test(hcId); }
+  int getMaskedCount() const { return mStatus.count(); }
+  const std::bitset<constants::MAXHALFCHAMBER>& getBitSet() const { return mStatus; }
   void print();
 
  private:
