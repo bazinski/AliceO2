@@ -108,8 +108,8 @@ class CalibratorConfigEvents
   std::bitset<constants::MAXHALFCHAMBER> mDisabledHalfChambers = 0; ///< Count of the currently enabled half chambers, used as a reference to determine the completeness of the received events.
 
   // both of these could be calculated in collapsing the array of array of maps, but we need this at other times as well.
-  std::array<uint32_t, constants::MAXMCMCOUNT> mTimesSeenMCM;      // How many times have we seen this mcm.
-  std::array<uint32_t, constants::MAXHALFCHAMBER> mTimesSeenHCID;  // How many times have we seen this half chamber, count of the headers not the constituent mcm.
+  std::array<uint32_t, constants::MAXMCMCOUNT> mTimesSeenMCM;     // How many times have we seen this mcm.
+  std::array<uint32_t, constants::MAXHALFCHAMBER> mTimesSeenHCID; // How many times have we seen this half chamber, count of the headers not the constituent mcm.
 
   // similar to above, but for hcid/mcm seen in the data stream of the rawreader (tracklets/digits)
   std::array<uint32_t, constants::MAXMCMCOUNT> mMCMSeenInData;     // How many times have we seen this mcm in the raw data stream.
@@ -117,7 +117,7 @@ class CalibratorConfigEvents
 
   std::array<int32_t, constants::MAXMCMCOUNT> mTrapRegistersMapVectorIndex; // index of mcm in the vector of array of maps
   // TODO switch to vector of array of maps, with an array index.
-  std::array<std::array<std::unordered_map<uint32_t, uint32_t>, TrapConfigEvent::kLastReg>, constants::MAXMCMCOUNT> mTrapRegistersFrequencyMap; // frequency map for values in the respective registers
+  std::array<std::array<std::unordered_map<uint32_t, uint32_t>, TrapRegisters::kLastReg>, constants::MAXMCMCOUNT> mTrapRegistersFrequencyMap; // frequency map for values in the respective registers
 
   const TRDCalibParams& mParams{TRDCalibParams::Instance()}; ///< reference to calibration parameters
 

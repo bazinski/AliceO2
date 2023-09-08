@@ -221,7 +221,7 @@ int TrapConfigEventParser::parseSingleData(std::vector<uint32_t>& data, uint32_t
       fastforward = true;
       return false;
     }
-    if (mCurrentMCMID < o2::trd::constants::MAXMCMCOUNT && mRegistersReadForCurrentMCM - 1 < TrapConfigEvent::kLastReg) {
+    if (mCurrentMCMID < o2::trd::constants::MAXMCMCOUNT && mRegistersReadForCurrentMCM - 1 < TrapRegisters::kLastReg) {
       LOGP(debug, "Adding single register {:08x} [{:08x}] name: {} for mcm {}, mCurrentRegisterWordsCount {} mRegistersReadForCurrentMCM:{} regindex {} with badreg:{}", registeraddr, registerdata, mTrapConfigEvent.get()->getRegNameByAddr(registeraddr), mCurrentMCMID, mCurrentRegisterWordsCount, mRegistersReadForCurrentMCM, idx, badreg);
       // update frequency map:
       if (mRegistersReadForCurrentMCM > 0) {
@@ -312,7 +312,7 @@ int TrapConfigEventParser::parseBlockData(std::vector<uint32_t>& data, uint32_t 
         fastforward = true;
         continue;
       }
-      if (mCurrentMCMID < o2::trd::constants::MAXMCMCOUNT && mRegistersReadForCurrentMCM < TrapConfigEvent::kLastReg) {
+      if (mCurrentMCMID < o2::trd::constants::MAXMCMCOUNT && mRegistersReadForCurrentMCM < TrapRegisters::kLastReg) {
         LOGP(debug, "Adding block register {:09x} [{:08x}] name: {}  for mcm {} mCurrentRegisterWordsCount {} mRegistersReadForCurrentMCM {} regindex {} header {:08x} with badreg:{}", registeraddr, registerdata, mTrapConfigEvent.get()->getRegNameByAddr(registeraddr), mCurrentMCMID, mCurrentRegisterWordsCount, mRegistersReadForCurrentMCM, idx, header, badreg);
         if (mRegistersReadForCurrentMCM > 0) {
           setRegister(mRegistersReadForCurrentMCM, mCurrentMCMID, registerdata);
@@ -325,7 +325,7 @@ int TrapConfigEventParser::parseBlockData(std::vector<uint32_t>& data, uint32_t 
         }
       } else {
         LOGP(debug, "if statement failed for currentmcmregister {:08x}  registerdata {:08x}", mRegistersReadForCurrentMCM, registerdata);
-        // TODO send to qc. if (mCurrentMCMID < o2::trd::constants::MAXMCMCOUNT && mRegistersReadForCurrentMCM < TrapConfigEvent::kLastReg)
+        // TODO send to qc. if (mCurrentMCMID < o2::trd::constants::MAXMCMCOUNT && mRegistersReadForCurrentMCM < TrapRegisters::kLastReg)
       }
 
       mRegisterCount[mTrapConfigEvent.get()->getRegIndexByAddr(registeraddr)]++; // keep a count of seen and accepted registers
@@ -623,15 +623,11 @@ bool TrapConfigEventParser::setRegister(const uint32_t regidx, const uint32_t mc
     return false;
   }
   index = mMCMDataIndex[mcmid];
-  auto base = mTrapConfigEvent.get()->getRegBase(regidx);
-  auto wordnumber = mTrapConfigEvent.get()->getRegWordNumber(regidx);
-  auto mask = mTrapConfigEvent.get()->getRegMask(regidx);
-  auto shift = mTrapConfigEvent.get()->getRegShift(regidx);
-  mMCMData[index].setRegister(registerdata, regidx, base,wordnumber,shift,mask);
+  mMCMData[index].setRegister(registerdata, regidx, mTrapConfigEvent.get()->getRegisterInfo(regidx));
   return true;
 }
 
-uint32_t TrapConfigEventParser::getRegister(const uint32_t regidx, const uint32_t mcmid)
+uint32_t TrapConfigEventParser::getRegister(const uint32_t regidx, const uint32_t mcmid) const
 {
   int32_t index;
   if (mMCMDataIndex[mcmid] == -1) {
@@ -640,11 +636,7 @@ uint32_t TrapConfigEventParser::getRegister(const uint32_t regidx, const uint32_
     return false;
   }
   index = mMCMDataIndex[mcmid];
-  auto base = mTrapConfigEvent.get()->getRegBase(regidx);
-  auto wordnumber = mTrapConfigEvent.get()->getRegWordNumber(regidx);
-  auto mask = mTrapConfigEvent.get()->getRegMask(regidx);
-  auto shift = mTrapConfigEvent.get()->getRegShift(regidx);
-  uint32_t regdata = mMCMData[index].getRegister(regidx, base,wordnumber,shift,mask);
+  uint32_t regdata = mMCMData[index].getRegister(regidx, mTrapConfigEvent.get()->getRegisterInfo(regidx));
   return regdata;
 }
 

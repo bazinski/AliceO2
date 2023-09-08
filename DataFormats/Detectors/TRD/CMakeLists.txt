@@ -25,6 +25,7 @@ o2_add_library(DataFormatsTRD
                        src/Digit.cxx
                        src/KrCluster.cxx
                        src/NoiseCalibration.cxx
+                       src/TrapRegisters.cxx
                        src/MCMEvent.cxx
                        src/TrapConfigEvent.cxx
                PUBLIC_LINK_LIBRARIES O2::CommonDataFormat O2::SimulationDataFormat)
@@ -59,6 +60,7 @@ o2_target_root_dictionary(DataFormatsTRD
                        include/DataFormatsTRD/TrapConfigEvent.h
                        include/DataFormatsTRD/MCMEvent.h
                        include/DataFormatsTRD/TrapRegInfo.h
+                       include/DataFormatsTRD/TrapRegisters.h
                        include/DataFormatsTRD/TrapConfigEventQC.h
                        include/DataFormatsTRD/TrapConfigEvent.h)
 

@@ -18,6 +18,7 @@
 #include "DataFormatsTRD/Constants.h"
 #include "DataFormatsTRD/RawData.h"
 #include "DataFormatsTRD/TrapRegInfo.h"
+#include "DataFormatsTRD/TrapRegisters.h"
 #include "DataFormatsTRD/Digit.h"
 
 #include <string>
@@ -38,10 +39,9 @@ namespace o2::trd
 */
 
 class MCMEvent
-{ 
+{
 
  public:
-
   MCMEvent() = default;
   MCMEvent(int mcmid) { setMCMId(mcmid); }
   ~MCMEvent() = default;
@@ -50,8 +50,10 @@ class MCMEvent
   void setMCMId(const int32_t mcmid) { mMCMId = mcmid; }
 
   // get and set a specific register. Get/Set the value from its internal compressed format.
-  bool setRegister(const uint32_t data, const uint32_t regidx, const uint32_t base, const uint32_t wordnumber, const uint32_t shift, const uint32_t mask);
-  uint32_t getRegister(const uint32_t regidx, const uint32_t base, const uint32_t wordnumber, const uint32_t shift, const uint32_t mask);
+  bool setRegister(const uint32_t data, const uint32_t regidx, const TrapRegInfo& trapreg);
+
+  // bool setRegister(const uint32_t data, const uint32_t regidx, const uint32_t base, const uint32_t wordnumber, const uint32_t shift, const uint32_t mask);
+  const uint32_t getRegister(const uint32_t regidx, const TrapRegInfo& trapreg) const;
 
  private:
   std::array<uint32_t, o2::trd::kTrapRegistersSize> mRegisterData{0}; //!< a block of mcm register data.

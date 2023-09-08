@@ -58,6 +58,8 @@ void EventRecord::sortData(bool sortDigits)
 void EventRecordContainer::sendData(o2::framework::ProcessingContext& pc, bool generatestats, bool sortDigits, bool sendLinkStats)
 {
   // at this point we know the total number of tracklets and digits and triggers.
+  auto dataReadStart = std::chrono::high_resolution_clock::now();
+
   size_t digitcount = 0;
   size_t trackletcount = 0;
   std::vector<Tracklet64> tracklets;

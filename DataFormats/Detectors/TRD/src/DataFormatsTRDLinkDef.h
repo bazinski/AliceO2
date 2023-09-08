@@ -46,6 +46,7 @@
 #pragma link C++ class o2::trd::TRDDataCountersPerTimeFrame + ;
 #pragma link C++ class o2::trd::DataCountersPerTrigger + ;
 #pragma link C++ class o2::trd::TrapRegInfo + ;
+#pragma link C++ class o2::trd::TrapRegisters + ;
 #pragma link C++ class o2::trd::TrapConfigEvent + ;
 #pragma link C++ class o2::trd::TrapConfigEventQC + ;
 #pragma link C++ class o2::trd::TrapConfigEventQCItem + ;
@@ -68,6 +69,7 @@
 #pragma link C++ class std::vector < o2::trd::TrapConfigEventQC> + ;
 #pragma link C++ class std::vector < o2::trd::TrapConfigEventQCItem> + ;
 #pragma link C++ class std::vector < o2::trd::MCMEvent> + ;
+#pragma link C++ class std::vector < o2::trd::TrapRegInfo> + ;
 
 #pragma link C++ struct o2::trd::CTFHeader + ;
 #pragma link C++ struct o2::trd::CTF + ;

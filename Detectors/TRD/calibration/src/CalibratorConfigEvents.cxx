@@ -91,8 +91,8 @@ void CalibratorConfigEvents::process(const gsl::span<MCMEvent>& MCMEvents)
   uint32_t regvalue = 0;
   std::bitset<constants::MAXCHAMBER> hcidseen;
   for (auto& mcmevent : MCMEvents) {
-    for (int mcmreg = 0; mcmreg < TrapConfigEvent::kLastReg; ++mcmreg) {
-      regvalue = mcmevent.getRegister(mcmreg);
+    for (int mcmreg = 0; mcmreg < TrapRegisters::kLastReg; ++mcmreg) {
+      regvalue = mcmevent.getRegister(mcmreg, mCCDBObject.getRegisterInfo(mcmreg));
       auto mcmid = mcmevent.getMCMId();
       if (mcmid < constants::MAXMCMCOUNT) {
         mTimesSeenMCM[mcmid]++; // frequency map for values in the respective registers
@@ -103,7 +103,7 @@ void CalibratorConfigEvents::process(const gsl::span<MCMEvent>& MCMEvents)
           mTimesSeenHCID[hcid]++;
           hcidseen.set(hcid);
         }
-        mCCDBObject.setRegisterValueByIdx(regvalue, mcmreg, mcmid);
+        mCCDBObject.setRegisterValue(regvalue, mcmreg, mcmid);
         if (mTrapRegistersFrequencyMap[mcmid][mcmreg][regvalue] == 0) {
           //  this =1 is actually not required as ++ will increment the zero, its more here for clarity, as this is the case of regvalue not being in the map yet.
           mTrapRegistersFrequencyMap[mcmid][mcmreg][regvalue] = 1;
@@ -161,7 +161,7 @@ void CalibratorConfigEvents::collapseRegisterValues()
       auto mcmevent = mCCDBObject.getMCMEvent(mcmid);
       if (mTimesSeenMCM[mcmid] > 0) {
         // avoid those mcm that have no data.
-        for (int mcmreg = 0; mcmreg < TrapConfigEvent::kLastReg; ++mcmreg) {
+        for (int mcmreg = 0; mcmreg < TrapRegisters::kLastReg; ++mcmreg) {
           // auto regvalue = mcmevent.getRegister(mcmreg,mCCDBObject.getTrapRegInfo(mcmreg));
           // do we have more than a single value?
           if (mTrapRegistersFrequencyMap[mcmid][mcmreg].size() > 1) {
@@ -169,7 +169,7 @@ void CalibratorConfigEvents::collapseRegisterValues()
             auto maxelement = std::max_element(mTrapRegistersFrequencyMap[mcmid][mcmreg].begin(), mTrapRegistersFrequencyMap[mcmid][mcmreg].end(), [](const auto& x, const auto& y) {
               return x.second < y.second;
             });
-            mCCDBObject.setRegisterValueByIdx(maxelement->first, mcmreg, mcmid);
+            mCCDBObject.setRegisterValue(maxelement->first, mcmreg, mcmid);
             int count = 0;
             for (auto& apair : mTrapRegistersFrequencyMap[mcmid][mcmreg]) {
               // LOGP(info,"XXX  [{}] GREATER than 1 value for mcmid #{} mcm register : {}[{},{}] value : {} count 1=={} ",count++,mcmid, mCCDBObject.getRegNameByIdx(mcmreg),mCCDBObject.getRegAddrByIdx(mcmreg),mcmreg,apair.first,mTrapRegistersFrequencyMap[mcmid][mcmreg].size());
@@ -178,7 +178,7 @@ void CalibratorConfigEvents::collapseRegisterValues()
             // we only have one value so use that one.
             auto data = mTrapRegistersFrequencyMap[mcmid][mcmreg].begin()->first;
             auto datacount = mTrapRegistersFrequencyMap[mcmid][mcmreg].begin()->second;
-            mCCDBObject.setRegisterValueByIdx(data, mcmreg, mcmid);
+            mCCDBObject.setRegisterValue(data, mcmreg, mcmid);
           }
         }
       }
@@ -244,7 +244,7 @@ void CalibratorConfigEvents::stillMissingMCM(std::stringstream& missingmcm)
   missingmcm << "MCM seen in data but not in configs : ";
   for (uint32_t mcmid = 0; mcmid < constants::NCHAMBER * 2; ++mcmid) {
     if (mMCMSeenInData[mcmid] > 0 && mTimesSeenMCM[mcmid] == 0) {
-      // mcmid has data coming in but we did not get a config event on this mcmid(link)
+      // mcmid has data coming in but we did not get a config event on this mcmid
       missingmcm << fmt::format("[{} != {}], ", mMCMSeenInData[mcmid], mTimesSeenMCM[mcmid]);
     }
   }

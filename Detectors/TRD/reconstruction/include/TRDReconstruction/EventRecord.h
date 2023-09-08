@@ -114,8 +114,8 @@ class EventRecordContainer
   void reset();
   void accumulateStats();
 
-  void incHCIDProducedData(const int hcid){mHCIDProducedData[hcid]++;}
-  void incMCMProducedData(const int mcmid){mMCMProducedData[mcmid]++;}
+  void incHCIDProducedData(const int hcid) { mHCIDProducedData[hcid]++; }
+  void incMCMProducedData(const int mcmid) { mMCMProducedData[mcmid]++; }
 
  private:
   int mCurrEventRecord = 0;

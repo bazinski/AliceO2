@@ -725,7 +725,7 @@ int CruRawReader::parseDigitLinkData(int maxWords32, int hcid, int& wordsRejecte
         previousMcm = mcmHeader.mcm;
         previousRob = mcmHeader.rob;
       }
-      mEventRecords.incMCMProducedData(HelperMethods::getMCMId(hcid/2,mcmHeader.rob,mcmHeader.mcm));
+      mEventRecords.incMCMProducedData(HelperMethods::getMCMId(hcid / 2, mcmHeader.rob, mcmHeader.mcm));
       if (mDigitHCHeader.major & 0x20) {
         // zero suppression (ZS) is ON, we expect ADC mask next
         state = StateDigitADCMask;

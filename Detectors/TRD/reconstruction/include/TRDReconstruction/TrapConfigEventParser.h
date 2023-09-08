@@ -67,12 +67,6 @@ class TrapConfigEventParser
 
   unsigned int getDmemUnsigned(int addr, int det, int rob, int mcm);
 
-  // helper methods
-  std::string getConfigVersion() { return mTrapConfigEventVersion; }
-  std::string getConfigName() { return mTrapConfigEventName; }
-  void setConfigVersion(std::string version) { mTrapConfigEventVersion = version; } // these must some how be gotten from git or wingdb.
-  void setConfigName(std::string name) { mTrapConfigEventName = name; }             // these must be gotten from git or wingdb.
-
   // TrapReg getRegByAddress(int address);
 
   void printMCMRegisterCount(int hcid);
@@ -86,10 +80,10 @@ class TrapConfigEventParser
 
   void FillHistograms(int eventnum); //;TH2F *hists[6])
   void compareToTrackletsHCID(std::bitset<1080> trackletshcid);
-  std::array<int, TrapConfigEvent::kLastReg>& getStartRegArray() { return mStartReg; }      // the number of time this register was read as the first register
-  std::array<int, TrapConfigEvent::kLastReg>& getStopRegArray() { return mStopReg; }        // the number of time this register was read as the last register
-  std::array<int, TrapConfigEvent::kLastReg>& getMissedRegArray() { return mMissedReg; }    // the number of times this register was not read
-  std::array<int, TrapConfigEvent::kLastReg>& getRegisterCount() { return mRegisterCount; } // total count for each register
+  std::array<int, TrapRegisters::kLastReg>& getStartRegArray() { return mStartReg; }      // the number of time this register was read as the first register
+  std::array<int, TrapRegisters::kLastReg>& getStopRegArray() { return mStopReg; }        // the number of time this register was read as the last register
+  std::array<int, TrapRegisters::kLastReg>& getMissedRegArray() { return mMissedReg; }    // the number of times this register was not read
+  std::array<int, TrapRegisters::kLastReg>& getRegisterCount() { return mRegisterCount; } // total count for each register
   void init(){};
   TrapConfigEvent getNewConfig() { return *(mTrapConfigEvent.get()); };
   TrapConfigEvent* getNewConfigPtr() { return mTrapConfigEvent.get(); };
@@ -116,7 +110,7 @@ class TrapConfigEventParser
   int getMCMParsingStatus(uint32_t mcmid) { return mMcmParsingStatus[mcmid]; }
 
   bool setRegister(const uint32_t regidx, const uint32_t mcmid, const uint32_t registerdata);
-  uint32_t getRegister(const uint32_t regidx, const uint32_t mcmid);
+  uint32_t getRegister(const uint32_t regidx, const uint32_t mcmid) const;
   void addMCM(const int mcmid);
   void clearEventBasedStats();
   void analyseEventBaseStats();
@@ -146,16 +140,14 @@ class TrapConfigEventParser
   InteractionRecord mIR;
   InteractionRecord mPreviousIR;
   std::time_t mConfigDate;
-  std::array<int, TrapConfigEvent::kLastReg> mStartReg{0};      // count which register a config starts at
-  std::array<int, TrapConfigEvent::kLastReg> mStopReg{0};       // count which register a config stops at.
-  std::array<int, TrapConfigEvent::kLastReg> mMissedReg{0};     // count the number of missed reigsters
-  std::array<int, TrapConfigEvent::kLastReg> mRegisterCount{0}; // register frequency, a count of how many times each register appears
-  std::string mTrapConfigEventName;                             // TOOD figure how to pull this in or seperately put it in the CCDB
-  std::string mTrapConfigEventVersion;
-  std::shared_ptr<TrapConfigEvent> mTrapConfigEvent; // emptry trap config to store the register information.
+  std::array<int, TrapRegisters::kLastReg> mStartReg{0};      // count which register a config starts at
+  std::array<int, TrapRegisters::kLastReg> mStopReg{0};       // count which register a config stops at.
+  std::array<int, TrapRegisters::kLastReg> mMissedReg{0};     // count the number of missed reigsters
+  std::array<int, TrapRegisters::kLastReg> mRegisterCount{0}; // register frequency, a count of how many times each register appears
+  std::shared_ptr<TrapConfigEvent> mTrapConfigEvent;          // emptry trap config to store the register information.
   std::vector<MCMEvent> mMCMData;
   std::array<int32_t, constants::MAXMCMCOUNT> mMCMDataIndex;
-  std::array<std::map<uint32_t, uint32_t>, TrapConfigEvent::kLastReg> mTrapRegistersFrequencyMap; // frequency map for values in the respective registers
+  std::array<std::map<uint32_t, uint32_t>, TrapRegisters::kLastReg> mTrapRegistersFrequencyMap; // frequency map for values in the respective registers
   TrapConfigEventQC mQCData;
   int configcount = 0;
   ClassDefNV(TrapConfigEventParser, 1);

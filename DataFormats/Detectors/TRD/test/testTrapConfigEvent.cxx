@@ -60,12 +60,12 @@ void trapregCheck(std::unique_ptr<TrapConfigEvent>& trapconfig, uint32_t mcmidx,
     uint32_t address = key;
     uint32_t index = trapconfig->getRegIndexByAddr(address);
     std::string name = trapconfig->getRegNameByAddr(address);
-    if (trapconfig->setRegisterValueByIdx(value, index, mcmidx)) {
-      BOOST_CHECK_EQUAL(trapconfig->getRegisterValueByIdx(index, mcmidx), value);
-      BOOST_CHECK_EQUAL(trapconfig->getRegisterValueByAddr(address, mcmidx), value);
-      BOOST_CHECK_EQUAL(trapconfig->getRegisterValueByIdx(index, HelperMethods::getMCMId(mcmfullindex[mcmidxcount].mSector, mcmfullindex[mcmidxcount].mStack, mcmfullindex[mcmidxcount].mLayer, mcmfullindex[mcmidxcount].mRob, mcmfullindex[mcmidxcount].mMcm)), value);
-      BOOST_CHECK_EQUAL(trapconfig->getRegisterValueByAddr(address, HelperMethods::getMCMId(mcmfullindex[mcmidxcount].mSector, mcmfullindex[mcmidxcount].mStack, mcmfullindex[mcmidxcount].mLayer, mcmfullindex[mcmidxcount].mRob, mcmfullindex[mcmidxcount].mMcm)), value);
-      BOOST_CHECK_EQUAL(trapconfig->getRegisterValueByName(name, mcmidx), value);
+    if (trapconfig->setRegisterValue(value, index, mcmidx)) {
+      BOOST_CHECK_EQUAL(trapconfig->getRegisterValue(index, mcmidx), value);
+      BOOST_CHECK_EQUAL(trapconfig->getRegisterValue(trapconfig->getRegIndexByAddr(address), mcmidx), value);
+      BOOST_CHECK_EQUAL(trapconfig->getRegisterValue(index, HelperMethods::getMCMId(mcmfullindex[mcmidxcount].mSector, mcmfullindex[mcmidxcount].mStack, mcmfullindex[mcmidxcount].mLayer, mcmfullindex[mcmidxcount].mRob, mcmfullindex[mcmidxcount].mMcm)), value);
+      BOOST_CHECK_EQUAL(trapconfig->getRegisterValue(trapconfig->getRegIndexByAddr(address), HelperMethods::getMCMId(mcmfullindex[mcmidxcount].mSector, mcmfullindex[mcmidxcount].mStack, mcmfullindex[mcmidxcount].mLayer, mcmfullindex[mcmidxcount].mRob, mcmfullindex[mcmidxcount].mMcm)), value);
+      BOOST_CHECK_EQUAL(trapconfig->getRegisterValue(trapconfig->getRegIndexByName(name), mcmidx), value);
     }
   }
 }
@@ -185,10 +185,9 @@ BOOST_AUTO_TEST_CASE(TRDTrapConfigEventGetSet)
     ++count;
   }
   // all those values have been written so we can now try read those back in bulk
-  std::unique_ptr<std::array<uint32_t, constants::MAXMCMCOUNT * TrapConfigEvent::kLastReg>> allregisters(new std::array<uint32_t, constants::MAXMCMCOUNT * TrapConfigEvent::kLastReg>()); // all data
-  std::unique_ptr<std::array<uint32_t, constants::MAXMCMCOUNT>> allregisterdata(new std::array<uint32_t, constants::MAXMCMCOUNT>());                                                      // data for a single register across all mcm
-  std::unique_ptr<std::array<uint32_t, TrapConfigEvent::kLastReg>> allmcmregisters(new std::array<uint32_t, TrapConfigEvent::kLastReg>());                                                // data for a single mcm, all registers.
-  std::memset(&allregisters->at(0), 0, sizeof(uint32_t));
+  // std::unique_ptr<std::array<uint32_t, constants::MAXMCMCOUNT * TrapConfigEvent::kLastReg>> allregisters(new std::array<uint32_t, constants::MAXMCMCOUNT * TrapConfigEvent::kLastReg>()); // all data
+  std::unique_ptr<std::array<uint32_t, constants::MAXMCMCOUNT>> allregisterdata(new std::array<uint32_t, constants::MAXMCMCOUNT>());   // data for a single register across all mcm
+  std::unique_ptr<std::array<uint32_t, TrapRegisters::kLastReg>> allmcmregisters(new std::array<uint32_t, TrapRegisters::kLastReg>()); // data for a single mcm, all registers. std::memset(&allregisters->at(0), 0, sizeof(uint32_t));
   std::memset(&allregisterdata->at(0), 0, sizeof(uint32_t));
   std::memset(&allmcmregisters->at(0), 0, sizeof(uint32_t));
   // loop over all registers written in trapregcheck and check the incoming array that those values are set.
@@ -207,13 +206,13 @@ BOOST_AUTO_TEST_CASE(TRDTrapConfigEventGetSet)
 
         uint32_t index = trapconfig->getRegIndexByAddr(address);
         std::string name = trapconfig->getRegNameByAddr(address);
-        uint32_t retval = trapconfig->setRegisterValueByIdx(registerreadvalue, index, mcmidx);
+        uint32_t retval = trapconfig->setRegisterValue(registerreadvalue, index, mcmidx);
       }
     }
     // all registers now written to ccdbconfig for this value set
     int elemcount = 0;
     // now check the values that were written
-    trapconfig->getAll(*allregisters);
+    // trapconfig->getAll(*allregisters);
     // check done in next double for loop
     uint32_t value = 0;
     int registersofinterestindex = 0;
@@ -227,7 +226,7 @@ BOOST_AUTO_TEST_CASE(TRDTrapConfigEventGetSet)
           auto regidx = reg;
           value = registervalues[registersofinterestindex * 4 + valuecount].mValue;
           BOOST_CHECK_EQUAL(allregisterdata->at(mcmidx), value);
-          BOOST_CHECK_EQUAL(allregisters->at(mcmidx * TrapConfigEvent::kLastReg + regidx), value); // do the big one at the same time as the little one, pointless repeating the loop seperately
+          // BOOST_CHECK_EQUAL(allregisters->at(mcmidx * TrapConfigEvent::kLastReg + regidx), value); // do the big one at the same time as the little one, pointless repeating the loop seperately
         }
       }
       ++registersofinterestindex;

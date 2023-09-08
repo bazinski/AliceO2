@@ -65,7 +65,7 @@ void TrapSimulator::init(TrapConfigEvent* trapconfig, int det, int robPos, int m
 
   if (!mInitialized) {
     mTrapConfigEvent = trapconfig;
-    mNTimeBin = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kC13CPUA, mDetector, mRobPos, mMcmPos);
+    mNTimeBin = mTrapConfigEvent->getTrapReg(TrapRegisters::kC13CPUA, mDetector, mRobPos, mMcmPos);
     mZSMap.resize(NADCMCM);
     mADCR.resize(mNTimeBin * NADCMCM);
     mADCF.resize(mNTimeBin * NADCMCM);
@@ -585,11 +585,11 @@ void TrapSimulator::draw(int choice, int index)
     for (int iTrkl = 0; iTrkl < mTrackletArray64.size(); iTrkl++) {
       Tracklet64 trkl = mTrackletArray64[iTrkl];
       float position = trkl.getPosition();
-      //never used int ndrift = mTrapConfigEvent->getDmemUnsigned(mgkDmemAddrNdrift, mDetector, mRobPos, mMcmPos) >> 5;
+      // never used int ndrift = mTrapConfigEvent->getDmemUnsigned(mgkDmemAddrNdrift, mDetector, mRobPos, mMcmPos) >> 5;
       float slope = trkl.getSlope();
 
-      int t0 = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPFS, mDetector, mRobPos, mMcmPos);
-      int t1 = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPFE, mDetector, mRobPos, mMcmPos);
+      int t0 = mTrapConfigEvent->getTrapReg(TrapRegisters::kTPFS, mDetector, mRobPos, mMcmPos);
+      int t1 = mTrapConfigEvent->getTrapReg(TrapRegisters::kTPFE, mDetector, mRobPos, mMcmPos);
 
       trklLines[iTrkl].SetX1(position - slope * t0);
       trklLines[iTrkl].SetY1(t0);
@@ -651,8 +651,8 @@ void TrapSimulator::setBaselines()
     if ((mADCFilled & (1 << adc)) == 0) { // adc is empty by construction of mADCFilled.
       for (int timebin = 0; timebin < mNTimeBin; timebin++) {
         // kFPNP = 32 = 8 << 2 (pedestal correction additive) and kTPFP = 40 = 10 << 2 (filtered pedestal)
-        mADCR[adc * mNTimeBin + timebin] = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPFP, mDetector, mRobPos, mMcmPos); // OS: not using FPNP here, since in filter() the ADC values from the 'raw' array will be copied into the filtered array
-        mADCF[adc * mNTimeBin + timebin] = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPFP, mDetector, mRobPos, mMcmPos);
+        mADCR[adc * mNTimeBin + timebin] = mTrapConfigEvent->getTrapReg(TrapRegisters::kTPFP, mDetector, mRobPos, mMcmPos); // OS: not using FPNP here, since in filter() the ADC values from the 'raw' array will be copied into the filtered array
+        mADCF[adc * mNTimeBin + timebin] = mTrapConfigEvent->getTrapReg(TrapRegisters::kTPFP, mDetector, mRobPos, mMcmPos);
       }
     }
   }
@@ -673,8 +673,8 @@ void TrapSimulator::setDataPedestal(int adc)
   }
 
   for (int it = 0; it < mNTimeBin; it++) {
-    mADCR[adc * mNTimeBin + it] = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFPNP, mDetector, mRobPos, mMcmPos);
-    mADCF[adc * mNTimeBin + it] = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPFP, mDetector, mRobPos, mMcmPos);
+    mADCR[adc * mNTimeBin + it] = mTrapConfigEvent->getTrapReg(TrapRegisters::kFPNP, mDetector, mRobPos, mMcmPos);
+    mADCF[adc * mNTimeBin + it] = mTrapConfigEvent->getTrapReg(TrapRegisters::kTPFP, mDetector, mRobPos, mMcmPos);
   }
 }
 
@@ -800,7 +800,7 @@ void TrapSimulator::filterPedestalInit(int baseline)
   // been constant for a long time (compared to the time constant).
   //  LOG(debug) << "BEGIN: " << __FILE__ << ":" << __func__ << ":" << __LINE__ ;
 
-  unsigned short fptc = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFPTC, mDetector, mRobPos, mMcmPos); // 0..3, 0 - fastest, 3 - slowest
+  unsigned short fptc = mTrapConfigEvent->getTrapReg(TrapRegisters::kFPTC, mDetector, mRobPos, mMcmPos); // 0..3, 0 - fastest, 3 - slowest
 
   for (int adc = 0; adc < NADCMCM; adc++) {
     mInternalFilterRegisters[adc].mPedAcc = (baseline << 2) * (1 << mgkFPshifts[fptc]);
@@ -815,9 +815,9 @@ unsigned short TrapSimulator::filterPedestalNextSample(int adc, int timebin, uns
   // history of the filter.
   LOG(debug) << "BEGIN: " << __FILE__ << ":" << __func__ << ":" << __LINE__;
 
-  unsigned short fpnp = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFPNP, mDetector, mRobPos, mMcmPos); // 0..511 -> 0..127.75, pedestal at the output
-  unsigned short fptc = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFPTC, mDetector, mRobPos, mMcmPos); // 0..3, 0 - fastest, 3 - slowest
-  unsigned short fpby = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFPBY, mDetector, mRobPos, mMcmPos); // 0..1 bypass, active low
+  unsigned short fpnp = mTrapConfigEvent->getTrapReg(TrapRegisters::kFPNP, mDetector, mRobPos, mMcmPos); // 0..511 -> 0..127.75, pedestal at the output
+  unsigned short fptc = mTrapConfigEvent->getTrapReg(TrapRegisters::kFPTC, mDetector, mRobPos, mMcmPos); // 0..3, 0 - fastest, 3 - slowest
+  unsigned short fpby = mTrapConfigEvent->getTrapReg(TrapRegisters::kFPBY, mDetector, mRobPos, mMcmPos); // 0..1 bypass, active low
 
   unsigned short accumulatorShifted;
   unsigned short inpAdd;
@@ -893,11 +893,11 @@ unsigned short TrapSimulator::filterGainNextSample(int adc, unsigned short value
   // history of the filter.
   //  if(mDetector==75&& mRobPos==5 && mMcmPos==15) LOG(debug) << "ENTER: " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " with adc = " << adc << " value = " << value;
 
-  unsigned short mgby = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFGBY, mDetector, mRobPos, mMcmPos);      // bypass, active low
-  unsigned short mgf = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFGF0 + adc, mDetector, mRobPos, mMcmPos); // 0x700 + (0 & 0x1ff);
-  unsigned short mga = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFGA0 + adc, mDetector, mRobPos, mMcmPos); // 40;
-  unsigned short mgta = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFGTA, mDetector, mRobPos, mMcmPos);      // 20;
-  unsigned short mgtb = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFGTB, mDetector, mRobPos, mMcmPos);      // 2060;
+  unsigned short mgby = mTrapConfigEvent->getTrapReg(TrapRegisters::kFGBY, mDetector, mRobPos, mMcmPos);      // bypass, active low
+  unsigned short mgf = mTrapConfigEvent->getTrapReg(TrapRegisters::kFGF0 + adc, mDetector, mRobPos, mMcmPos); // 0x700 + (0 & 0x1ff);
+  unsigned short mga = mTrapConfigEvent->getTrapReg(TrapRegisters::kFGA0 + adc, mDetector, mRobPos, mMcmPos); // 40;
+  unsigned short mgta = mTrapConfigEvent->getTrapReg(TrapRegisters::kFGTA, mDetector, mRobPos, mMcmPos);      // 20;
+  unsigned short mgtb = mTrapConfigEvent->getTrapReg(TrapRegisters::kFGTB, mDetector, mRobPos, mMcmPos);      // 2060;
   //  mgf=256;
   //  mga=8;
   //  mgta=20;
@@ -955,9 +955,9 @@ void TrapSimulator::filterTailInit(int baseline)
   // sufficiently long time.
 
   // exponents and weight calculated from configuration
-  unsigned short alphaLong = 0x3ff & mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFTAL, mDetector, mRobPos, mMcmPos);                            // the weight of the long component
-  unsigned short lambdaLong = (1 << 10) | (1 << 9) | (mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFTLL, mDetector, mRobPos, mMcmPos) & 0x1FF);  // the multiplier
-  unsigned short lambdaShort = (0 << 10) | (1 << 9) | (mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFTLS, mDetector, mRobPos, mMcmPos) & 0x1FF); // the multiplier
+  unsigned short alphaLong = 0x3ff & mTrapConfigEvent->getTrapReg(TrapRegisters::kFTAL, mDetector, mRobPos, mMcmPos);                            // the weight of the long component
+  unsigned short lambdaLong = (1 << 10) | (1 << 9) | (mTrapConfigEvent->getTrapReg(TrapRegisters::kFTLL, mDetector, mRobPos, mMcmPos) & 0x1FF);  // the multiplier
+  unsigned short lambdaShort = (0 << 10) | (1 << 9) | (mTrapConfigEvent->getTrapReg(TrapRegisters::kFTLS, mDetector, mRobPos, mMcmPos) & 0x1FF); // the multiplier
 
   float lambdaL = lambdaLong * 1.0 / (1 << 11);
   float lambdaS = lambdaShort * 1.0 / (1 << 11);
@@ -970,7 +970,7 @@ void TrapSimulator::filterTailInit(int baseline)
   float ql, qs;
 
   if (baseline < 0) {
-    baseline = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFPNP, mDetector, mRobPos, mMcmPos);
+    baseline = mTrapConfigEvent->getTrapReg(TrapRegisters::kFPNP, mDetector, mRobPos, mMcmPos);
   }
 
   ql = lambdaL * (1 - lambdaS) * alphaL;
@@ -978,9 +978,9 @@ void TrapSimulator::filterTailInit(int baseline)
 
   for (int adc = 0; adc < NADCMCM; adc++) {
     int value = baseline & 0xFFF;
-    int corr = (value * mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFGF0 + adc, mDetector, mRobPos, mMcmPos)) >> 11;
+    int corr = (value * mTrapConfigEvent->getTrapReg(TrapRegisters::kFGF0 + adc, mDetector, mRobPos, mMcmPos)) >> 11;
     corr = corr > 0xfff ? 0xfff : corr;
-    corr = addUintClipping(corr, mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFGA0 + adc, mDetector, mRobPos, mMcmPos), 12);
+    corr = addUintClipping(corr, mTrapConfigEvent->getTrapReg(TrapRegisters::kFGA0 + adc, mDetector, mRobPos, mMcmPos), 12);
 
     float kt = kdc * baseline;
     unsigned short aout = baseline - (unsigned short)kt;
@@ -997,9 +997,9 @@ unsigned short TrapSimulator::filterTailNextSample(int adc, unsigned short value
   // history of the filter.
 
   // exponents and weight calculated from configuration
-  unsigned short alphaLong = 0x3ff & mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFTAL, mDetector, mRobPos, mMcmPos);                            // the weight of the long component
-  unsigned short lambdaLong = (1 << 10) | (1 << 9) | (mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFTLL, mDetector, mRobPos, mMcmPos) & 0x1FF);  // the multiplier of the long component
-  unsigned short lambdaShort = (0 << 10) | (1 << 9) | (mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFTLS, mDetector, mRobPos, mMcmPos) & 0x1FF); // the multiplier of the short component
+  unsigned short alphaLong = 0x3ff & mTrapConfigEvent->getTrapReg(TrapRegisters::kFTAL, mDetector, mRobPos, mMcmPos);                            // the weight of the long component
+  unsigned short lambdaLong = (1 << 10) | (1 << 9) | (mTrapConfigEvent->getTrapReg(TrapRegisters::kFTLL, mDetector, mRobPos, mMcmPos) & 0x1FF);  // the multiplier of the long component
+  unsigned short lambdaShort = (0 << 10) | (1 << 9) | (mTrapConfigEvent->getTrapReg(TrapRegisters::kFTLS, mDetector, mRobPos, mMcmPos) & 0x1FF); // the multiplier of the short component
 
   // intermediate signals
   unsigned int aDiff;
@@ -1033,7 +1033,7 @@ unsigned short TrapSimulator::filterTailNextSample(int adc, unsigned short value
   mInternalFilterRegisters[adc].mTailAmplShort = tmp & 0xFFF;
 
   // the output of the filter
-  if (mTrapConfigEvent->getTrapReg(TrapConfigEvent::kFTBY, mDetector, mRobPos, mMcmPos) == 0) { // bypass mode, active low
+  if (mTrapConfigEvent->getTrapReg(TrapRegisters::kFTBY, mDetector, mRobPos, mMcmPos) == 0) { // bypass mode, active low
     return value;
   } else {
     return aDiff;
@@ -1065,10 +1065,10 @@ void TrapSimulator::zeroSupressionMapping()
     return;
   }
 
-  int eBIS = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kEBIS, mDetector, mRobPos, mMcmPos);
-  int eBIT = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kEBIT, mDetector, mRobPos, mMcmPos);
-  int eBIL = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kEBIL, mDetector, mRobPos, mMcmPos);
-  int eBIN = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kEBIN, mDetector, mRobPos, mMcmPos);
+  int eBIS = mTrapConfigEvent->getTrapReg(TrapRegisters::kEBIS, mDetector, mRobPos, mMcmPos);
+  int eBIT = mTrapConfigEvent->getTrapReg(TrapRegisters::kEBIT, mDetector, mRobPos, mMcmPos);
+  int eBIL = mTrapConfigEvent->getTrapReg(TrapRegisters::kEBIL, mDetector, mRobPos, mMcmPos);
+  int eBIN = mTrapConfigEvent->getTrapReg(TrapRegisters::kEBIN, mDetector, mRobPos, mMcmPos);
 
   for (int iAdc = 0; iAdc < NADCMCM; iAdc++) {
     mZSMap[iAdc] = -1;
@@ -1146,13 +1146,13 @@ void TrapSimulator::addHitToFitreg(int adc, unsigned short timebin, unsigned sho
   // In addition to the fit sums in the fit register
   //
   /*
-    if ((timebin >= mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPQS0, mDetector, mRobPos, mMcmPos)) &&
-        (timebin < mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPQE0, mDetector, mRobPos, mMcmPos))) {
+    if ((timebin >= mTrapConfigEvent->getTrapReg(TrapRegisters::kTPQS0, mDetector, mRobPos, mMcmPos)) &&
+        (timebin < mTrapConfigEvent->getTrapReg(TrapRegisters::kTPQE0, mDetector, mRobPos, mMcmPos))) {
       mFitReg[adc].q0 += qtot;
     }
 
-    if ((timebin >= mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPQS1, mDetector, mRobPos, mMcmPos)) &&
-        (timebin < mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPQE1, mDetector, mRobPos, mMcmPos))) {
+    if ((timebin >= mTrapConfigEvent->getTrapReg(TrapRegisters::kTPQS1, mDetector, mRobPos, mMcmPos)) &&
+        (timebin < mTrapConfigEvent->getTrapReg(TrapRegisters::kTPQE1, mDetector, mRobPos, mMcmPos))) {
       mFitReg[adc].q1 += qtot;
     }
   */
@@ -1186,21 +1186,21 @@ void TrapSimulator::calcFitreg()
   //??? to be clarified:
 
   // find first timebin to be looked at
-  unsigned short timebin1 = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPFS, mDetector, mRobPos, mMcmPos);
-  if (mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPQS0, mDetector, mRobPos, mMcmPos) < timebin1) {
-    timebin1 = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPQS0, mDetector, mRobPos, mMcmPos);
+  unsigned short timebin1 = mTrapConfigEvent->getTrapReg(TrapRegisters::kTPFS, mDetector, mRobPos, mMcmPos);
+  if (mTrapConfigEvent->getTrapReg(TrapRegisters::kTPQS0, mDetector, mRobPos, mMcmPos) < timebin1) {
+    timebin1 = mTrapConfigEvent->getTrapReg(TrapRegisters::kTPQS0, mDetector, mRobPos, mMcmPos);
   }
-  if (mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPQS1, mDetector, mRobPos, mMcmPos) < timebin1) {
-    timebin1 = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPQS1, mDetector, mRobPos, mMcmPos);
+  if (mTrapConfigEvent->getTrapReg(TrapRegisters::kTPQS1, mDetector, mRobPos, mMcmPos) < timebin1) {
+    timebin1 = mTrapConfigEvent->getTrapReg(TrapRegisters::kTPQS1, mDetector, mRobPos, mMcmPos);
   }
 
   // find last timebin to be looked at
-  unsigned short timebin2 = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPFE, mDetector, mRobPos, mMcmPos);
-  if (mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPQE0, mDetector, mRobPos, mMcmPos) > timebin2) {
-    timebin2 = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPQE0, mDetector, mRobPos, mMcmPos);
+  unsigned short timebin2 = mTrapConfigEvent->getTrapReg(TrapRegisters::kTPFE, mDetector, mRobPos, mMcmPos);
+  if (mTrapConfigEvent->getTrapReg(TrapRegisters::kTPQE0, mDetector, mRobPos, mMcmPos) > timebin2) {
+    timebin2 = mTrapConfigEvent->getTrapReg(TrapRegisters::kTPQE0, mDetector, mRobPos, mMcmPos);
   }
-  if (mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPQE1, mDetector, mRobPos, mMcmPos) > timebin2) {
-    timebin2 = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPQE1, mDetector, mRobPos, mMcmPos);
+  if (mTrapConfigEvent->getTrapReg(TrapRegisters::kTPQE1, mDetector, mRobPos, mMcmPos) > timebin2) {
+    timebin2 = mTrapConfigEvent->getTrapReg(TrapRegisters::kTPQE1, mDetector, mRobPos, mMcmPos);
   }
 
   // FIXME: overwrite fit start with values as in Venelin's simulation:
@@ -1222,16 +1222,16 @@ void TrapSimulator::calcFitreg()
       adcCentral = mADCF[(adcch + 1) * mNTimeBin + timebin];
       adcRight = mADCF[(adcch + 2) * mNTimeBin + timebin];
       bool hitQual = false;
-      if (mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPVBY, mDetector, mRobPos, mMcmPos) == 0) {
+      if (mTrapConfigEvent->getTrapReg(TrapRegisters::kTPVBY, mDetector, mRobPos, mMcmPos) == 0) {
         // bypass the cluster verification
         hitQual = true;
       } else {
         hitQual = ((adcLeft * adcRight) <
-                   ((mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPVT, mDetector, mRobPos, mMcmPos) * adcCentral * adcCentral) >> 10));
+                   ((mTrapConfigEvent->getTrapReg(TrapRegisters::kTPVT, mDetector, mRobPos, mMcmPos) * adcCentral * adcCentral) >> 10));
         if (hitQual) {
           LOG(debug) << "cluster quality cut passed with " << adcLeft << ", " << adcCentral << ", "
-                     << adcRight << " - threshold " << mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPVT, mDetector, mRobPos, mMcmPos)
-                     << " -> " << mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPVT, mDetector, mRobPos, mMcmPos) * adcCentral * adcCentral;
+                     << adcRight << " - threshold " << mTrapConfigEvent->getTrapReg(TrapRegisters::kTPVT, mDetector, mRobPos, mMcmPos)
+                     << " -> " << mTrapConfigEvent->getTrapReg(TrapRegisters::kTPVT, mDetector, mRobPos, mMcmPos) * adcCentral * adcCentral;
         }
       }
 
@@ -1239,7 +1239,7 @@ void TrapSimulator::calcFitreg()
       int qtotTemp = adcLeft + adcCentral + adcRight;
 
       if ((hitQual) &&
-          (qtotTemp >= mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPHT, mDetector, mRobPos, mMcmPos)) &&
+          (qtotTemp >= mTrapConfigEvent->getTrapReg(TrapRegisters::kTPHT, mDetector, mRobPos, mMcmPos)) &&
           (adcLeft <= adcCentral) &&
           (adcCentral > adcRight)) {
         qTotal[adcch] = qtotTemp;
@@ -1328,10 +1328,10 @@ void TrapSimulator::calcFitreg()
         //  hit detected, in TRAP we have 4 units and a hit-selection, here we proceed all channels!
         //  subtract the pedestal TPFP, clipping instead of wrapping
 
-        int regTPFP = mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPFP, mDetector, mRobPos, mMcmPos); // TODO put this together with the others as members of trapsim, which is initiliased by det,rob,mcm.
+        int regTPFP = mTrapConfigEvent->getTrapReg(TrapRegisters::kTPFP, mDetector, mRobPos, mMcmPos); // TODO put this together with the others as members of trapsim, which is initiliased by det,rob,mcm.
         LOG(debug) << "Hit found, time=" << timebin << ", adcch=" << adcch << "/" << adcch + 1 << "/"
                    << adcch + 2 << ", adc values=" << adcLeft << "/" << adcCentral << "/"
-                   << adcRight << ", regTPFP=" << regTPFP << ", TPHT=" << mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPHT, mDetector, mRobPos, mMcmPos);
+                   << adcRight << ", regTPFP=" << regTPFP << ", TPHT=" << mTrapConfigEvent->getTrapReg(TrapRegisters::kTPHT, mDetector, mRobPos, mMcmPos);
         // regTPFP >>= 2; // OS: this line should be commented out when checking real data. It's only needed for comparison with Venelin's simulation if in addition mgkAddDigits == 0
         if (adcLeft < regTPFP) {
           adcLeft = 0;
@@ -1363,7 +1363,7 @@ void TrapSimulator::calcFitreg()
         //  make the correction using the position LUT
         // LOG(info) << "ypos raw is " << ypos << "  adcrigh-adcleft/adccentral " << adcRight << "-" << adcLeft << "/" << adcCentral << "==" << (adcRight - adcLeft) / adcCentral << " 128 * numerator : " << 128 * (adcRight - adcLeft) / adcCentral;
         // LOG(info) << "ypos before lut correction : " << ypos;
-        ypos = ypos + mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPL00 + (ypos & 0x7F),
+        ypos = ypos + mTrapConfigEvent->getTrapReg(TrapRegisters::kTPL00 + (ypos & 0x7F),
                                                    mDetector, mRobPos, mMcmPos);
         // ypos += LUT_POS[ypos & 0x7f]; // FIXME use this LUT to obtain the same results as Venelin
         //   LOG(info) << "ypos after lut correction : " << ypos;
@@ -1386,10 +1386,10 @@ void TrapSimulator::trackletSelection()
   std::array<unsigned short, 18> trackletCandhits{}; // store the number of hits for all tracklet candidates
 
   ntracks = 0;
-  // LOG(info) << "kTPCL: " << mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPCL, mDetector, mRobPos, mMcmPos);
-  // LOG(info) << "kTPCT: " << mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPCT, mDetector, mRobPos, mMcmPos);
+  // LOG(info) << "kTPCL: " << mTrapConfigEvent->getTrapReg(TrapRegisters::kTPCL, mDetector, mRobPos, mMcmPos);
+  // LOG(info) << "kTPCT: " << mTrapConfigEvent->getTrapReg(TrapRegisters::kTPCT, mDetector, mRobPos, mMcmPos);
   for (adcIdx = 0; adcIdx < 18; adcIdx++) { // ADCs
-    if ((mFitReg[adcIdx].nHits >= mTrapConfigEvent->getTrapReg(TrapConfigEvent::kTPCL, mDetector, mRobPos, mMcmPos)) &&
+    if ((mFitReg[adcIdx].nHits >= mTrapConfigEvent->getTrapReg(TrapRegisters::kTPCL, mDetector, mRobPos, mMcmPos)) &&
         (mFitReg[adcIdx].nHits + mFitReg[adcIdx + 1].nHits >= 8)) { // FIXME was 10 otherwise
       trackletCandch[ntracks] = adcIdx;
       trackletCandhits[ntracks] = mFitReg[adcIdx].nHits + mFitReg[adcIdx + 1].nHits;

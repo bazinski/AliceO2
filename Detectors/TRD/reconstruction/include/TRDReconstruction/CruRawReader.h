@@ -200,7 +200,6 @@ class CruRawReader
   uint32_t mWordsRejected = 0;         // those words rejected before tracklet and digit parsing could start
 
   EventRecordContainer mEventRecords; // store data range indexes into the above vectors.
-
 };
 
 } // namespace o2::trd
