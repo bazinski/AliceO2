@@ -129,7 +129,7 @@ struct thirtyonebit {
 };
 
 struct mcmtrapevent {
-  fivebit tpl[22];
+  short  tpl[128];
   tenbit fgf[5];
   fivebit cpuclk[2];
   fifteenbit ebi[2];
@@ -232,7 +232,7 @@ class TrapConfigEvent
   uint32_t getDmemUnsigned(uint32_t address, int detector, int rob, int mcm);
   uint32_t getTrapReg(const uint32_t index, const int detector, const int rob, const int mcm);
 
-  bool isHCIDPresent(const int hcid) const { return mHCIDPresent.test(hcid); }
+/*  bool isHCIDPresent(const int hcid) const { return mHCIDPresent.test(hcid); }
   void HCIDIsPresent(const int hcid) { mHCIDPresent.set(hcid); }
   uint32_t countHCIDPresent() { return mHCIDPresent.count(); }
   const std::bitset<constants::MAXHALFCHAMBER>& getHCIDPresent() const { return mHCIDPresent; }
@@ -241,13 +241,13 @@ class TrapConfigEvent
   const std::bitset<constants::MAXMCMCOUNT>& getMCMPresent() const { return mMCMPresent; }
   uint32_t countMCMPresent() { return mMCMPresent.count(); }
   void clearMCMPresent() { mMCMPresent.reset(); }
-  void clearMCMEvent() { mConfigData.clear(); }
+  void clearMCMEvent() { mConfigData.clear(); }*/
   void clear()
   {
-    clearMCMPresent();
-    clearMCMEvent();
+ //   clearMCMPresent();
+  //  clearMCMEvent();
   }
-  bool ignoreWord(const int offset) const { return mWordNumberIgnore.test(offset); }
+ // bool ignoreWord(const int offset) const { return mWordNumberIgnore.test(offset); }
 
   // required for a container for calibration
   void fill(const TrapConfigEvent& input);
@@ -261,15 +261,12 @@ class TrapConfigEvent
 
  private:
   TrapRegisters mTrapRegisters;
-  std::bitset<constants::MAXMCMCOUNT> mMCMPresent{0};               //!< does the mcm actually receive data.
-  std::bitset<constants::MAXHALFCHAMBER> mHCIDPresent{0};           //!< did the link actually receive data.
-  std::vector<MCMEvent> mConfigData;                                //!< vector of register data blocks
-  std::array<int32_t, constants::MAXMCMCOUNT> mConfigDataIndex{-1}; //!< one block of data per mcm, array as one wants to query if an mcm is present with having to walk the whole index.
+  //std::bitset<constants::MAXMCMCOUNT> mMCMPresent{0};               ///< does the mcm actually receive data.
+  //std::bitset<constants::MAXHALFCHAMBER> mHCIDPresent{0};           ///< did the link actually receive data.
+  std::vector<MCMEvent> mConfigData;                                ///< vector of register data blocks
+  std::array<int32_t, constants::MAXMCMCOUNT> mConfigDataIndex{-1}; ///< one block of data per mcm, array as one wants to query if an mcm is present with having to walk the whole index.
   std::map<uint16_t, uint16_t> mTrapRegistersAddressIndexMap;       //!< map of address into mTrapRegisters, populated at the end of initialiseRegisters
-  std::bitset<kTrapRegistersSize> mWordNumberIgnore;                //!< whether to ignore a register or not. Here to speed lookups up.
-  // uint32_t mTrapConfigEventNumber;       //!< the version number coming from the config that is written to the traps, from config register C09CPU01
-  // uint32_t mTrapConfigEventVersion;      //!< the version of the coming from the config that is written to the traps, from DigitHCHeader (svn version number)
-  // uint16_t mTrapConfigEventSavedVersion; //!< the version that is saved, for the ability to later save the config differently.
+  //std::bitset<kTrapRegistersSize> mWordNumberIgnore;                ///< whether to ignore a register or not. Here to speed lookups up.
   void initialiseRegisters(); // build some indexes
   ClassDefNV(TrapConfigEvent, 1);
 };

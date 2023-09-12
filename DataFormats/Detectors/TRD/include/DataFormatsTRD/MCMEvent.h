@@ -56,8 +56,8 @@ class MCMEvent
   const uint32_t getRegister(const uint32_t regidx, const TrapRegInfo& trapreg) const;
 
  private:
-  std::array<uint32_t, o2::trd::kTrapRegistersSize> mRegisterData{0}; //!< a block of mcm register data.
-  int32_t mMCMId{-1};                                                 //!< the id of this mcm. -1 to know when it has not been set yet.
+  std::array<uint32_t, o2::trd::kTrapRegistersSize> mRegisterData{0}; // a block of mcm register data.
+  int32_t mMCMId{-1};                                                 // the id of this mcm. -1 to know when it has not been set yet.
   ClassDefNV(MCMEvent, 1);
 };
 

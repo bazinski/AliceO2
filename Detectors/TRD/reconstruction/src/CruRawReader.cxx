@@ -341,7 +341,7 @@ bool CruRawReader::parseDigitHCHeaders(int hcid)
         if (headersfound.test(2)) {
           // we have a problem, we already have a Digit HC Header3, we are hereby lost.
           if (mOptions[TRDVerboseErrorsBit]) {
-            LOG(error) << "We have a >1 Digit HC Header 2  : " << std::hex << " raw: 0x" << headers[headerwordcount];
+            LOG(info) << "We have a >1 Digit HC Header 2  : " << std::hex << " raw: 0x" << headers[headerwordcount];
             printDigitHCHeader(mDigitHCHeader, headers.data());
           }
           incrementErrors(DigitHCHeader3Problem, hcid);

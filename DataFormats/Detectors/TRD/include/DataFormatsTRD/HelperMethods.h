@@ -13,7 +13,6 @@
 #define ALICEO2_TRD_HELPERMETHODS_HH
 
 #include "DataFormatsTRD/Constants.h"
-#include "DataFormatsTRD/RawData.h"
 #include <iostream>
 
 namespace o2
