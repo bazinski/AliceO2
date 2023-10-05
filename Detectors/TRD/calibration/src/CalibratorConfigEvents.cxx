@@ -200,6 +200,7 @@ void CalibratorConfigEvents::collapseRegisterValues()
       LOGP(info, "Collapsing with mcmid {} is not present", mcmid);
     }
   }
+
   // walk the register value map and figure out the most prevelant values for a particular register.
   for (int mcmreg = 0; mcmreg < TrapRegisters::kLastReg; ++mcmreg) {
     // auto& map = registervaluemap[mcmreg] ;
