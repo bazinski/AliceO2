@@ -730,8 +730,6 @@ int TrapSimulator::packData(std::vector<uint32_t>& rawdata, uint32_t offset) con
   //
   //given the, up to 3 tracklets, pack them according to the define data format.
   //
-  //  std::cout << "span size in packData is : " << rawdata.size() << std::endl;
-  //TODO this is left blank so that the dataformats etc. can come in a seperate PR
   //to keep different work seperate.
   uint32_t wordswritten = 0; // count the 32 bit words written;
                              //  std::cout << &raw[offset] << std::endl;
@@ -747,7 +745,7 @@ int TrapSimulator::packData(std::vector<uint32_t>& rawdata, uint32_t offset) con
   mcmhead.padrow = ((mRobPos >> 1) << 2) | (mMcmPos >> 2);
   int mcmcol = mMcmPos % NMCMROBINCOL + (mRobPos % 2) * NMCMROBINCOL;
   int padcol = mcmcol * NCOLMCM + NCOLMCM + 1;
-  mcmhead.col = 1; //TODO check this, cant call FeeParam due to virtual function
+  mcmhead.col = 1;
   LOG(debug) << "packing data with trackletarry64 size of : " << mTrackletArray64.size();
   for (int i = 0; i < 3; i++) {
     if (i < mTrackletArray64.size()) { // we have  a tracklet
@@ -843,14 +841,12 @@ void TrapSimulator::filterPedestalInit(int baseline)
 {
   // Initializes the pedestal filter assuming that the input has
   // been constant for a long time (compared to the time constant).
-  //  LOG(debug) << "BEGIN: " << __FILE__ << ":" << __func__ << ":" << __LINE__ ;
 
   unsigned short fptc = mTrapConfig->getTrapReg(TrapConfig::kFPTC, mDetector, mRobPos, mMcmPos); // 0..3, 0 - fastest, 3 - slowest
 
   for (int adc = 0; adc < NADCMCM; adc++) {
     mInternalFilterRegisters[adc].mPedAcc = (baseline << 2) * (1 << mgkFPshifts[fptc]);
   }
-  //  LOG(debug) << "LEAVE: " << __FILE__ << ":" << __func__ << ":" << __LINE__ ;
 }
 
 unsigned short TrapSimulator::filterPedestalNextSample(int adc, int timebin, unsigned short value)
@@ -858,7 +854,6 @@ unsigned short TrapSimulator::filterPedestalNextSample(int adc, int timebin, uns
   // Returns the output of the pedestal filter given the input value.
   // The output depends on the internal registers and, thus, the
   // history of the filter.
-  LOG(debug) << "BEGIN: " << __FILE__ << ":" << __func__ << ":" << __LINE__;
 
   unsigned short fpnp = mTrapConfig->getTrapReg(TrapConfig::kFPNP, mDetector, mRobPos, mMcmPos); // 0..511 -> 0..127.75, pedestal at the output
   unsigned short fptc = mTrapConfig->getTrapReg(TrapConfig::kFPTC, mDetector, mRobPos, mMcmPos); // 0..3, 0 - fastest, 3 - slowest
@@ -905,16 +900,13 @@ void TrapSimulator::filterPedestal()
   // It has only an effect if previous samples have been fed to
   // find the pedestal. Currently, the simulation assumes that
   // the input has been stable for a sufficiently long time.
-  // LOG(debug) << "BEGIN: " << __FILE__ << ":" << __func__ << ":" << __LINE__ ;
 
   for (int iTimeBin = 0; iTimeBin < mNTimeBin; iTimeBin++) {
     for (int iAdc = 0; iAdc < NADCMCM; iAdc++) {
       int oldadc = mADCF[iAdc * mNTimeBin + iTimeBin];
       mADCF[iAdc * mNTimeBin + iTimeBin] = filterPedestalNextSample(iAdc, iTimeBin, mADCR[iAdc * mNTimeBin + iTimeBin]);
-      //    LOG(debug) << "mADCF : time : " << iTimeBin << " adc : " << iAdc << " change : " << oldadc << " -> " << mADCF[iAdc * mNTimeBin + iTimeBin];
     }
   }
-  // LOG(debug) << "BEGIN: " << __FILE__ << ":" << __func__ << ":" << __LINE__ ;
 }
 
 void TrapSimulator::filterGainInit()
@@ -936,7 +928,6 @@ unsigned short TrapSimulator::filterGainNextSample(int adc, unsigned short value
   // BEGIN_LATEX O_{i}(t) = #gamma_{i} * I_{i}(t) + a_{i} END_LATEX
   // The output depends on the internal registers and, thus, the
   // history of the filter.
-  //  if(mDetector==75&& mRobPos==5 && mMcmPos==15) LOG(debug) << "ENTER: " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " with adc = " << adc << " value = " << value;
 
   unsigned short mgby = mTrapConfig->getTrapReg(TrapConfig::kFGBY, mDetector, mRobPos, mMcmPos);                             // bypass, active low
   unsigned short mgf = mTrapConfig->getTrapReg(TrapConfig::TrapReg_t(TrapConfig::kFGF0 + adc), mDetector, mRobPos, mMcmPos); // 0x700 + (0 & 0x1ff);
@@ -949,25 +940,20 @@ unsigned short TrapSimulator::filterGainNextSample(int adc, unsigned short value
   //  mgtb=2060;
 
   unsigned int mgfExtended = 0x700 + mgf; // The corr factor which is finally applied has to be extended by 0x700 (hex) or 0.875 (dec)
-  // because fgf=0 correspons to 0.875 and fgf=511 correspons to 1.125 - 2^(-11)
+  // because fgf=0 corresponds to 0.875 and fgf=511 correspons to 1.125 - 2^(-11)
   // (see TRAP User Manual for details)
-  //if(mDetector==75&& mRobPos==5 && mMcmPos==15) LOG(debug) << "ENTER: " << __FILE__ << ":" << __func__ << ":" << __LINE__ << " with adc = " << adc << " value = " << value << " Trapconfig values :"  << mgby <<":"<<mgf<<":"<<mga<<":"<<mgta<<":"<<mgtb << ":"<< mgfExtended;
   unsigned int corr; // corrected value
 
-  //  if(mDetector==75&& mRobPos==5 && mMcmPos==15) LOG(debug) << "after declaring corr adc = " << adc << " value = " << value;
   value &= 0xFFF;
   corr = (value * mgfExtended) >> 11;
   corr = corr > 0xfff ? 0xfff : corr;
-  //  if(mDetector==75&& mRobPos==5 && mMcmPos==15) LOG(debug) <<__LINE__ <<  " adc = " << adc << " value = " << value << " corr  : " << corr;
   corr = addUintClipping(corr, mga, 12);
-  //  if(mDetector==75&& mRobPos==5 && mMcmPos==15) LOG(debug) <<__LINE__ <<  " adc = " << adc << " value = " << value << " corr  : " << corr;
 
   // Update threshold counters
   // not really useful as they are cleared with every new event
   if (!((mInternalFilterRegisters[adc].mGainCounterA == 0x3FFFFFF) || (mInternalFilterRegisters[adc].mGainCounterB == 0x3FFFFFF)))
   // stop when full
   {
-    //  if(mDetector==75&& mRobPos==5 && mMcmPos==15) LOG(debug) <<__LINE__ <<  " adc = " << adc << " value = " << value << " corr  : " << corr  << " mgtb : " << mgtb;
     if (corr >= mgtb) {
       mInternalFilterRegisters[adc].mGainCounterB++;
     } else if (corr >= mgta) {
@@ -975,7 +961,6 @@ unsigned short TrapSimulator::filterGainNextSample(int adc, unsigned short value
     }
   }
 
-  //  if(mDetector==75&& mRobPos==5 && mMcmPos==15) LOG(debug) <<__LINE__ <<  " adc = " << adc << " value = " << value << " corr  : " << corr  << " mgby : " << mgby;
   //  if (mgby == 1)
   //    return corr;
   //  else
