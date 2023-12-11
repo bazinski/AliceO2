@@ -128,10 +128,10 @@ class TrapConfigEvent
   std::array<int32_t, constants::MAXMCMCOUNT> mConfigDataIndex{-1};     // one block of data per mcm, array as one wants to query if an mcm is present with having to walk the whole index.
                                                                         //  std::map<uint16_t, uint16_t> mTrapRegistersAddressIndexMap;    moved to parser   //!< map of address into mTrapRegisters, populated at the end of initialiseRegisters
   std::bitset<kTrapRegistersSize> mWordNumberIgnore;                    // whether to ignore a register or not. Here to speed lookups up.
-  //alternate storage:
-  //std::array<std::vector<uint32_t>,o2::trd::TrapRegisters::kLastReg> mConfigDataint;                 // vector of vectors of register data, 1 value for a constant register, 69k for individual
-  // now we dont know if we actually have data for a specific mcm, so keep a record of which ones have been actually read and known to be current
-  //std::bitset<o2::trd::constants::MAXMCMCOUNT> mMCMsPresent;                 // which mcms were actually seen to build this series of configuration events
+  // alternate storage:
+  // std::array<std::vector<uint32_t>,o2::trd::TrapRegisters::kLastReg> mConfigDataint;                 // vector of vectors of register data, 1 value for a constant register, 69k for individual
+  //  now we dont know if we actually have data for a specific mcm, so keep a record of which ones have been actually read and known to be current
+  // std::bitset<o2::trd::constants::MAXMCMCOUNT> mMCMsPresent;                 // which mcms were actually seen to build this series of configuration events
 
   ClassDefNV(TrapConfigEvent, 4);
 };
