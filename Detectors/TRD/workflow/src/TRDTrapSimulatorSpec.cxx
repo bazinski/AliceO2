@@ -370,6 +370,7 @@ o2::framework::DataProcessorSpec getTRDTrapSimulatorSpec(bool useMC, int digitDo
                              {"trd-onlinegaincorrection", VariantType::Bool, false, {"Apply online gain calibrations, mostly for back checking to run2 by setting FGBY to 0"}},
                              {"trd-onlinegaintable", VariantType::String, "Krypton_2015-02", {"Online gain table to be use, names found in CCDB, obviously trd-onlinegaincorrection must be set as well."}},
                              {"trd-dumptrapconfig", VariantType::Bool, false, {"Dump the selected trap configuration at loading time, to text file"}},
+                             {"trd-trapconfigevent", VariantType::Bool, false, {"Use TrapConfigEvent not TrapConfig, you will need to specify a value for trd-trapconfig"}},
                              {"trd-runnum", VariantType::Int, -1, {"Run number to use to anchor simulation to (from Run 2 297595 was used)"}}}};
 };
 
