@@ -19,9 +19,14 @@ using namespace o2::trd::constants;
 
 void TrackletTransformer::init()
 {
+  LOGP(info, " geometry instantiation");
   mGeo = Geometry::instance();
+
+  LOGP(info, " padplane array creation :");
   mGeo->createPadPlaneArray();
+  LOGP(info, " cluster matrix array :");
   mGeo->createClusterMatrixArray();
+  LOGP(info, " XAnode pos : ");
 
   // 3.35 cm
   mXAnode = mGeo->cdrHght() + mGeo->camHght() / 2;

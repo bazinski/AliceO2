@@ -37,6 +37,8 @@ class RawDisplay
   void drawClusters();
   void drawHits();
   void drawMCTrackSegments();
+  void drawMCTrackReferences();
+  void drawTrackRef();
 
   void draw()
   {

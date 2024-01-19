@@ -709,6 +709,7 @@ void Geometry::createVolumes(std::vector<int> const& idtmed)
 
   for (int istack = 0; istack < NSTACK; istack++) {
     for (int ilayer = 0; ilayer < NLAYER; ilayer++) {
+	    LOGP(info,"XXX Assembling : stack {} layer {}",istack,ilayer);
       assembleChamber(ilayer, istack);
     }
   }
@@ -2531,6 +2532,7 @@ void Geometry::assembleChamber(int ilayer, int istack)
   }
   ypos -= CLENGTH[ilayer][istack] / 2.0;
   zpos = VROCSM + SMPLTT + CHSV / 2.0 - SHEIGHT / 2.0 + ilayer * (CH + VSPACE);
+  LOGP(info,"XXX xpos {} ypos {} zpos {}",xpos,ypos,zpos);
   TGeoVolume* sm1 = gGeoManager->GetVolume("UTI1");
   TGeoVolume* sm2 = gGeoManager->GetVolume("UTI2");
   TGeoVolume* sm3 = gGeoManager->GetVolume("UTI3");

@@ -168,6 +168,17 @@ void RawDisplay::drawHits()
     }
   }
 }
+/*
+void RawDisplay::drawMCTrackReferences()
+{
+  TLine line;
+  line.SetLineColor(kMagenta);
+  line.SetLineWidth(1.0);
+
+  for (auto& trkref : mDataSpan.makeMCTrackReferences()) {
+    line.DrawLine(trkref.getStartPoint().getPadCol(), trkref.getStartPoint().getTimeBin(), trkref.getEndPoint().getPadCol(), trkref.getEndPoint().getTimeBin());
+  }
+}
 
 void RawDisplay::drawMCTrackSegments()
 {
@@ -179,3 +190,4 @@ void RawDisplay::drawMCTrackSegments()
     line.DrawLine(trkl.getStartPoint().getPadCol(), trkl.getStartPoint().getTimeBin(), trkl.getEndPoint().getPadCol(), trkl.getEndPoint().getTimeBin());
   }
 }
+*/

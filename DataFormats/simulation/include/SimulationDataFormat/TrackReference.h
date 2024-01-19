@@ -223,7 +223,7 @@ inline std::ostream& operator<<(std::ostream& os, const TrackReference& a)
   os << "TrackRef (" << a.mTrackNumber << "): X[" << a.mX << " , " << a.mY << " , " << a.mZ << "]"
      << "; P[ " << a.mPX << " , " << a.mPY << " , " << a.mPZ << " ] "
      << "; Length = " << a.mTrackLength << " ; TOF = " << a.mTof << " ; DetID = " << a.mDetectorId
-     << "; Status = " << a.mStatus;
+     << "; Status = " << a.mStatus << ";";
   return os;
 }
 

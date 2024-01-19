@@ -243,6 +243,54 @@ std::vector<RawDataSpan> RawDataSpan::iterateByMCM() { return iterateBy<MCM_ID>(
 //   }
 // };
 
+/*
+std::vector<o2::TrackReference> RawDataSpan::makeMCTrackReferences()
+{
+  // define a struct to keep track of the first and last MC hit of one track in one chamber
+  struct TrackReferencesInfo {
+    // The first reference is hopefully the entry point
+    size_t firstref{0}; //
+    // The last reference should be the exit point of the amplification region
+    size_t lastref{0};
+    float trackid{-999.9}; // local x cordinate of the first trackef
+    float end{999.9};      // local x cordinate of the last trackref
+  };
+  // Keep information about found track references in a map indexed by track ID and detector number.
+  // If the span only covers (part of) a detector, the detector information is redundant, but in
+  // the case of processing a whole event, the distinction by detector will be needed.
+  std::map<std::pair<int, int>, TrackReferencesInfo> trackReferenceInfo;
+
+  for (int iTrackRef = 0; iTrackRef < trackrefs.size(); ++iTrackRef) {
+    auto ref = trackrefs[iTrackRef];
+
+    // we look for track references classified as entering the drift region
+    if ((ref.getUserId() & 0x3) == 0x1) {
+      // The first hit is the hit closest to the anode region, i.e. with the largest x coordinate.
+      auto id = std::make_pair(ref.getTrackID(), ref.getUserId() >> 2);
+      if (ref.X() > trackReferenceInfo[id].start) {
+        trackReferenceInfo[id].firstref = iTrackRef;
+        trackReferenceInfo[id].firstref = ref.X();
+      }
+      // The last hit is the hit closest to the radiator, i.e. with the smallest x coordinate.
+      if (ref.X() < trackReferenceInfo[id].end) {
+        trackReferenceInfo[id].trackid = iTrackRef;
+        trackReferenceInfo[id].end = ref.X();
+      }
+    }
+  } // trackreference loop
+
+  std::vector<o2::TrackReference> trackReferences;
+  for (auto x : trackReferenceInfo) {
+    auto trackid = x.first.first;
+    auto detector = x.first.second;
+    auto firstref = hits[x.second.firstref];
+    auto lastref = hits[x.second.lastref];
+    trackReferences.emplace_back(firstref, lastref, trackid);
+  }
+  return trackReferences;
+}
+*/
+
 std::vector<TrackSegment> RawDataSpan::makeMCTrackSegments()
 {
   // define a struct to keep track of the first and last MC hit of one track in one chamber
@@ -341,6 +389,7 @@ RawDataManager::RawDataManager(std::filesystem::path dir)
     mMCFile->GetObject("o2sim", mMCTree);
     mMCTree->SetBranchAddress("MCEventHeader.", &mMCEventHeader);
     mMCTree->SetBranchAddress("MCTrack", &mMCTracks);
+    //mMCTree->SetBranchAddress("TrackRefs", &mMCTrackReferences);
   }
 
   // We then add the TRD hits to the MC tree

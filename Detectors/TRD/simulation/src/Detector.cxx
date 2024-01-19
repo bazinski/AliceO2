@@ -139,7 +139,13 @@ bool Detector::ProcessHits(FairVolume* v)
     // chamber that contains the momentum components of the particle
     fMC->TrackMomentum(px, py, pz, etot);
     fMC->TrackPosition(xp, yp, zp);
-    stack->addTrackReference(o2::TrackReference(*fMC, GetDetId()));
+    o2::TrackReference trackref(*fMC,GetDetId());
+    int tdet=det<<2;
+    tdet |= 0x1;
+    trackref.setUserId(tdet);
+    stack->addTrackReference(trackref);
+    LOGP(info,"YY TRD trkref : entering drreg of det{} x {} y {} z {} px {} py {} pz {} etot {} tracklength {} tof {} det {} tdet {}",det,xp,yp,zp,px,py,pz,etot,trackLength,tof,det,tdet);
+		    
     // Update track status
     trkStat = 1;
     // Create the hits from TR photons if electron/positron is entering the drift volume
@@ -152,7 +158,14 @@ bool Detector::ProcessHits(FairVolume* v)
     // chamber that contains the momentum components of the particle
     fMC->TrackMomentum(px, py, pz, etot);
     fMC->TrackPosition(xp, yp, zp);
-    stack->addTrackReference(o2::TrackReference(*fMC, GetDetId()));
+    
+    o2::TrackReference trackref(*fMC,GetDetId());
+    int tdet=det<<2;
+	    tdet |= 0x2;
+
+    LOGP(info,"YY TRD trkref : exiting amreg of det{}x {} y {} z {} px {} py {} pz {} etot {} tracklength {} tof {} det {} tdet{}",det,xp,yp,zp,px,py,pz,etot,trackLength,tof,det,tdet);
+    trackref.setUserId(tdet);
+    stack->addTrackReference(trackref);
     // Update track status
     trkStat = 2;
   }
