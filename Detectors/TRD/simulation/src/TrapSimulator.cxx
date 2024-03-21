@@ -1583,8 +1583,8 @@ void TrapSimulator::fitTracklet()
         yoffs += (int)mTrapConfig->getDmemUnsigned(mgkDmemAddrYcorr, mDetector, mRobPos, mMcmPos);
       } else {
         yoffs = 0;
-        //TODO this is not available in a trapconfigevent, TODO, awaiting changes to firmware.
-        //TODO yoffs += (int)mTrapConfig->getTrapReg(TrapRegisters::kYCORR, mDetector, mRobPos, mMcmPos);
+        // TODO this is not available in a trapconfigevent, TODO, awaiting changes to firmware.
+        // TODO yoffs += (int)mTrapConfig->getTrapReg(TrapRegisters::kYCORR, mDetector, mRobPos, mMcmPos);
       }
     }
 
@@ -2042,4 +2042,3 @@ uint32_t TrapSimulator::getTrapReg(uint32_t reg, uint32_t det, uint32_t rob, uin
   }
   return 0;
 }
-

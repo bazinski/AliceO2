@@ -195,7 +195,7 @@ class TrapSimulator
   void printAdcDatXml(std::ostream& os) const;
   void printAdcDatDatx(std::ostream& os, bool broadcast = kFALSE, int timeBinOffset = -1) const;
 
-//  static bool readPackedConfig(TrapConfigEvent* cfg, int hc, unsigned int* data, int size);
+  //  static bool readPackedConfig(TrapConfigEvent* cfg, int hc, unsigned int* data, int size);
 
   // DMEM addresses None of these are accesable from a trapconfig event.
   static constexpr int mgkDmemAddrLUTcor0 = 0xC02A;

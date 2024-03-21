@@ -61,7 +61,7 @@ void CalibratorConfigEvents::init()
   auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
   auto timeStamp = now_ms.time_since_epoch();
   if (halfChamberStatus == nullptr) {
-    
+
     LOGP(info, "Could not find a halfchamberstatusqc for this time, searching for a known time");
     // TODO ...
   }
