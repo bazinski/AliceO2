@@ -79,7 +79,6 @@ void TrapSimulator::init(TrapConfig* trapconfig, int det, int robPos, int mcmPos
   mInitialized = true;
   reset();
 }
-
 void TrapSimulator::init(TrapConfigEvent* trapconfigevent, int det, int robPos, int mcmPos)
 {
   //
@@ -88,7 +87,7 @@ void TrapSimulator::init(TrapConfigEvent* trapconfigevent, int det, int robPos, 
   mDetector = det;
   mRobPos = robPos;
   mMcmPos = mcmPos;
-  mUseTrapConfigEvent = true;                                   // this is temporary until we properly migrate to TrapConfigEvent
+
   uint64_t row = mFeeParam->getPadRowFromMCM(mRobPos, mMcmPos); // need uint64_t type to assemble mTrkltWordEmpty below
   uint64_t column = mMcmPos % NMCMROBINCOL;
   // prepare a part of the MCM header, what still is missing are the 3 x 8 bits from the charges
@@ -101,10 +100,10 @@ void TrapSimulator::init(TrapConfigEvent* trapconfigevent, int det, int robPos, 
 
   if (!mInitialized) {
     mTrapConfigEvent = trapconfigevent;
-    if (mTrapConfig != nullptr) {
-      mNTimeBin = getTrapReg(TrapRegisters::kC13CPUA, mDetector, mRobPos, mMcmPos);
+    if (mTrapConfigEvent != nullptr) {
+      mNTimeBin = getTrapReg(TrapConfig::kC13CPUA, mDetector, mRobPos, mMcmPos);
     } else {
-      LOGP(error, "Initialising the TRAP simulator with a null TrapConfigEvent");
+      LOGP(error, "Initialising the TRAP simulator with a null TrapConfig");
     }
     mZSMap.resize(NADCMCM);
     mADCR.resize(mNTimeBin * NADCMCM);
@@ -838,14 +837,12 @@ void TrapSimulator::filterPedestalInit(int baseline)
 {
   // Initializes the pedestal filter assuming that the input has
   // been constant for a long time (compared to the time constant).
-  //  LOG(debug) << "BEGIN: " << __FILE__ << ":" << __func__ << ":" << __LINE__ ;
 
   unsigned short fptc = getTrapReg(TrapRegisters::kFPTC, mDetector, mRobPos, mMcmPos); // 0..3, 0 - fastest, 3 - slowest
 
   for (int adc = 0; adc < NADCMCM; adc++) {
     mInternalFilterRegisters[adc].mPedAcc = (baseline << 2) * (1 << mgkFPshifts[fptc]);
   }
-  //  LOG(debug) << "LEAVE: " << __FILE__ << ":" << __func__ << ":" << __LINE__ ;
 }
 
 unsigned short TrapSimulator::filterPedestalNextSample(int adc, int timebin, unsigned short value)
@@ -2030,9 +2027,9 @@ uint32_t TrapSimulator::getTrapReg(uint32_t reg, uint32_t det, uint32_t rob, uin
     if (mTrapConfigEvent->isMCMPresent(HelperMethods::getMCMId(det, rob, mcm))) {
       return mTrapConfigEvent->getTrapReg(reg, det, rob, mcm);
     } else {
-      // choose most likely
-      //  if(mUseAverageValue){
-      //    mTrapConfigEvent->getAverage(reg);
+      // choose most common
+      //  if(mUseCommonValue){
+      //    mTrapConfigEvent->getCommon(reg);
       //  }
       //  if(mUseDefaultValue){
       //    mTrapConfigEvent->getDefault(reg);
@@ -2045,3 +2042,4 @@ uint32_t TrapSimulator::getTrapReg(uint32_t reg, uint32_t det, uint32_t rob, uin
   }
   return 0;
 }
+

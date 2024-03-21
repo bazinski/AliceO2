@@ -108,8 +108,8 @@ class TrapSimulator
   ~TrapSimulator() = default;
 
   // Initialize MCM by the position parameters
-  void init(TrapConfigEvent* trapconfig, int det, int rob, int mcm);
   void init(TrapConfig* trapconfig, int det, int rob, int mcm);
+  void init(TrapConfigEvent* trapconfigevent, int det, int rob, int mcm);
 
   bool checkInitialized() const { return mInitialized; }
 
@@ -195,7 +195,7 @@ class TrapSimulator
   void printAdcDatXml(std::ostream& os) const;
   void printAdcDatDatx(std::ostream& os, bool broadcast = kFALSE, int timeBinOffset = -1) const;
 
-  static bool readPackedConfig(TrapConfigEvent* cfg, int hc, unsigned int* data, int size);
+//  static bool readPackedConfig(TrapConfigEvent* cfg, int hc, unsigned int* data, int size);
 
   // DMEM addresses None of these are accesable from a trapconfig event.
   static constexpr int mgkDmemAddrLUTcor0 = 0xC02A;

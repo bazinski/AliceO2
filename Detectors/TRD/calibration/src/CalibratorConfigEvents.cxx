@@ -24,7 +24,6 @@
 #include "DataFormatsTRD/Constants.h"
 #include "TRDCalibration/CalibratorConfigEvents.h"
 #include "DataFormatsTRD/TrapConfigEvent.h"
-#include "TRDQC/StatusHelper.h"
 #include "TRDBase/GeometryBase.h"
 
 #include "TStopwatch.h"
@@ -61,8 +60,8 @@ void CalibratorConfigEvents::init()
   auto now = std::chrono::high_resolution_clock::now();
   auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
   auto timeStamp = now_ms.time_since_epoch();
-  auto halfChamberStatus = mgr->getForTimeStamp<o2::trd::HalfChamberStatusQC>("TRD/Calib/HalfChamberStatusQC", timeStamp.count());
   if (halfChamberStatus == nullptr) {
+    
     LOGP(info, "Could not find a halfchamberstatusqc for this time, searching for a known time");
     // TODO ...
   }
