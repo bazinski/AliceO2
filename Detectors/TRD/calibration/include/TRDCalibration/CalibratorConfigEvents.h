@@ -9,15 +9,13 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-/// \file CalibratorVdExB.h
-/// \brief TimeSlot-based calibration of vDrift and ExB
-/// \author Ole Schmidt
+/// \file CalibratorConfigEvens.h
+/// \brief Calibrator to take config events accumulate them and merge them into one.
+/// \author Sean Murray
 
 #ifndef O2_TRD_CALIBRATORCONFIGEVENTS_H
 #define O2_TRD_CALIBRATORCONFIGEVENTS_H
 
-// #include "DetectorsCalibration/TimeSlotCalibration.h"
-// #include "DetectorsCalibration/TimeSlot.h"
 #include "DataFormatsTRD/Constants.h"
 #include "DataFormatsTRD/TrapConfigEvent.h"
 #include "TRDCalibration/CalibrationParams.h"
