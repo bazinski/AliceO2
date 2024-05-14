@@ -54,7 +54,7 @@ struct RawDataSpan {
   boost::iterator_range<std::vector<o2::trd::Digit>::iterator> digits;
   boost::iterator_range<std::vector<o2::trd::Tracklet64>::iterator> tracklets;
   boost::iterator_range<std::vector<HitPoint>::iterator> hits;
-  //boost::iterator_range<std::vector<o2::TrackReference>::iterator> trackrefs;
+  boost::iterator_range<std::vector<o2::TrackReference>::iterator> trackrefs;
 
   /// Sort digits, tracklets and space points by detector, pad row, column
   /// The digits, tracklets, hits and other future data members must be sorted
@@ -78,7 +78,7 @@ struct RawDataSpan {
   // std::vector<RawDataSpan> iterateDetector();
 
   std::vector<TrackSegment> makeMCTrackSegments();
-  //std::vector<o2::TrackReference> makeMCTrackReferences();
+  std::vector<o2::TrackReference> makeMCTrackReferences();
 
   //   pair<int, int> getMaxADCsumAndChannel();
   //   int getMaxADCsum(){ return getMaxADCsumAndChannel().first; }
@@ -164,14 +164,14 @@ class RawDataManager
   // TTreeReader* mMCReader{0};
   std::vector<o2::dataformats::MCEventHeader>* mMCEventHeader{0};
   std::vector<o2::MCTrackT<Float_t>>* mMCTracks{0};
-  //std::vector<o2::TrackReference>* mMCTrackReferences{0};
+  std::vector<o2::TrackReference>* mMCTrackReferences{0};
   std::vector<o2::trd::Hit>* mHits{0};
 
   // MC hits, converted to chamber coordinates
   std::vector<o2::trd::HitPoint> mHitPoints;
 
   // MC track references, converted to chamber coordinates
-  //std::vector<o2::TrackReference> mTrackReferences;
+  std::vector<o2::TrackReference> mTrackReferences;
 
   // time frame information (for data only)
   std::vector<o2::dataformats::TFIDInfo>* mTFIDs{0};

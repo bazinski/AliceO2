@@ -243,7 +243,7 @@ std::vector<RawDataSpan> RawDataSpan::iterateByMCM() { return iterateBy<MCM_ID>(
 //   }
 // };
 
-/*
+
 std::vector<o2::TrackReference> RawDataSpan::makeMCTrackReferences()
 {
   // define a struct to keep track of the first and last MC hit of one track in one chamber
@@ -253,6 +253,7 @@ std::vector<o2::TrackReference> RawDataSpan::makeMCTrackReferences()
     // The last reference should be the exit point of the amplification region
     size_t lastref{0};
     float trackid{-999.9}; // local x cordinate of the first trackef
+    float start{-100.0};
     float end{999.9};      // local x cordinate of the last trackref
   };
   // Keep information about found track references in a map indexed by track ID and detector number.
@@ -285,11 +286,10 @@ std::vector<o2::TrackReference> RawDataSpan::makeMCTrackReferences()
     auto detector = x.first.second;
     auto firstref = hits[x.second.firstref];
     auto lastref = hits[x.second.lastref];
-    trackReferences.emplace_back(firstref, lastref, trackid);
+    //trackReferences.emplace_back(firstref, lastref, trackid);
   }
   return trackReferences;
 }
-*/
 
 std::vector<TrackSegment> RawDataSpan::makeMCTrackSegments()
 {
