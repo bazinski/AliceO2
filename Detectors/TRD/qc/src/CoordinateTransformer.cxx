@@ -1,4 +1,5 @@
 // Copyright 2019-2023 CERN and copyright holders of ALICE O2.
+//
 // See https://alice-o2.web.cern.ch/copyright for details of the copyright holders.
 // All rights not expressly granted are reserved.
 //
@@ -143,8 +144,8 @@ o2::trd::ChamberSpacePoint CoordinateTransformer::MakeSpacePoint(o2::TrackRefere
   float x = ref.X();
   float y = ref.Y();
   float z = ref.Z();
-  auto rct = Local2RCT(ref.getDetectorId(), x, y, z);
-  return o2::trd::ChamberSpacePoint(ref.getTrackID(), ref.getDetectorId(), x, y, z, rct, true);
+  auto rct = Local2RCT(ref.getUserId()>>2, x, y, z);
+  return o2::trd::ChamberSpacePoint(ref.getTrackID(), ref.getUserId()>>2, x, y, z, rct, true);
 }
 
 namespace o2::trd

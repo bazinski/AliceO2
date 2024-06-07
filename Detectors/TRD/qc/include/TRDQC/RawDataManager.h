@@ -66,13 +66,15 @@ public:
   bool mHasEnter{false};
   bool mHasExit{false};
   //methods for satisfying templates using the exit point (pad side) 
-  int getDetector()const{return mDet;}
+  int getDetector()const{return mExitSpace.getDetector();}
   int getPadRow()const;//{return 1;}
   int getPadCol()const;//{return 1;}
   float getROBf()const;//{return 1;}
   float getMCMf()const;//{return 1;} 
   int getROB()const;//{return 1;}
   int getMCM()const;//{return 1;} 
+  void setExitSpace(ChamberSpacePoint& point, double charge, int trackid){mExitSpace=point;}
+  void setEnterSpace(ChamberSpacePoint& point, double charge, int trackid){mEnterSpace=point;}
   bool isGood(){ if (mEnter.getLength() >0.1 && mExit.getLength()>0.1) return true; else return false;}
 };
 
