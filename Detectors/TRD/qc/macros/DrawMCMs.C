@@ -86,7 +86,6 @@ void DrawMCMs(std::string dirname = ".")
         disp.drawDigits("text,same");
         disp.drawClusters();
         disp.drawTracklets();
-
         disp.drawHits();
         disp.drawMCTrackSegments();
       }

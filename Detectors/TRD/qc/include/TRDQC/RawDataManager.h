@@ -21,6 +21,7 @@
 #include "DataFormatsTRD/Tracklet64.h"
 #include "DataFormatsTRD/TriggerRecord.h"
 #include "DataFormatsTRD/Hit.h"
+#include "TRDBase/Geometry.h"
 
 #include "TRDQC/CoordinateTransformer.h"
 
@@ -44,6 +45,40 @@ class TTree;
 namespace o2::trd
 {
 
+class MCTrackletSegmentInfo {
+  // simply a place to store the geant entry and exit points and the associated trd tracklet
+public:
+  MCTrackletSegmentInfo(){};
+  MCTrackletSegmentInfo(o2::TrackReference &in, o2::TrackReference &out, int trackid, int det)
+      : mEnter(in), mExit(out), mTrackId(trackid), mDet(det) {};
+  void setEntry(o2::TrackReference& entry){mEnter=entry;mHasEnter=true;}
+  void setExit(o2::TrackReference& exit){mExit=exit;mHasExit=true;}
+  void setMidPoint(){/*std::cout << "setting midpoint " << mEnter << " :: " << mExit << "\n";*/ mMidPoint[0]=(mEnter.X()+mExit.X())/2.; mMidPoint[1]=(mEnter.Y()+mExit.Y())/2.; mMidPoint[2]=(mEnter.Z()+mExit.Z())/2.;/* std::cout << "set midpoint\n";*/} // contract the enter and exit points to guarantee both are with in UJ UK;
+  o2::TrackReference mEnter;
+  ChamberSpacePoint mEnterSpace;
+  o2::TrackReference mExit;
+  ChamberSpacePoint mExitSpace;
+  std::array<double,3> mMidPoint; // store the mid point of the segment for purposes of figuring out the position in the geometry
+  o2::trd::Tracklet64 mTracklet; // enables us to match against a tracklet as last resort.
+  int mTrackId;
+  int mDet;
+  int mcmid;
+  bool mHasEnter{false};
+  bool mHasExit{false};
+  //methods for satisfying templates using the exit point (pad side) 
+  int getDetector()const{return mDet;}
+  int getPadRow()const;//{return 1;}
+  int getPadCol()const;//{return 1;}
+  float getROBf()const;//{return 1;}
+  float getMCMf()const;//{return 1;} 
+  int getROB()const;//{return 1;}
+  int getMCM()const;//{return 1;} 
+  bool isGood(){ if (mEnter.getLength() >0.1 && mExit.getLength()>0.1) return true; else return false;}
+};
+
+
+std::ostream& operator<<(std::ostream& os, const MCTrackletSegmentInfo& p);
+
 /// RawDataSpan holds ranges pointing to parts of other containers
 /// This class helps with restricting the view of digits/trackets/... to part
 /// of a timeframe, e.g. data from one event, detector, padrow or MCM.
@@ -54,7 +89,8 @@ struct RawDataSpan {
   boost::iterator_range<std::vector<o2::trd::Digit>::iterator> digits;
   boost::iterator_range<std::vector<o2::trd::Tracklet64>::iterator> tracklets;
   boost::iterator_range<std::vector<HitPoint>::iterator> hits;
-  boost::iterator_range<std::vector<o2::TrackReference>::iterator> trackrefs;
+//  boost::iterator_range<std::vector<o2::TrackReference>::iterator> trackrefs;
+  boost::iterator_range<std::vector<o2::trd::MCTrackletSegmentInfo>::iterator> trackrefsegments;
 
   /// Sort digits, tracklets and space points by detector, pad row, column
   /// The digits, tracklets, hits and other future data members must be sorted
@@ -77,8 +113,18 @@ struct RawDataSpan {
   std::vector<RawDataSpan> iterateByPadRow();
   // std::vector<RawDataSpan> iterateDetector();
 
-  std::vector<TrackSegment> makeMCTrackSegments();
+  std::vector<TrackSegment> makeMCTrackSegments(); // this is based on hits
+//  std::vector<o2::TrackReference> makeMCTrackSegmentsEntryExit();
+  //this one is based on TrackReferences.
+  std::vector<TrackSegment> makeMCTrackSegmentsEntryExit();
+  //std::vector<MCTrackletInfo> makeMCTrackSegmentsEntryExit();
   std::vector<o2::TrackReference> makeMCTrackReferences();
+
+ // std::vector<MCTrackletSegmentInfo> makeMCTrackSegmentsGeant();
+  std::vector<TrackSegment> makeMCTrackSegmentsGeant();
+
+  //convert a track ref to a hit so that the global and local coordinates are kept togther.
+  Hit convertTrackReferenceToHit(o2::TrackReference &ref, int trackid, int detector);
 
   //   pair<int, int> getMaxADCsumAndChannel();
   //   int getMaxADCsum(){ return getMaxADCsumAndChannel().first; }
@@ -162,16 +208,25 @@ class RawDataManager
   TFile* mMCFile{0};
   TTree* mMCTree{0};
   // TTreeReader* mMCReader{0};
-  std::vector<o2::dataformats::MCEventHeader>* mMCEventHeader{0};
+  //std::vector<o2::dataformats::MCEventHeader>* mMCEventHeader{0};
+  o2::dataformats::MCEventHeader* mMCEventHeader{0};
   std::vector<o2::MCTrackT<Float_t>>* mMCTracks{0};
   std::vector<o2::TrackReference>* mMCTrackReferences{0};
+  std::vector<o2::TrackReference> mFilteredMCTrackReferences{0};
+  std::vector<MCTrackletSegmentInfo> mMCTrackletSegmentInfo{0};
   std::vector<o2::trd::Hit>* mHits{0};
 
   // MC hits, converted to chamber coordinates
   std::vector<o2::trd::HitPoint> mHitPoints;
 
+  // process the MC Trackreferences into MCTrackletSegmentInfo
+  void processTrackReferences();
+
   // MC track references, converted to chamber coordinates
-  std::vector<o2::TrackReference> mTrackReferences;
+  std::vector<o2::trd::HitPoint> mTrackReferences;
+  
+  // MC track references, converted to chamber coordinates, for those matching entry and exit of a chamber.
+  std::vector<o2::trd::MCTrackletSegmentInfo> mMatchedTrackReferences;
 
   // time frame information (for data only)
   std::vector<o2::dataformats::TFIDInfo>* mTFIDs{0};

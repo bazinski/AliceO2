@@ -18,6 +18,8 @@
 ///
 
 #include "DataFormatsTRD/Hit.h"
+#include "DataFormatsTRD/HelperMethods.h"
+#include "SimulationDataFormat/TrackReference.h"
 
 #include <array>
 
@@ -36,7 +38,7 @@ class ChamberSpacePoint
   ChamberSpacePoint(int det = -999) : mDetector(det){};
   ChamberSpacePoint(int id, int detector, float x, float y, float z, std::array<float, 3> rct, bool inDrift)
     : mID(id), mDetector(detector), mX(x), mY(y), mZ(z), mPadrow(rct[0]), mPadcol(rct[1]), mTimebin(rct[2]), mInDrift(inDrift){};
-
+  //ChamberSpacePoint(o2::TrackReference &ref): mID(ref->getTrackID()), mDetector(ref->getDetectorId()), mX(ref->X()),mY(ref->Y()), mZ(ref->Z()), 
   /// check if the space point has been initialized
   bool isValid() const { return mDetector >= 0; }
 
@@ -74,10 +76,10 @@ class ChamberSpacePoint
   bool isInMCM(int detector, int padrow, int mcmcol) const;
 
   /// calculate MCM corresponding to pad row/column
-  // int getMCM() const { return o2::trd::HelperMethods::getMCMfromPad(mPadrow, mPadcol); }
+  int getMCM() const { return o2::trd::HelperMethods::getMCMfromPad(mPadrow, mPadcol); }
 
   /// calculate readout board corresponding to pad row/column
-  // int getROB() const { return o2::trd::HelperMethods::getROBfromPad(mPadrow, mPadcol); }
+   int getROB() const { return o2::trd::HelperMethods::getROBfromPad(mPadrow, mPadcol); }
 
  protected:
   float mX, mY, mZ;
@@ -98,17 +100,23 @@ std::ostream& operator<<(std::ostream& os, const ChamberSpacePoint& p);
 class HitPoint : public ChamberSpacePoint
 {
  public:
-  HitPoint(ChamberSpacePoint position, float charge)
-    : ChamberSpacePoint(position), mCharge(charge)
+    HitPoint(ChamberSpacePoint position, float charge=0., int trackid=0)
+    : ChamberSpacePoint(position), mCharge(charge), mTrackID(trackid)
   {
   }
 
   HitPoint(){};
 
   float getCharge() { return mCharge; }
+  const uint32_t getUserId()const { return mUserId; }
+  void setUserId(uint32_t userid){ mUserId=userid; }
+  const uint32_t getTrackID()const { return mTrackID; }
+  void setTrackID(uint32_t trackid){ mTrackID=trackid; }
 
  private:
   float mCharge{0.0};
+  uint32_t mUserId{0}; // pulled in from a trackref.
+  uint32_t mTrackID{0};
 };
 
 /// A track segment: a straight line connecting two points. The points are generally given in spatial coordinates,
@@ -124,6 +132,11 @@ class TrackSegment
   {
     assert(start.getDetector() == end.getDetector());
   }
+ /* TrackSegment(o2::TrackReference start, o2::TrackReference end, int id, int det)
+    : mStartPoint(start), mEndPoint(end), mTrackID(id)
+  {
+    assert(start.getDetector() == end.getDetector());
+  }*/
 
   /// check if the space point has been initialized
   bool isValid() const { return mStartPoint.isValid(); }
@@ -186,6 +199,8 @@ class CoordinateTransformer
   }
 
   o2::trd::ChamberSpacePoint MakeSpacePoint(o2::trd::Hit& hit);
+
+  o2::trd::ChamberSpacePoint MakeSpacePoint(o2::TrackReference& ref);
 
   /// Legacy, less accurate method to convert local spatial to row/column/time coordinate.
   /// This method is only included for comparision, and should be removed in the future.

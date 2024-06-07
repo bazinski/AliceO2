@@ -33,11 +33,11 @@ float PadColF(o2::trd::Tracklet64& tracklet)
   float padLocal = tracklet.getPositionBinSigned() * constants::GRANULARITYTRKLPOS;
   // MCM number in column direction (0..7)
   int mcmCol = (tracklet.getMCM() % constants::NMCMROBINCOL) + constants::NMCMROBINCOL * (tracklet.getROB() % 2);
-
   // original calculation
   // FIXME: understand why the offset seems to be 6 pads and not nChannels / 2 = 10.5
   // return CAMath::Round(6.f + mcmCol * ((float)constants::NCOLMCM) + padLocal);
 
+  //std::cout << "tracklet64 cal: " << std::dec << tracklet.getPadCol() << " :: " <<  float((mcmCol + 1) * constants::NCOLMCM) + padLocal - 10.0 << std::endl;
   // my calculation
   return float((mcmCol + 1) * constants::NCOLMCM) + padLocal - 10.0;
 }
@@ -87,7 +87,7 @@ MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad)
     mPad->SetTitle(mDesc.c_str());
   }
 
-  mDigitsHisto = new TH2F(mName.c_str(), (mDesc + ";pad;time bin").c_str(), (mLastPad - mFirstPad), mFirstPad, mLastPad, 30, 0., 30.);
+  mDigitsHisto = new TH2F(mName.c_str(), (mDesc + ";pad;time bin").c_str(), (mLastPad - mFirstPad), mFirstPad, mLastPad, 36, -6., 30.);
 
   for (auto digit : mDataSpan.digits) {
     auto adc = digit.getADC();
@@ -150,7 +150,7 @@ void RawDisplay::drawClusters()
         //      << "   pos = " << pos << " ~ " << clpos
         //      << endl;
         clustermarker.DrawMarker(clpos, t - 0.5);
-        // cogmarker.DrawMarker(cog, t - 0.5);
+        cogmarker.DrawMarker(cog, t - 0.5);
       }
     }
   }
@@ -168,8 +168,8 @@ void RawDisplay::drawHits()
     }
   }
 }
-/*
-void RawDisplay::drawMCTrackReferences()
+
+/*void RawDisplay::drawMCTrackReferences()
 {
   TLine line;
   line.SetLineColor(kMagenta);
@@ -179,15 +179,39 @@ void RawDisplay::drawMCTrackReferences()
     line.DrawLine(trkref.getStartPoint().getPadCol(), trkref.getStartPoint().getTimeBin(), trkref.getEndPoint().getPadCol(), trkref.getEndPoint().getTimeBin());
   }
 }
-
+*/
 void RawDisplay::drawMCTrackSegments()
 {
   TLine line;
-  line.SetLineColor(kBlue);
+  line.SetLineColor(kBlack);
   line.SetLineWidth(2.0);
 
-  for (auto& trkl : mDataSpan.makeMCTrackSegments()) {
-    line.DrawLine(trkl.getStartPoint().getPadCol(), trkl.getStartPoint().getTimeBin(), trkl.getEndPoint().getPadCol(), trkl.getEndPoint().getTimeBin());
+  for (auto& trkl : mDataSpan.trackrefsegments) {
+    line.DrawLine(trkl.mEnter.X(), trkl.mEnter.Y(),trkl.mExit.X(),trkl.mExit.Y());
   }
 }
-*/
+
+
+void RawDisplay::drawMCTrackRefEntryExit()
+{
+  TLine line;
+  line.SetLineColor(kBlack);
+  line.SetLineWidth(2.0);
+  TMarker hitmarker;
+  hitmarker.SetMarkerColor(kBlack);
+  hitmarker.SetMarkerStyle(38);
+  std::cout << "About to display the geant entry and exit point !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+  int count=0; 
+  for (auto& geanttrkl : mDataSpan.makeMCTrackSegmentsGeant()) {
+    count++;
+  }
+  std::cout << "makeMCTrackSegmentsGeant created " << count << " items" << std::endl;
+
+  for (auto& geanttrkl : mDataSpan.makeMCTrackSegmentsEntryExit()) {
+     hitmarker.SetMarkerSize(log10(10));
+     hitmarker.DrawMarker(geanttrkl.getStartPoint().getPadCol(), geanttrkl.getStartPoint().getTimeBin());
+    //std::cout << "entry at :"<< geanttrkl.getStartPoint().getPadCol() <<":"<< geanttrkl.getStartPoint().getTimeBin() << std::endl;
+    //std::cout << "exit at :" <<geanttrkl.getEndPoint().getPadCol() <<":"<<  geanttrkl.getEndPoint().getTimeBin() << std::endl;
+    line.DrawLine(geanttrkl.getStartPoint().getPadCol(), geanttrkl.getStartPoint().getTimeBin(), geanttrkl.getEndPoint().getPadCol(), geanttrkl.getEndPoint().getTimeBin());
+  }
+}

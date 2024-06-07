@@ -57,10 +57,6 @@
 
 using namespace o2::detectors;
 
-/*std::vector<float> transformtracklet(o2::trd::Tracklet64 tracklet) {
-  // this is ported kind of from tracklettransformer but that needs ccdb
-  // connections and other stuff.
-}*/
 class MCTracklet {
 public:
   MCTracklet(o2::TrackReference &in, o2::TrackReference &out, int trackid,

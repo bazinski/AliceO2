@@ -96,7 +96,7 @@ std::array<float, 3> CoordinateTransformer::OrigLocal2RCT(int det, float x, floa
   double lengthCorr = padPlane->getLengthOPad() / padPlane->getLengthIPad();
 
   // calculate position based on inner pad length
-  rct[0] = -z / padPlane->getLengthIPad() + padPlane->getNrows() / 2;
+  rct[0] = -z / padPlane->getLengthIPad() + padPlane->getNrows() / 2.0;
 
   // correct row for outer pad rows
   if (rct[0] <= 1.0) {
@@ -125,7 +125,7 @@ std::array<float, 3> CoordinateTransformer::OrigLocal2RCT(int det, float x, floa
     // anode region: very rough guess
     rct[2] = mT0 - 1.0 + fabs(x);
   }
-
+LOGP(info," rct after OrigLocal2RCT : x:y:z {}:{}:{} => {}:{}:{}",x,y,z,rct[0], rct[1], rct[2]);
   return rct;
 }
 
@@ -136,6 +136,15 @@ o2::trd::ChamberSpacePoint CoordinateTransformer::MakeSpacePoint(o2::trd::Hit& h
   float z = hit.getLocalR();
   auto rct = Local2RCT(hit.GetDetectorID(), x, y, z);
   return o2::trd::ChamberSpacePoint(hit.GetTrackID(), hit.GetDetectorID(), x, y, y, rct, hit.isFromDriftRegion());
+}
+
+o2::trd::ChamberSpacePoint CoordinateTransformer::MakeSpacePoint(o2::TrackReference& ref)
+{
+  float x = ref.X();
+  float y = ref.Y();
+  float z = ref.Z();
+  auto rct = Local2RCT(ref.getDetectorId(), x, y, z);
+  return o2::trd::ChamberSpacePoint(ref.getTrackID(), ref.getDetectorId(), x, y, z, rct, true);
 }
 
 namespace o2::trd

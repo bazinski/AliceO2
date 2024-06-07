@@ -39,6 +39,7 @@ class RawDisplay
   void drawMCTrackSegments();
   void drawMCTrackReferences();
   void drawTrackRef();
+  void drawMCTrackRefEntryExit();
 
   void draw()
   {
