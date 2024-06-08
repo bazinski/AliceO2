@@ -11,10 +11,12 @@
 // or submit itself to any jurisdiction.
 
 #include "TRDQC/CoordinateTransformer.h"
-#include <TMath.h>
 #include "DataFormatsTRD/Constants.h"
 #include "TRDBase/Geometry.h"
+#include <TGeoManager.h>
+#include <TVirtualMC.h>
 
+#include <TMath.h>
 using namespace o2::trd;
 
 float ChamberSpacePoint::getMCMChannel(int mcmcol) const
@@ -141,11 +143,20 @@ o2::trd::ChamberSpacePoint CoordinateTransformer::MakeSpacePoint(o2::trd::Hit& h
 
 o2::trd::ChamberSpacePoint CoordinateTransformer::MakeSpacePoint(o2::TrackReference& ref)
 {
+  double pos[3] = {ref.X(),ref.Y(),ref.Z()};
+  double loc[3] = {-99, -99, -99};
   float x = ref.X();
   float y = ref.Y();
   float z = ref.Z();
+  if(gGeoManager == nullptr){
+    gGeoManager = new TGeoManager();
+    gGeoManager->Import("o2sim_geometry.root");
+  }
+  auto node = gGeoManager->FindNode(x,y,z);
+  gGeoManager->MasterToLocal(pos, loc); // Go to the local coordinate system (locR, locC, locT)
   auto rct = Local2RCT(ref.getUserId()>>2, x, y, z);
-  return o2::trd::ChamberSpacePoint(ref.getTrackID(), ref.getUserId()>>2, x, y, z, rct, true);
+  std::cout << fmt::format("det: {} x:y:z : {}:{}:{} -- rct : {}:{}:{} \n",ref.getUserId()>>2,x,y,z,rct[0],rct[1],rct[2]);
+  return o2::trd::ChamberSpacePoint(ref.getTrackID(), ref.getUserId()>>2, loc[0],loc[1],loc[2], rct, true);
 }
 
 namespace o2::trd

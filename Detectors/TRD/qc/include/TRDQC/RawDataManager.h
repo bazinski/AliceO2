@@ -51,20 +51,20 @@ public:
   MCTrackletSegmentInfo(){};
   MCTrackletSegmentInfo(o2::TrackReference &in, o2::TrackReference &out, int trackid, int det)
       : mEnter(in), mExit(out), mTrackId(trackid), mDet(det) {};
-  void setEntry(o2::TrackReference& entry){mEnter=entry;mHasEnter=true;}
-  void setExit(o2::TrackReference& exit){mExit=exit;mHasExit=true;}
+  void setEntry(o2::TrackReference& entry){mEnter=entry;}
+  void setExit(o2::TrackReference& exit){mExit=exit;}
   void setMidPoint(){/*std::cout << "setting midpoint " << mEnter << " :: " << mExit << "\n";*/ mMidPoint[0]=(mEnter.X()+mExit.X())/2.; mMidPoint[1]=(mEnter.Y()+mExit.Y())/2.; mMidPoint[2]=(mEnter.Z()+mExit.Z())/2.;/* std::cout << "set midpoint\n";*/} // contract the enter and exit points to guarantee both are with in UJ UK;
-  o2::TrackReference mEnter;
-  ChamberSpacePoint mEnterSpace;
-  o2::TrackReference mExit;
-  ChamberSpacePoint mExitSpace;
+  void setMidSpacePoint(){/*std::cout << "setting midpoint " << mEnter << " :: " << mExit << "\n";*/ mMidPoint[0]=(mEnter.X()+mExit.X())/2.; mMidPoint[1]=(mEnter.Y()+mExit.Y())/2.; mMidPoint[2]=(mEnter.Z()+mExit.Z())/2.;/* std::cout << "set midpoint\n";*/} // contract the enter and exit points to guarantee both are with in UJ UK;
+  o2::TrackReference mEnter; // as original
+  ChamberSpacePoint mEnterSpace; // in local coordinates
+  o2::TrackReference mExit; // as original
+  ChamberSpacePoint mExitSpace; // in local cordinates
+  ChamberSpacePoint mMidSpace;
   std::array<double,3> mMidPoint; // store the mid point of the segment for purposes of figuring out the position in the geometry
   o2::trd::Tracklet64 mTracklet; // enables us to match against a tracklet as last resort.
   int mTrackId;
   int mDet;
   int mcmid;
-  bool mHasEnter{false};
-  bool mHasExit{false};
   //methods for satisfying templates using the exit point (pad side) 
   int getDetector()const{return mExitSpace.getDetector();}
   int getPadRow()const;//{return 1;}
@@ -75,6 +75,7 @@ public:
   int getMCM()const;//{return 1;} 
   void setExitSpace(ChamberSpacePoint& point, double charge, int trackid){mExitSpace=point;}
   void setEnterSpace(ChamberSpacePoint& point, double charge, int trackid){mEnterSpace=point;}
+  void setMidSpace(ChamberSpacePoint& point, double charge, int trackid){mMidSpace=point;}
   bool isGood(){ if (mEnter.getLength() >0.1 && mExit.getLength()>0.1) return true; else return false;}
 };
 

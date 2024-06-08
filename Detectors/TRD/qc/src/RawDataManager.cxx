@@ -753,11 +753,21 @@ void RawDataManager::processTrackReferences()
     if(trackreferences[key].isGood()){
       o2::TrackReference ent=trackreferences[key].mEnter;
       o2::TrackReference ext=trackreferences[key].mExit;
+      trackreferences[key].setMidSpacePoint();
       ChamberSpacePoint enter=ctrans->MakeSpacePoint(ent);
       ChamberSpacePoint exit=ctrans->MakeSpacePoint(ext);
+
+      //ChamberSpacePoint mid=ctrans->MakeSpacePoint(trackreferences[key].mMidSpace);
+      
       //std::cout << "ZZZ det: " << exit.getDetector() << "\n";
       trackreferences[key].setEnterSpace(enter, 0.0,trackreferences[key].mEnter.getTrackID());
       trackreferences[key].setExitSpace(exit, 0.0,trackreferences[key].mExit.getTrackID());
+      trackreferences[key].setMidSpace(mid, 0.0,trackreferences[key].mExit.getTrackID());
+
+      if(trackreferences[key].getDetector()==9){
+        LOGP(info,"ZZ Det : 9 Trackid : {} : {}:{}:{} padrow {} padcol {} mcm {} rob {}",trackreferences[key].mEnter.getTrackID(),
+             trackreferences[key].mMidSpace.getX(),trackreferences[key].mMidSpace.getY(),trackreferences[key].mMidSpace.getZ(),trackreferences[key].mMidSpace.getPadRow(), trackreferences[key].mMidSpace.getPadCol(),trackreferences[key].mMidSpace.getMCM(),trackreferences[key].mMidSpace.getROB());
+      }
       // remove those that dont have a enter or exit
     mMCTrackletSegmentInfo.emplace_back(value);
      // std::cout << "GOOD: " << trackreferences[key] << "\n";
@@ -818,6 +828,9 @@ bool RawDataManager::nextEvent()
         // convert hits to spacepoints
         auto ctrans = o2::trd::CoordinateTransformer::instance();
         for (auto& hit : *mHits) {
+         // if(hit.getDetector()==9){
+            if(hit.GetTrackID() == 19179) LOGP(info,"ZZ det 9 trackid : {} hit : {} {} {} : {} {} {} ",hit.GetTrackID(),hit.GetX(),hit.GetY(),hit.GetZ(),hit.getLocalC(),hit.getLocalR(),hit.getLocalT());
+          //}
           mHitPoints.emplace_back(ctrans->MakeSpacePoint(hit), hit.GetCharge(),hit.GetTrackID());
          // std::cout << " building mHitPoints trackid : " << hit.GetTrackID() << std::endl;
         }
@@ -997,7 +1010,7 @@ int MCTrackletSegmentInfo::getPadCol() const
   float locC = loc[0], locR = loc[1], locT = loc[2];
   //std::cout <<__func__ <<"pos : " << pos[0] << ":"<<pos[1]<<":"<<pos[2] << " :: " <<loc[0] << ":" << loc[1] << ":" <<loc[2] << "  midpoint:" << mMidPoint[0] << ":" << mMidPoint[1] <<":" << mMidPoint[2] <<" " << node->GetVolume()->GetName() << "\n";
   //return (int)locC;
-  return mExitSpace.getPadCol();///(int)locC;
+  return mMidSpace.getPadCol();///(int)locC;
 }
 
 float MCTrackletSegmentInfo::getMCMf() const
@@ -1016,12 +1029,12 @@ int MCTrackletSegmentInfo::getMCM() const
   auto padcol = getPadCol();
   //std::cout << __func__ << " padrow:" << padrow << "[0:"<< constants::NROWC1<<"]  padcol:" << padcol << "[0:"<< constants::NCOLUMN << "] \n";
   //std::cout <<__func__ << " midpoint:" << mMidPoint[0] << ":" << mMidPoint[1] <<":" << mMidPoint[2] <<" " << gGeoManager->FindNode(mMidPoint[0],mMidPoint[1],mMidPoint[2])->GetVolume()->GetName() << "\n";
-  return mExitSpace.getMCM();//o2::trd::HelperMethods::getMCMfromPad(getPadRow(),getPadCol());
+  return mMidSpace.getMCM();//o2::trd::HelperMethods::getMCMfromPad(getPadRow(),getPadCol());
 };
 
 int MCTrackletSegmentInfo::getROB() const
 {
-  return mExitSpace.getROB();//o2::trd::HelperMethods::getROBfromPad(getPadRow(),getPadCol());
+  return mMidSpace.getROB();//o2::trd::HelperMethods::getROBfromPad(getPadRow(),getPadCol());
 };
 
 
