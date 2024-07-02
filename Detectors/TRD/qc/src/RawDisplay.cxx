@@ -87,7 +87,7 @@ MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad)
     mPad->SetTitle(mDesc.c_str());
   }
 
-  mDigitsHisto = new TH2F(mName.c_str(), (mDesc + ";pad;time bin").c_str(), (mLastPad - mFirstPad), mFirstPad, mLastPad, 36, -6., 30.);
+  mDigitsHisto = new TH2F(mName.c_str(), (mDesc + ";pad;time bin").c_str(), (mLastPad - mFirstPad), mFirstPad, mLastPad, 30, 0., 30.);
 
   for (auto digit : mDataSpan.digits) {
     auto adc = digit.getADC();
@@ -169,17 +169,22 @@ void RawDisplay::drawHits()
   }
 }
 
-/*void RawDisplay::drawMCTrackReferences()
+void RawDisplay::drawMCTrackReferences()
 {
   TLine line;
   line.SetLineColor(kMagenta);
   line.SetLineWidth(1.0);
 
-  for (auto& trkref : mDataSpan.makeMCTrackReferences()) {
+  for (auto& trkref : mDataSpan.makeMCTrackSegments()) {
+  line.SetLineColor(kMagenta);
+  line.SetLineWidth(2.0);
     line.DrawLine(trkref.getStartPoint().getPadCol(), trkref.getStartPoint().getTimeBin(), trkref.getEndPoint().getPadCol(), trkref.getEndPoint().getTimeBin());
+  line.SetLineColor(kGreen);
+  line.SetLineWidth(2.0);
+    line.DrawLine(trkref.getStartPoint().getPadCol(), 0, trkref.getEndPoint().getPadCol(), 30);
   }
 }
-*/
+
 void RawDisplay::drawMCTrackSegments()
 {
   TLine line;

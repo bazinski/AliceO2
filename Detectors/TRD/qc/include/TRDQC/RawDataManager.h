@@ -58,8 +58,8 @@ public:
   o2::TrackReference mEnter; // as original
   ChamberSpacePoint mEnterSpace; // in local coordinates
   o2::TrackReference mExit; // as original
-  ChamberSpacePoint mExitSpace; // in local cordinates
-  ChamberSpacePoint mMidSpace;
+  ChamberSpacePoint mExitSpace; // in local coordinates
+  ChamberSpacePoint mMidSpace; // in local coordinates
   std::array<double,3> mMidPoint; // store the mid point of the segment for purposes of figuring out the position in the geometry
   o2::trd::Tracklet64 mTracklet; // enables us to match against a tracklet as last resort.
   int mTrackId;

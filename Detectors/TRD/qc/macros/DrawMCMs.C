@@ -88,6 +88,7 @@ void DrawMCMs(std::string dirname = ".")
         disp.drawTracklets();
         disp.drawHits();
         disp.drawMCTrackSegments();
+        disp.drawMCTrackReferences();
       }
 
     } // event/trigger record loop

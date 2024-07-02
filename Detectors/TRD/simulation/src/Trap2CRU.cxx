@@ -131,8 +131,8 @@ void Trap2CRU::sortDataToLinks()
 
   for (auto& trig : mTrackletTriggerRecords) {
     if (trig.getNumberOfTracklets() > 0) {
-      if (mVerbosity) {
-        LOG(debug) << " sorting tracklets from : " << trig.getFirstTracklet() << " till " << trig.getFirstTracklet() + trig.getNumberOfTracklets();
+      if (1){//mVerbosity) {
+        LOG(info) << " sorting tracklets from : " << trig.getFirstTracklet() << " till " << trig.getFirstTracklet() + trig.getNumberOfTracklets();
       }
       // sort to link order *NOT* hcid order ...
       // link is defined by stack,layer,halfchamberside.
@@ -166,7 +166,7 @@ void Trap2CRU::sortDataToLinks()
     }
   }
 
-  if (mVerbosity) {
+  if (1){//mVerbosity) {
     std::chrono::duration<double> duration = std::chrono::high_resolution_clock::now() - sortstart;
     LOG(info) << "TRD Digit/Tracklet Sorting took " << duration.count() << " s";
     int triggercount = 0;
@@ -179,12 +179,12 @@ void Trap2CRU::sortDataToLinks()
         int firsttracklet = trig.getFirstTracklet();
         int numtracklets = trig.getNumberOfTracklets();
         for (int trackletcount = firsttracklet; trackletcount < firsttracklet + numtracklets; ++trackletcount) {
-          LOG(info) << "Tracklet : " << trackletcount << " details : supermodule:" << std::dec << mTracklets[trackletcount].getHCID() << std::hex << " tracklet:" << mTracklets[trackletcount];
+          LOG(info) << "Tracklet : " << trackletcount << " details : hci:" << std::dec << mTracklets[trackletcount].getHCID() << std::hex << " tracklet:" << mTracklets[trackletcount] << std::dec;
         }
       } else {
         LOG(info) << "No Tracklets for this trigger";
       }
-      if (trig.getNumberOfDigits() != 0) {
+      if (0){//]]trig.getNumberOfDigits() != 0) {
         int firstdigit = trig.getFirstDigit();
         int numdigits = trig.getNumberOfDigits();
         for (int digitcount = firstdigit; digitcount < firstdigit + numdigits; ++digitcount) {
@@ -225,6 +225,15 @@ void Trap2CRU::readTrapData()
     LOG(info) << "Retrieving LinkToHCIDMapping for time stamp " << mTimeStamp;
     auto& ccdbmgr = o2::ccdb::BasicCCDBManager::instance();
     mLinkMap = ccdbmgr.getForTimeStamp<LinkToHCIDMapping>("TRD/Config/LinkToHCIDMapping", mTimeStamp);
+    std::cout << " HCID Mapping to link" <<  "\n"; 
+    for(int hcid=0; hcid<1080;++hcid){
+      LOGP(info,"{} : {} ",hcid, mLinkMap->getLink(hcid));
+    }
+    std::cout << " Link Mapping to HCID" <<  "\n"; 
+    for(int hcid=0; hcid<1080;++hcid){
+      LOGP(info,"{} : {} ",hcid, mLinkMap->getHCID(hcid));
+    }
+   
   }
 
   // lets register our links
@@ -283,6 +292,7 @@ void Trap2CRU::readTrapData()
   int nDigitsTotal = 0;
   int nTriggerRecordsTotal = 0;
   int triggercount = 42; // triggercount is here so that we can span timeframes. The actual number is of no consequence,but must increase.
+  int triggercounter=0; // triggercount is here so that we can span timeframes. The actual number is of no consequence,but must increase.
   for (int entry = 0; entry < mTrackletsTree->GetEntries(); entry++) {
     mTrackletsTree->GetEntry(entry);
     mDigitsTree->GetEntry(entry);
@@ -294,7 +304,12 @@ void Trap2CRU::readTrapData()
     for (auto tracklettrigger : mTrackletTriggerRecords) {
       convertTrapData(tracklettrigger, triggercount); // tracklettrigger assumed to be authoritive
       triggercount++;
+      triggercounter++;
+    LOGF(info, "For Entry : %lu triggercounter %lu In the input files there were %u tracklets and %u digits in %u trigger records", entry, triggercounter, nTrackletsTotal, nDigitsTotal, nTriggerRecordsTotal);
+    LOGF(info, "For Entry : %lu triggercounter %lu Wrote %lu tracklets and %lu digits into the raw data", entry, triggercounter, mTotalTrackletsWritten, mTotalDigitsWritten);
     }
+    LOGF(info, "For Entry : %lu In the input files there were %u tracklets and %u digits in %u trigger records", entry, nTrackletsTotal, nDigitsTotal, nTriggerRecordsTotal);
+    LOGF(info, "For Entry : %lu Wrote %lu tracklets and %lu digits into the raw data", entry, mTotalTrackletsWritten, mTotalDigitsWritten);
   }
   LOGF(info, "In the input files there were %u tracklets and %u digits in %u trigger records", nTrackletsTotal, nDigitsTotal, nTriggerRecordsTotal);
   LOGF(info, "Wrote %lu tracklets and %lu digits into the raw data", mTotalTrackletsWritten, mTotalDigitsWritten);
@@ -587,15 +602,19 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
       int nDigitsOnLink = 0;
       bool haveDigitOnLink = false;
       bool haveTrackletOnLink = false;
+       LOGF(info, "YYYY Link ID(%i), HCID(%i). halfcrulink %i  Tracklets? %i, Digits? %i. Tracklet HCID(%i), mCurrentTracklet(%i), mCurrentDigit(%i)",
+             linkid, hcid, halfcrulink, haveTrackletOnLink, haveDigitOnLink, mTracklets[mCurrentTracklet].getHCID(), mCurrentTracklet, mCurrentDigit);
       if (mCurrentTracklet < mTracklets.size() && mTracklets[mCurrentTracklet].getHCID() == hcid) {
         haveTrackletOnLink = true;
+        LOGF(info, "link true Link ID(%i), HCID(%i). Tracklets? %i, Digits? %i. Tracklet HCID(%i), mCurrentTracklet(%i), mCurrentDigit(%i)",
+             linkid, hcid, haveTrackletOnLink, haveDigitOnLink, mTracklets[mCurrentTracklet].getHCID(), mCurrentTracklet, mCurrentDigit);
       }
       if (mCurrentDigit < mDigits.size() && mDigits[mDigitsIndex[mCurrentDigit]].getHCId() == hcid) {
         haveDigitOnLink = true;
       }
-      if (mVerbosity) {
-        LOGF(info, "Link ID(%i), HCID(%i). Tracklets? %i, Digits? %i. Tracklet HCID(%i), mCurrentTracklet(%i), mCurrentDigit(%i)",
-             linkid, hcid, haveTrackletOnLink, haveDigitOnLink, mTracklets[mCurrentTracklet].getHCID(), mCurrentTracklet, mCurrentDigit);
+      if (1){//mVerbosity) {
+        LOGF(info, "Link ID(%i), HCID(%i). halfcrulink %i  Tracklets? %i, Digits? %i. Tracklet HCID(%i), mCurrentTracklet(%i), mCurrentDigit(%i)",
+             linkid, hcid, halfcrulink, haveTrackletOnLink, haveDigitOnLink, mTracklets[mCurrentTracklet].getHCID(), mCurrentTracklet, mCurrentDigit);
       }
       if (haveTrackletOnLink || haveDigitOnLink) {
         nLinksWithData++;
@@ -604,18 +623,22 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
           if (haveTrackletOnLink || mUseTrackletHCHeader == 2) {
             // write tracklethcheader if there is tracklet data or if we always want to have tracklethcheader
             // first part of the if statement handles the mUseTrackletHCHeader==1 option
+            LOGP(info,"writing hcid {} for triggercount {}",hcid,triggercount);
             writeTrackletHCHeader(hcid, triggercount);
             linkwordswritten += 1;
           }
           //else do nothing as we dont want/have tracklethcheader
         }
+        LOGP(info,"while loop mCurrentTracklet  {} < endtrackletindex {} && mTracklets[mCurrentTracklet].getHCID() {} == hcid {}",mCurrentTracklet, endtrackletindex, mTracklets[mCurrentTracklet].getHCID(), hcid);
         while (mCurrentTracklet < endtrackletindex && mTracklets[mCurrentTracklet].getHCID() == hcid) {
           // still on an mcm on this link
           int tracklets = buildTrackletRawData(mCurrentTracklet); // returns # of tracklets for single MCM
+          LOGP(info,"ZZZ building raw data for tracklet {} ",mCurrentTracklet);
           mCurrentTracklet += tracklets;
           nTrackletsOnLink += tracklets;
           mTotalTrackletsWritten += tracklets;
           linkwordswritten += tracklets + 1; // +1 to include the header
+          LOGP(info,"ZZZ Running total of tracklets written {} ",tracklets);
         }
         // write 2 tracklet end markers irrespective of there being tracklet data.
         writeTrackletEndMarkers();
@@ -676,7 +699,7 @@ void Trap2CRU::convertTrapData(o2::trd::TriggerRecord const& triggerrecord, cons
           bytescopied = mRawDataPtr - rawdataptratstart;
           LOGF(error, "Data size missmatch. Written words (%i), bytesCopied(%i), crudatasize(%i)", linkwordswritten, bytescopied, crudatasize);
         }
-        LOGF(debug, "Found %i tracklets and %i digits on link %i (HCID=%i)", nTrackletsOnLink, nDigitsOnLink, linkid, hcid);
+        LOGF(info, "ZZZZ Found %i tracklets and %i digits on link %i (HCID=%i)", nTrackletsOnLink, nDigitsOnLink, linkid, hcid);
       } else {
         // no data on this link
         setHalfCRUHeaderLinkSizeAndFlags(halfcruheader, halfcrulink, 0, 0);

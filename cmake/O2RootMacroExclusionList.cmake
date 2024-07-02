@@ -29,6 +29,7 @@ list(APPEND O2_ROOT_MACRO_EXCLUSION_LIST
             Detectors/TRD/base/macros/Readocdb.C
             Detectors/TRD/base/macros/PrintTrapConfig.C
             Detectors/TRD/base/macros/TestTrapSim.C
+            Detectors/TRD/qc/macros/PlotTrackRef.C
             Detectors/TRD/macros/convertRun2ToRun3Digits.C
             Detectors/TRD/simulation/macros/CheckTRDFST.C
             Detectors/gconfig/g4Config.C

@@ -167,7 +167,7 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
   // add all the digits to a map
   for (auto cur = digits.begin(); cur != digits.end(); /* noop */) {
     // calculate the key of the current (first unprocessed) digit
-    auto key = keyfunc::key(*cur,true);
+    auto key = keyfunc::key(*cur);
     foundkeys.push_back(key);
     // find the first digit with a different key
     auto nxt = std::find_if(cur, digits.end(), [key](auto x) { return keyfunc::key(x) != key; });
@@ -192,7 +192,7 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
   std::map<uint32_t, std::vector<HitPoint>::iterator> firsthit;
   for (auto cur = hits.begin(); cur != hits.end(); ++cur) {
     // calculate the keys for this hit
-    auto keys = keyfunc::keys(*cur,true);
+    auto keys = keyfunc::keys(*cur);
     // if we are not yet aware of this key, register the current hit as the first hit
     for (auto key : keys) {
       firsthit.insert({key, cur});
@@ -222,7 +222,7 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
     //std::cout << "index: " << count++ << "\n";
 
 
-    auto key = keyfunc::key(*cur,true);
+    auto key = keyfunc::key(*cur);
     auto it= std::find(foundkeys.begin(),foundkeys.end(),key);
     if(it == foundkeys.end()){
       LOGP(info, "tracksegment key is not present so error key:{}", key);
@@ -343,56 +343,9 @@ std::vector<RawDataSpan> RawDataSpan::iterateByMCM() { return iterateBy<MCM_ID>(
 // };
 
 
-std::vector<o2::TrackReference> RawDataSpan::makeMCTrackReferences()
-{
-  // define a struct to keep track of the first and last MC hit of one track in one chamber
-  struct TrackReferencesInfo {
-    // The first reference is hopefully the entry point
-    size_t firstref{0}; //
-    // The last reference should be the exit point of the amplification region
-    size_t lastref{0};
-    float trackid{-999.9}; // local x cordinate of the first trackef
-    float start{-100.0};
-    float end{999.9};      // local x cordinate of the last trackref
-  };
-  // Keep information about found track references in a map indexed by track ID and detector number.
-  // If the span only covers (part of) a detector, the detector information is redundant, but in
-  // the case of processing a whole event, the distinction by detector will be needed.
-  std::map<std::pair<int, int>, TrackReferencesInfo> trackReferenceInfo;
-
-/*  for (int iTrackRef = 0; iTrackRef < trackrefs.size(); ++iTrackRef) {
-    auto ref = trackrefs[iTrackRef];
-
-    // we look for track references classified as entering the drift region
-    if ((ref.getUserId() & 0x3) == 0x1) {
-      // The first hit is the hit closest to the anode region, i.e. with the largest x coordinate.
-      auto id = std::make_pair(ref.getTrackID(), ref.getUserId() >> 2);
-      if (ref.X() > trackReferenceInfo[id].start) {
-        trackReferenceInfo[id].firstref = iTrackRef;
-        trackReferenceInfo[id].firstref = ref.X();
-      }
-      // The last hit is the hit closest to the radiator, i.e. with the smallest x coordinate.
-      if (ref.X() < trackReferenceInfo[id].end) {
-        trackReferenceInfo[id].trackid = iTrackRef;
-        trackReferenceInfo[id].end = ref.X();
-      }
-    }
-  } // trackreference loop
-*/
-  std::vector<o2::TrackReference> trackReferences;
-  for (auto x : trackReferenceInfo) {
-    auto trackid = x.first.first;
-    auto detector = x.first.second;
-    auto firstref = hits[x.second.firstref];
-    auto lastref = hits[x.second.lastref];
-    //trackReferences.emplace_back(firstref, lastref, trackid);
-  }
-  return trackReferences;
-}
-
 std::vector<TrackSegment> RawDataSpan::makeMCTrackSegments()
 {
-  // define a struct to keep track of the first and last MC hit of one track in one chamber
+// define a struct to keep track of the first and last MC hit of one track in one chamber
   struct SegmentInfo {
     // The first hit is the hit closest to the anode region, i.e. with the largest x coordinate.
     size_t firsthit{0}; //
@@ -422,8 +375,9 @@ std::vector<TrackSegment> RawDataSpan::makeMCTrackSegments()
         trackSegmentInfo[id].lasthit = iHit;
         trackSegmentInfo[id].end = hit.getX();
       }
- //   }
+    //}
   } // hit loop
+
   std::vector<TrackSegment> trackSegments;
   for (auto x : trackSegmentInfo) {
     auto trackid = x.first.first;
@@ -432,6 +386,7 @@ std::vector<TrackSegment> RawDataSpan::makeMCTrackSegments()
     auto lasthit = hits[x.second.lasthit];
     trackSegments.emplace_back(firsthit, lasthit, trackid);
   }
+LOGP(info,"ZZzz trackSegments has size : {}", trackSegments.size());
   return trackSegments;
 }
 
@@ -488,14 +443,10 @@ std::vector<TrackSegment> RawDataSpan::makeMCTrackSegmentsEntryExit()
         if(hit.getX() == trackref.mEnter.X() && hit.getY()== trackref.mEnter.Y() && hit.getZ() == trackref.mEnter.Z()) {
           auto hit = hits[iHit];
           trackRefSegmentInfo[id].entertrackref=iHit;
-         // std::cout << " found corresponding hit for the in at" << std::endl;
         }
       }
       trackRefSegmentInfo[id].exittrackref=trackrefcounter;
-      //exitunmatched.push_back(o2::math_utils::Point3D<float>(
-      //   trackref.X(), trackref.Y(), trackref.Z()));
       // direction exiting
-      //std::cout << " Now to look for corresponding hit of trackref exiting" << std::endl;
       for (int iHit = 0; iHit < hits.size(); ++iHit) {
         auto hit = hits[iHit];
         float distance = sqrt(pow((hit.getX() - trackref.mExit.X()),2) +  pow(( hit.getY()- trackref.mExit.Y()),2)+ pow( (hit.getZ() - trackref.mExit.Z()),2));
@@ -748,12 +699,19 @@ void RawDataManager::processTrackReferences()
     }
     auto ctrans = o2::trd::CoordinateTransformer::instance();
     trackreferences[key].setMidPoint();
+/*    if(trackreferences[key].mEnter.getTrackID() == 19179){
+      std::cout << "ZZZ trackid for key.1 "<< key.first << " key.2" << key.second << " is : " << trackreferences[key].mEnter.getTrackID() << " " << trackreferences[key].mExit.getTrackID() << std::endl;
+      std::cout << "ZZZ trackrefs Enter : " << trackreferences[key].mEnter << "\n";
+      std::cout << "ZZZaa exit : " << trackreferences[key].mExit <<  "\n";
+      std::cout << "ZZZb mid point : " << trackreferences[key].mMidPoint[0] << ":" <<  trackreferences[key].mMidPoint[1] << ":" <<  trackreferences[key].mMidPoint[2] << "\n";
+      std::cout << "ZZZ newline \n";
+    }*/
    // trackreferences[key].setMidSpace(ctrans->MakeSpacePoint(mExit), 0.0,mExit.getTrackID());
     //mMCTrackletSegmentInfo.emplace_back(trackreferences[key].mEnter,trackreferences[key].mExit,det,trackid);
     if(trackreferences[key].isGood()){
       o2::TrackReference ent=trackreferences[key].mEnter;
       o2::TrackReference ext=trackreferences[key].mExit;
-      trackreferences[key].setMidSpacePoint();
+      //trackreferences[key].setMidSpacePoint();
       ChamberSpacePoint enter=ctrans->MakeSpacePoint(ent);
       ChamberSpacePoint exit=ctrans->MakeSpacePoint(ext);
 
@@ -762,7 +720,7 @@ void RawDataManager::processTrackReferences()
       //std::cout << "ZZZ det: " << exit.getDetector() << "\n";
       trackreferences[key].setEnterSpace(enter, 0.0,trackreferences[key].mEnter.getTrackID());
       trackreferences[key].setExitSpace(exit, 0.0,trackreferences[key].mExit.getTrackID());
-      trackreferences[key].setMidSpace(mid, 0.0,trackreferences[key].mExit.getTrackID());
+     // trackreferences[key].setMidSpace(mid, 0.0,trackreferences[key].mExit.getTrackID());
 
       if(trackreferences[key].getDetector()==9){
         LOGP(info,"ZZ Det : 9 Trackid : {} : {}:{}:{} padrow {} padcol {} mcm {} rob {}",trackreferences[key].mEnter.getTrackID(),
@@ -829,15 +787,11 @@ bool RawDataManager::nextEvent()
         auto ctrans = o2::trd::CoordinateTransformer::instance();
         for (auto& hit : *mHits) {
          // if(hit.getDetector()==9){
-            if(hit.GetTrackID() == 19179) LOGP(info,"ZZ det 9 trackid : {} hit : {} {} {} : {} {} {} ",hit.GetTrackID(),hit.GetX(),hit.GetY(),hit.GetZ(),hit.getLocalC(),hit.getLocalR(),hit.getLocalT());
+            //if(hit.GetTrackID() == 19179) LOGP(info,"ZZ det 9 trackid : {} hit : {} {} {} : {} {} {} ",hit.GetTrackID(),hit.GetX(),hit.GetY(),hit.GetZ(),hit.getLocalC(),hit.getLocalR(),hit.getLocalT());
           //}
           mHitPoints.emplace_back(ctrans->MakeSpacePoint(hit), hit.GetCharge(),hit.GetTrackID());
          // std::cout << " building mHitPoints trackid : " << hit.GetTrackID() << std::endl;
         }
-       /* for (auto& trackref : *mMCTrackReferences) {
-          std::cout << "added track ref at : " << trackref.X()<<":"<<trackref.Y()<<":"<<trackref.Z() << std::endl;
-          mTrackReferences.emplace_back(ctrans->MakeSpacePoint(trackref));
-        }*/
       }
     }
   }
@@ -854,24 +808,8 @@ RawDataSpan RawDataManager::getEvent()
   ev.tracklets = boost::make_iterator_range_n(mTracklets->begin() + mTriggerRecord.getFirstTracklet(), mTriggerRecord.getNumberOfTracklets());
 
   ev.hits = boost::make_iterator_range(mHitPoints.begin(), mHitPoints.end());
-  
-  //ev.trackrefs = boost::make_iterator_range(mTrackReferences.begin(), mTrackReferences.end());
-  //ev.trackrefhits = boost::make_iterator_range(mMCTrackReferences.begin(), mMCTrackReferences.end());
-  ev.trackrefsegments = boost::make_iterator_range(mMCTrackletSegmentInfo.begin(), mMCTrackletSegmentInfo.end());
-  
-  auto evtime = getTriggerTime();
-  std::cout << "event time : " << evtime << std::endl;
-  std::vector<uint32_t> trackids;
-  for(auto hit : ev.hits){
-    trackids.push_back(hit.getTrackID());
 
-  }
-  int idcountpre=trackids.size();
-  sort(trackids.begin(),trackids.end());
-  auto uniqueids=std::unique(trackids.begin(),trackids.end());
-  trackids.erase(uniqueids,trackids.end());
-  int idcountpost=trackids.size();
-  std::cout << " pre trackids:" << idcountpre << " post trackids:" << idcountpost << std::endl;
+  auto evtime = getTriggerTime();
 
   // if (tpctracks) {
   //   for (auto &track : *mTpcTracks) {
@@ -902,6 +840,7 @@ RawDataSpan RawDataManager::getEvent()
 
   // ev.trackpoints.begin() = ev.evtrackpoints.begin();
   // ev.trackpoints.end() = ev.evtrackpoints.end();
+
   std::cout << " returning event" << std::endl;
   return ev;
 }
