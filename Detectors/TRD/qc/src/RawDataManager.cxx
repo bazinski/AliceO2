@@ -213,12 +213,12 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
   auto uniquekeys=std::unique(foundkeys.begin(),foundkeys.end());
   foundkeys.erase(uniquekeys,foundkeys.end());
   for( auto &key : foundkeys) {
-    //spanmap[key].trackrefsegments= boost::make_iterator_range(trackrefsegments.begin(),trackrefsegments.end());
-  //  std::cout << "key : " << key << "\n";
+    spanmap[key].trackrefsegments= boost::make_iterator_range(trackrefsegments.begin(),trackrefsegments.end());
+    std::cout << "key : " << key << " distance : " << std::distance(trackrefsegments.begin(),trackrefsegments.end()) <<  " \n";
   }
   int count=0;
   for (auto cur = trackrefsegments.begin(); cur != trackrefsegments.end(); /* noop */) {
-    //LOGP(info,"********************** tracksegment start:  ***********************************");
+    LOGP(info,"********************** tracksegment start:  ***********************************");
     //std::cout << "index: " << count++ << "\n";
 
 
@@ -232,7 +232,7 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
       LOGP(info, "tracksegment key is present so error key:{}", key);
     }
     
-    //LOGP(info,"!!!!!!!!!!!!!!!!!!!!!! tracksegment find_if:  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    LOGP(info,"!!!!!!!!!!!!!!!!!!!!!! tracksegment find_if:  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     //std::cout << "!!!!!!!!!!!!!!!!!!!!!! cur " << *cur << "\n";
     auto nxt = std::find_if(cur, trackrefsegments.end(), [key](auto x) { return keyfunc::key(x) != key; });
     //std::cout << "!!!!!!!!!!!!!!!!!!!!!! nxt " << *nxt << "\n";
@@ -366,6 +366,7 @@ std::vector<TrackSegment> RawDataSpan::makeMCTrackSegments()
 //    if (hit.isFromDriftRegion()) {
       // The first hit is the hit closest to the anode region, i.e. with the largest x coordinate.
       auto id = std::make_pair(hit.getID(), hit.getDetector());
+      if(hit.isFromDriftRegion()) continue;
       if (hit.getX() > trackSegmentInfo[id].start) {
         trackSegmentInfo[id].firsthit = iHit;
         trackSegmentInfo[id].start = hit.getX();
@@ -668,7 +669,7 @@ void RawDataManager::processTrackReferences()
         trackreferences[key]=MCTrackletSegmentInfo();  // map[key].   trackrefsvectorwithextra.push_back(trackref);
         if((trackref.getUserId() & 0x3) == 0x2) {
             // we have an exit but no preceding enter ??
-          std::cout << "Exit but no entry key : " << key.first << ":"<< key.second << " Setting entry point with entry point of : " <<  trackreferences[key].mEnter << " and corresponding exit of : " << trackreferences[key].mExit << std::endl;
+          //std::cout << "Exit but no entry key : " << key.first << ":"<< key.second << " Setting entry point with entry point of : " <<  trackreferences[key].mEnter << " and corresponding exit of : " << trackreferences[key].mExit << std::endl;
           }
         }
         switch (trackref.getUserId() & 0x3) {
@@ -723,8 +724,7 @@ void RawDataManager::processTrackReferences()
      // trackreferences[key].setMidSpace(mid, 0.0,trackreferences[key].mExit.getTrackID());
 
       if(trackreferences[key].getDetector()==9){
-        LOGP(info,"ZZ Det : 9 Trackid : {} : {}:{}:{} padrow {} padcol {} mcm {} rob {}",trackreferences[key].mEnter.getTrackID(),
-             trackreferences[key].mMidSpace.getX(),trackreferences[key].mMidSpace.getY(),trackreferences[key].mMidSpace.getZ(),trackreferences[key].mMidSpace.getPadRow(), trackreferences[key].mMidSpace.getPadCol(),trackreferences[key].mMidSpace.getMCM(),trackreferences[key].mMidSpace.getROB());
+        //LOGP(info,"ZZ Det : 9 Trackid : {} : {}:{}:{} padrow {} padcol {} mcm {} rob {}",trackreferences[key].mEnter.getTrackID(), trackreferences[key].mMidSpace.getX(),trackreferences[key].mMidSpace.getY(),trackreferences[key].mMidSpace.getZ(),trackreferences[key].mMidSpace.getPadRow(), trackreferences[key].mMidSpace.getPadCol(),trackreferences[key].mMidSpace.getMCM(),trackreferences[key].mMidSpace.getROB());
       }
       // remove those that dont have a enter or exit
     mMCTrackletSegmentInfo.emplace_back(value);
