@@ -52,6 +52,8 @@ class TRDDPLTrapSimulatorTask : public o2::framework::Task
   bool mEnableTrapConfigDump{false};
   bool mInitCcdbObjectsDone{false}; // flag whether one time download of CCDB objects has been done
   int mNumThreads{-1};              // number of threads used for parallel processing
+  int mTF{4};                       // timeframe we want to look at.
+  int mTimeFrameCounter{-1};         // count timeframes, i.e. count # of time run is executed.
   std::string mTrapConfigName;      // the name of the config to be used.
                                     //  std::string mOnlineGainTableName;
                                     //  std::unique_ptr<Calibrations> mCalib; // store the calibrations connection to CCDB. Used primarily for the gaintables in line above.

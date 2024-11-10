@@ -18,7 +18,7 @@
 ///
 
 #include "TRDQC/RawDataManager.h"
-
+#include "TRDBase/TrackletTransformer.h"
 class TVirtualPad;
 class TH2;
 
@@ -34,6 +34,9 @@ class RawDisplay
   RawDisplay(RawDataSpan& dataspan, TVirtualPad* pad = nullptr);
   void drawDigits(std::string opt = "colz");
   void drawTracklets();
+  void drawShiftedTracklets();
+  void drawSimTracklets();
+  void drawCalibratedTracklets();
   void drawClusters();
   void drawHits();
   void drawMCTrackSegments();
@@ -52,7 +55,8 @@ class RawDisplay
   std::string mDesc;
   int mFirstPad;
   int mLastPad;
-
+  float mCalvdriftexb{};
+//  TrackletTransformer mTransformer;
   float mClusterThreshold{50}; /// threshold for drawing clusters
 };
 
@@ -60,7 +64,7 @@ class RawDisplay
 class MCMDisplay : public RawDisplay
 {
  public:
-  MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad = nullptr);
+  MCMDisplay(RawDataSpan& mcmdata, int event=-1, TVirtualPad* pad = nullptr);
 };
 
 } // namespace o2::trd

@@ -20,6 +20,7 @@
 #endif
 
 #include "TFile.h"
+#include "TTree.h"
 
 #include "Framework/ConfigParamRegistry.h"
 #include "Framework/ControlService.h"
@@ -48,8 +49,31 @@ using namespace constants;
 
 void TRDDPLTrapSimulatorTask::initTrapConfig(long timeStamp)
 {
-  auto& ccdbmgr = o2::ccdb::BasicCCDBManager::instance();
-  mTrapConfigEvent = ccdbmgr.getForTimeStamp<o2::trd::TrapConfigEvent>("TRD/TrapConfig/" + mTrapConfigName, timeStamp);
+  //auto& ccdbmgr = o2::ccdb::BasicCCDBManager::instance();
+  //mTrapConfigEvent = ccdbmgr.getForTimeStamp<o2::trd::TrapConfigEvent>("TRD/TrapConfig/" + mTrapConfigName, timeStamp);
+  /******** TEmporary open a local file with a trapconfigevent   ****************************/
+  std::unique_ptr<TFile> file( TFile::Open("trdconfigevents.root") );
+  if (!file || file->IsZombie()) {
+   std::cerr << "Error opening trdconfigevent file" << std::endl;
+   exit(-1);
+  }
+//  std::unique_ptr<TTree> configTree(file->Get<TTree>("calib"));
+  mTrapConfigEvent =file->Get<TrapConfigEvent>("ccdb_object");
+  std::unique_ptr<TrapConfigEvent> configevent(file->Get<TrapConfigEvent>("ccdb_object"));
+  if(mTrapConfigEvent){
+    LOGP(debug," we have a valid trapconfigevent object");
+  }
+  else{
+    LOGP(debug," we have a invalid trapconfigevent object");
+  }
+  //configTree->GetEntry(0);
+  //
+  /************************************/
+
+
+
+
+
 
   //  if (mEnableTrapConfigDump) {
   //    mTrapConfig->DumpTrapConfig2File("run3trapconfig_dump");
@@ -117,6 +141,8 @@ void TRDDPLTrapSimulatorTask::processTRAPchips(int& nTracklets, std::vector<Trac
     if (!trapSimulators[iTrap].isDataSet()) {
       continue;
     }
+    LOGP(info,"Processing TRAP chip : {}", iTrap);
+    std::cout << trapSimulators[iTrap] << std::endl;
     trapSimulators[iTrap].setBaselines();
     trapSimulators[iTrap].filter();
     trapSimulators[iTrap].tracklet();
@@ -177,14 +203,31 @@ void TRDDPLTrapSimulatorTask::init(o2::framework::InitContext& ic)
 void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
 {
   // this method steeres the processing of the TRAP simulation
-  LOG(info) << "TRD Trap Simulator Device running over incoming message";
-
+  LOGP(info,"TRD Trap Simulator Device running over incoming message TF : {}",mTimeFrameCounter);
+/*  if(mTF > -1 &&  mTF!=mTimeFrameCounter){
+    // ignore those timeframes other than the one selected.
+    LOGP(info,"Skipping time frame : {} requested tf : {} ",mTimeFrameCounter, mTF );
+    mTimeFrameCounter++;
+    return ;
+  }
+  */
+  if(mTimeFrameCounter > 100) {
+    LOGP(info,"Skipping time frame : {}",mTimeFrameCounter);
+    return ;
+  }
+  mTimeFrameCounter++;
   if (!mInitCcdbObjectsDone) {
     auto creationTime = pc.services().get<o2::framework::TimingInfo>().creation;
     auto timeStamp = (mRunNumber < 0) ? creationTime : mRunNumber;
     // mCalib = std::make_unique<Calibrations>();
     // mCalib->getCCDBObjects(timeStamp);
     initTrapConfig(timeStamp);
+  if(mTrapConfigEvent){
+    LOGP(info," after init we have a valid trapconfigevent object");
+  }
+  else{
+    LOGP(info," after init  we have a invalid trapconfigevent object");
+  }
     // setOnlineGainTables();
     mInitCcdbObjectsDone = true;
   }
@@ -242,6 +285,7 @@ void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
 #endif
   for (size_t iTrig = 0; iTrig < triggerRecords.size(); ++iTrig) {
     int currHCId = -1;
+    int currDet =-1;
     std::array<TrapSimulator, NMCMHCMAX> trapSimulators{}; //the up to 64 trap simulators for a single half chamber
     for (int iDigit = triggerRecords[iTrig].getFirstDigit(); iDigit < (triggerRecords[iTrig].getFirstDigit() + triggerRecords[iTrig].getNumberOfDigits()); ++iDigit) {
       const auto& digit = &digits[digitIdxArray[iDigit]];
@@ -250,12 +294,20 @@ void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
       }
       if (currHCId != digit->getHCId()) {
         // we switch to a new half chamber, process all TRAPs of the previous half chamber which contain data
+        LOGP(info,"Processing half chamber : {} det : {}",currHCId, currDet);
         processTRAPchips(nTracklets[iTrig], trackletsAccum[iTrig], trapSimulators, digitCountsAccum[iTrig], digitIndicesAccum[iTrig]);
+        LOGP(info,"Finished Processing half chamgber : {} det {}",currHCId, currDet);
         currHCId = digit->getHCId();
       }
       // fill the digit data into the corresponding TRAP chip
       int trapIdx = (digit->getROB() / 2) * NMCMROB + digit->getMCM();
       if (!trapSimulators[trapIdx].isDataSet()) {
+        if(mTrapConfigEvent){
+          LOGP(debug," About to init TrapSimulator with a valid mTrapConfigEvent");
+        }
+        else {
+          LOGP(debug,"oops About to init TrapSimulator with an invalid mTrapConfigEvent");
+        }
         trapSimulators[trapIdx].init(mTrapConfigEvent, digit->getDetector(), digit->getROB(), digit->getMCM());
         if (mUseFloatingPointForQ) {
           trapSimulators[trapIdx].setUseFloatingPointForQ();

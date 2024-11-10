@@ -13,7 +13,9 @@
 #include "TRDQC/RawDataManager.h"
 #include "DataFormatsTRD/Constants.h"
 #include "DataFormatsTRD/HelperMethods.h"
+#include "TRDBase/TrackletTransformer.h"
 
+#include <TColor.h>
 #include <TVirtualPad.h>
 #include <TPad.h>
 #include <TCanvas.h>
@@ -47,9 +49,21 @@ float PadColF(o2::trd::Tracklet64& tracklet)
 RawDisplay::RawDisplay(RawDataSpan& dataspan, TVirtualPad* pad)
   : mDataSpan(dataspan), mPad(pad)
 {
+  /*
+  std::string calvdexbfile = "~/alice/thesis/o2-trd-CalVdriftExB.root";
+  TFile *vdriftexbf = TFile::Open(calvdexbfile.data());
+  o2::trd::CalVdriftExB *calvdriftexb;
+  vdriftexbf->GetObject("ccdb_object", calvdriftexb);
+  mTransformer.init();
+  mTransformer.setCalVdriftExB(calvdriftexb);
+  LOGP(info,"VDrift and ExB");
+  for(uint32_t i=0;i<constants::MAXCHAMBER;++i){
+    LOGP(info,"{} : {} {} ", i, vdriftexbf->getVdrift(i), vdriftexbf->getExB(i));
+  }
+  */
 }
 
-MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad)
+MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, int event, TVirtualPad* pad)
   : RawDisplay(mcmdata, pad) // initializes mDataSpan, mPad
 {
   int det = -1, rob = -1, mcm = -1;
@@ -69,9 +83,15 @@ MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad)
     assert(false);
   }
 
-  mName = Form("det%03d_rob%d_mcm%02d", det, rob, mcm);
-  mDesc = Form("Detector %02d_%d_%d (%03d) - MCM %d:%02d", det / 30, (det % 30) / 6, det % 6, det, rob, mcm);
-  ;
+  if(event!=-1){
+    mName = Form("det%03d_rob%d_mcm%02d_e%d", det, rob, mcm,event);
+    mDesc = Form("Detector %02d_%d_%d (%03d) - MCM %d:%02d e:%d", det / 30, (det % 30) / 6, det % 6, det, rob, mcm,event);
+  }
+  else{
+    mName = Form("det%03d_rob%d_mcm%02d", det, rob, mcm);
+    mDesc = Form("Detector %02d_%d_%d (%03d) - MCM %d:%02d", det / 30, (det % 30) / 6, det % 6, det, rob, mcm,event);
+  }
+
 
   // MCM column number on ROC [0..7]
   int mcmcol = mcm % constants::NMCMROBINCOL + HelperMethods::getROBSide(rob) * constants::NMCMROBINCOL;
@@ -113,6 +133,51 @@ void RawDisplay::drawTracklets()
   trkl.SetLineWidth(3);
 
   for (auto tracklet : mDataSpan.tracklets) {
+    auto pos = PadColF(tracklet);
+    auto slope = -tracklet.getSlopeBinSigned() * constants::GRANULARITYTRKLSLOPE / constants::ADDBITSHIFTSLOPE;
+    trkl.DrawLine(pos, 0, pos + 30 * slope, 30);
+  }
+}
+
+void RawDisplay::drawShiftedTracklets()
+{
+  mPad->cd();
+
+  TLine trkl;
+  trkl.SetLineColor(kGreen);
+  trkl.SetLineWidth(3);
+
+  for (auto tracklet : mDataSpan.tracklets) {
+    auto pos = PadColF(tracklet);
+    auto slope = -tracklet.getSlopeBinSigned() * constants::GRANULARITYTRKLSLOPE / constants::ADDBITSHIFTSLOPE;
+    trkl.DrawLine(pos+1, 0, pos+1 + 30 * slope, 30);
+  }
+}
+
+void RawDisplay::drawCalibratedTracklets()//CalibratedTracklet& caltracklet)
+{
+  mPad->cd();
+
+  TLine trkl;
+  trkl.SetLineColor(kPink);
+  trkl.SetLineWidth(3);
+
+  for (auto tracklet : mDataSpan.tracklets) {
+    auto pos = PadColF(tracklet);
+    auto slope = -tracklet.getSlopeBinSigned() * constants::GRANULARITYTRKLSLOPE / constants::ADDBITSHIFTSLOPE;
+    trkl.DrawLine(pos, 0, pos+1 + 30 * slope, 30);
+  }
+}
+
+void RawDisplay::drawSimTracklets()
+{
+  mPad->cd();
+
+  TLine trkl;
+  trkl.SetLineColor(kGreenRedViolet);
+  trkl.SetLineWidth(3);
+
+  for (auto tracklet : mDataSpan.simtracklets) {
     auto pos = PadColF(tracklet);
     auto slope = -tracklet.getSlopeBinSigned() * constants::GRANULARITYTRKLSLOPE / constants::ADDBITSHIFTSLOPE;
     trkl.DrawLine(pos, 0, pos + 30 * slope, 30);

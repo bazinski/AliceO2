@@ -52,6 +52,7 @@ struct RawDataSpan {
  public:
   boost::iterator_range<std::vector<o2::trd::Digit>::iterator> digits;
   boost::iterator_range<std::vector<o2::trd::Tracklet64>::iterator> tracklets;
+  boost::iterator_range<std::vector<o2::trd::Tracklet64>::iterator> simtracklets;
   boost::iterator_range<std::vector<HitPoint>::iterator> hits;
 
   /// Sort digits, tracklets and space points by detector, pad row, column
@@ -144,12 +145,15 @@ class RawDataManager
  private:
   // access to TRD digits and tracklets
   TFile* mMainFile{0}; // the main trdtracklets.root file
+  TFile* mMainSimFile{0}; // the main trdtracklets.root file from simulation
   TTree* mDataTree{0}; // tree and friends from digits, tracklets files
                        //  TTreeReader* mDataReader{0};
 
   std::vector<o2::trd::Digit>* mDigits{0};
   std::vector<o2::trd::Tracklet64>* mTracklets{0};
+  std::vector<o2::trd::Tracklet64>* mSimTracklets{0};
   std::vector<o2::trd::TriggerRecord>* mTrgRecords{0};
+  std::vector<o2::trd::TriggerRecord>* mSimTrgRecords{0};
 
   // access tracks
   std::vector<o2::dataformats::TrackTPCITS>* mTracks{0};
@@ -174,6 +178,7 @@ class RawDataManager
 
   // current trigger record
   o2::trd::TriggerRecord mTriggerRecord;
+  o2::trd::TriggerRecord mSimTriggerRecord;
 
   // time frame and event counters
   size_t mTimeFrameNo{0}, mEventNo{0};

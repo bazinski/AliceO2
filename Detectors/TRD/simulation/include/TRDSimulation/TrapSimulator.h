@@ -278,7 +278,7 @@ class TrapSimulator
 
   // Parameter classes
   FeeParam* mFeeParam{FeeParam::instance()}; // FEE parameters, a singleton
-  TrapConfigEvent* mTrapConfigEvent{nullptr}; // TRAP config
+  TrapConfigEvent* mTrapConfigEvent{nullptr}; // TRAP configEvent (pre templatetisation)
   TrapConfig* mTrapConfig{nullptr};           // TRAP config
   bool mUseTrapConfigEvent{false};            // this is temporary until we fully migrate to TrapConfigEvent
 

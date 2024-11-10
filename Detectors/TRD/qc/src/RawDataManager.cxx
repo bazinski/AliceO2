@@ -127,7 +127,14 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
     spanmap[key].tracklets = boost::make_iterator_range(cur, nxt);
     cur = nxt;
   }
-
+  
+  // add tracklets to the map
+  for (auto cur = simtracklets.begin(); cur != simtracklets.end(); /* noop */) {
+    auto key = keyfunc::key(*cur);
+    auto nxt = std::find_if(cur, simtracklets.end(), [key](auto x) { return keyfunc::key(x) != key; });
+    spanmap[key].simtracklets = boost::make_iterator_range(cur, nxt);
+    cur = nxt;
+  }
   // spanmap contains all TRD data - either digits or tracklets. Now we insert hit information into these spans. The
   // tricky part is that space points or hits can belong to more than one MCM, i.e. they could appear in two spans.
   // We keep the begin iterator for each key in a map
@@ -311,10 +318,18 @@ RawDataManager::RawDataManager(std::filesystem::path dir)
   // set up the branches we want to read
   mDataTree->SetBranchAddress("Tracklet", &mTracklets);
   mDataTree->SetBranchAddress("TrackTrg", &mTrgRecords);
+  
 
   if (std::filesystem::exists(dir / "trddigits.root")) {
     mDataTree->AddFriend("o2sim", (dir / "trddigits.root").c_str());
     mDataTree->SetBranchAddress("TRDDigit", &mDigits);
+  }
+
+  // add the simulated tracklets derived from online digit data
+  if (std::filesystem::exists(dir / "trdtracklets-sim.root")) {
+    mDataTree->AddFriend("o2simsim = o2sim", (dir / "trdtracklets-sim.root").c_str());
+    mDataTree->SetBranchAddress("o2simsim.Tracklet", &mSimTracklets);
+    mDataTree->SetBranchAddress("o2simsim.TrackTrg", &mSimTrgRecords);
   }
 
   if (std::filesystem::exists(dir / "o2match_itstpc.root")) {
@@ -359,9 +374,15 @@ bool RawDataManager::nextTimeFrame()
 
   mEventNo = 0;
   mTimeFrameNo++;
-
+  if(!mSimTracklets){
   O2INFO("Loaded data for time frame #%d with %d TRD trigger records, %d digits and %d tracklets",
          mTimeFrameNo, mTrgRecords->size(), mDigits->size(), mTracklets->size());
+    }
+  else {
+  O2INFO("Loaded data for time frame #%d with %d TRD trigger records, %d digits and %d tracklets and %d simtracklets",
+         mTimeFrameNo, mTrgRecords->size(), mDigits->size(), mTracklets->size(), mSimTracklets->size());
+  }
+
 
   return true;
 }
@@ -373,6 +394,7 @@ bool RawDataManager::nextEvent()
     return false;
   }
   mTriggerRecord = mTrgRecords->at(mEventNo);
+  if(mSimTrgRecords) mSimTriggerRecord = mSimTrgRecords->at(mEventNo);
   O2INFO("Processing event: orbit %d bc %04d with %d digits and %d tracklets",
          mTriggerRecord.getBCData().orbit, mTriggerRecord.getBCData().bc,
          mTriggerRecord.getNumberOfDigits(), mTriggerRecord.getNumberOfTracklets());
@@ -411,6 +433,11 @@ RawDataSpan RawDataManager::getEvent()
 
   ev.digits = boost::make_iterator_range_n(mDigits->begin() + mTriggerRecord.getFirstDigit(), mTriggerRecord.getNumberOfDigits());
   ev.tracklets = boost::make_iterator_range_n(mTracklets->begin() + mTriggerRecord.getFirstTracklet(), mTriggerRecord.getNumberOfTracklets());
+  if(!mSimTracklets) {
+    LOGP(info,"mSimTracklets is null");
+  }
+  else 
+    ev.simtracklets = boost::make_iterator_range_n(mSimTracklets->begin() + mSimTriggerRecord.getFirstTracklet(), mSimTriggerRecord.getNumberOfTracklets());
 
   ev.hits = boost::make_iterator_range(mHitPoints.begin(), mHitPoints.end());
 
@@ -485,6 +512,9 @@ std::string RawDataManager::describeFiles()
   if (mDataTree->GetFriend("TRDDigit")) {
     out << "digits" << std::endl;
   }
+  if (mDataTree->GetFriend("Tracklets")) {
+    out << "simtracklets" << std::endl;
+  }
   if (mDataTree->GetFriend("TPCITS")) {
     out << "tpc its matches" << std::endl;
   }
@@ -498,7 +528,8 @@ std::string RawDataManager::describeFiles()
 std::string RawDataManager::describeTimeFrame()
 {
   std::ostringstream out;
-  out << "## Time frame " << mTimeFrameNo << ": ";
+  out << "## Time frame " << mTimeFrameNo << ": "
+      << mDataTree->GetEntries() << " ";
   // out << mDatareader->GetEntries() << "";
   return out.str();
 }
@@ -509,6 +540,7 @@ std::string RawDataManager::describeEvent()
   out << "## TF:Event " << mTimeFrameNo << ":" << mEventNo << ":  "
       //  << hits->getsize() << " hits   "
       << mTriggerRecord.getNumberOfDigits() << " digits and "
-      << mTriggerRecord.getNumberOfTracklets() << " tracklets";
+      << mTriggerRecord.getNumberOfTracklets() << " tracklets and ";
+     // << mSimTriggerRecord.getNumberOfTracklets() << " simulated tracklets";
   return out.str();
 }

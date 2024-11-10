@@ -260,6 +260,7 @@ GPUdi() int Tracklet64::getSlopeBinSigned() const
 
 #ifndef GPUCA_GPUCODE_DEVICE
 std::ostream& operator<<(std::ostream& stream, const Tracklet64& trg);
+bool operator<(const Tracklet64& lhs, const Tracklet64& rhs);
 #endif // GPUCA_GPUCODE_DEVICE
 
 } // namespace trd
