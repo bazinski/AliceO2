@@ -32,7 +32,7 @@ list(APPEND O2_ROOT_MACRO_EXCLUSION_LIST
             Detectors/TRD/macros/convertRun2ToRun3Digits.C
             Detectors/TRD/macros/CheckConfigEvent.C
             Detectors/TRD/simulation/macros/CheckTRDFST.C
-            Detectors/TRD/qc/macros/ClassifyEvent.C
+            Detectors/TRD/qc/macros/ClassifyEvents.C
             Detectors/gconfig/g4Config.C
             Detectors/TRD/macros/ParseTrapRawOutput.C
             Detectors/EMCAL/calib/macros/ReadTestBadChannelMap_CCDBApi.C
