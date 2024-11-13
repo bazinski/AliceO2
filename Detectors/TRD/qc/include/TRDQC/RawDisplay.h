@@ -56,7 +56,7 @@ class RawDisplay
   int mFirstPad;
   int mLastPad;
   float mCalvdriftexb{};
-//  TrackletTransformer mTransformer;
+  //  TrackletTransformer mTransformer;
   float mClusterThreshold{50}; /// threshold for drawing clusters
 };
 
@@ -64,7 +64,7 @@ class RawDisplay
 class MCMDisplay : public RawDisplay
 {
  public:
-  MCMDisplay(RawDataSpan& mcmdata, int event=-1, TVirtualPad* pad = nullptr);
+  MCMDisplay(RawDataSpan& mcmdata, int event = -1, std::string text = " ", TVirtualPad* pad = nullptr);
 };
 
 } // namespace o2::trd

@@ -63,7 +63,7 @@ RawDisplay::RawDisplay(RawDataSpan& dataspan, TVirtualPad* pad)
   */
 }
 
-MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, int event, TVirtualPad* pad)
+MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, int event, std::string text, TVirtualPad* pad)
   : RawDisplay(mcmdata, pad) // initializes mDataSpan, mPad
 {
   int det = -1, rob = -1, mcm = -1;
@@ -83,15 +83,13 @@ MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, int event, TVirtualPad* pad)
     assert(false);
   }
 
-  if(event!=-1){
-    mName = Form("det%03d_rob%d_mcm%02d_e%d", det, rob, mcm,event);
-    mDesc = Form("Detector %02d_%d_%d (%03d) - MCM %d:%02d e:%d", det / 30, (det % 30) / 6, det % 6, det, rob, mcm,event);
-  }
-  else{
+  if (event != -1) {
+    mName = Form("det%03d_rob%d_mcm%02d_e%d", det, rob, mcm, event);
+    mDesc = Form("Detector %02d_%d_%d (%03d) - MCM %d:%02d e:%d %s", det / 30, (det % 30) / 6, det % 6, det, rob, mcm, event, text.c_str());
+  } else {
     mName = Form("det%03d_rob%d_mcm%02d", det, rob, mcm);
-    mDesc = Form("Detector %02d_%d_%d (%03d) - MCM %d:%02d", det / 30, (det % 30) / 6, det % 6, det, rob, mcm,event);
+    mDesc = Form("Detector %02d_%d_%d (%03d) - MCM %d:%02d %s", det / 30, (det % 30) / 6, det % 6, det, rob, mcm, event, text.c_str());
   }
-
 
   // MCM column number on ROC [0..7]
   int mcmcol = mcm % constants::NMCMROBINCOL + HelperMethods::getROBSide(rob) * constants::NMCMROBINCOL;
@@ -150,11 +148,11 @@ void RawDisplay::drawShiftedTracklets()
   for (auto tracklet : mDataSpan.tracklets) {
     auto pos = PadColF(tracklet);
     auto slope = -tracklet.getSlopeBinSigned() * constants::GRANULARITYTRKLSLOPE / constants::ADDBITSHIFTSLOPE;
-    trkl.DrawLine(pos+1, 0, pos+1 + 30 * slope, 30);
+    trkl.DrawLine(pos + 1, 0, pos + 1 + 30 * slope, 30);
   }
 }
 
-void RawDisplay::drawCalibratedTracklets()//CalibratedTracklet& caltracklet)
+void RawDisplay::drawCalibratedTracklets() // CalibratedTracklet& caltracklet)
 {
   mPad->cd();
 
@@ -165,7 +163,7 @@ void RawDisplay::drawCalibratedTracklets()//CalibratedTracklet& caltracklet)
   for (auto tracklet : mDataSpan.tracklets) {
     auto pos = PadColF(tracklet);
     auto slope = -tracklet.getSlopeBinSigned() * constants::GRANULARITYTRKLSLOPE / constants::ADDBITSHIFTSLOPE;
-    trkl.DrawLine(pos, 0, pos+1 + 30 * slope, 30);
+    trkl.DrawLine(pos, 0, pos + 1 + 30 * slope, 30);
   }
 }
 
