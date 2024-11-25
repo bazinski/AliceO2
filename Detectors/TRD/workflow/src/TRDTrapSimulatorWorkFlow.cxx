@@ -62,6 +62,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
   ConfigurableParam::updateFromString(configcontext.options().get<std::string>("configKeyValues"));
   WorkflowSpec specs;
   auto useMC = !configcontext.options().get<bool>("disable-mc");
+  LOGP(info, "disable mc option is : {}", useMC);
   auto disableRootInput = configcontext.options().get<bool>("disable-root-input");
   auto disableRootOutput = configcontext.options().get<bool>("disable-root-output");
   if (!disableRootInput) {

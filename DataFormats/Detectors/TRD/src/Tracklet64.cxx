@@ -29,9 +29,10 @@ void Tracklet64::print() const
 void Tracklet64::printStream(std::ostream& stream) const
 {
   stream << "Tracklet64 : 0x" << std::hex << getTrackletWord();
-  stream << "\t hcid : " << getHCID() << " row:" << getPadRow() << " col:" << getColumn()
+  stream << "\t hcid : " << std::dec << getHCID() << " row:" << getPadRow()
+         << " col:" << getColumn() << " mcm:" << getMCM() << " rob:" << getROB()
          << " Position:" << getPosition() << " slope:" << getSlope()
-         << " PID:0x" << getPID()
+         << " PID:0x" << std::hex << getPID() << std::dec
          << " Q0:" << getQ0() << " Q1:" << getQ1() << " Q2:" << getQ2();
 }
 
@@ -43,11 +44,11 @@ std::ostream& operator<<(std::ostream& stream, const Tracklet64& trg)
 
 bool operator<(const Tracklet64& lhs, const Tracklet64& rhs)
 {
-           return (lhs.getDetector() < rhs.getDetector()) ||
-           (lhs.getDetector() == rhs.getDetector() && lhs.getROB() < rhs.getROB()) ||
-           (lhs.getDetector() == rhs.getDetector() && lhs.getROB() == rhs.getROB() && lhs.getMCM() < rhs.getMCM()) ||
-           (lhs.getDetector() == rhs.getDetector() && lhs.getROB() == rhs.getROB() && lhs.getMCM() == rhs.getMCM() && lhs.getPadRow() < rhs.getPadRow()) ||
-           (lhs.getDetector() == rhs.getDetector() && lhs.getROB() == rhs.getROB() && lhs.getMCM() == rhs.getMCM() && lhs.getPadRow() == rhs.getPadRow() && lhs.getPadCol() < rhs.getPadCol());
+  return (lhs.getDetector() < rhs.getDetector()) ||
+         (lhs.getDetector() == rhs.getDetector() && lhs.getROB() < rhs.getROB()) ||
+         (lhs.getDetector() == rhs.getDetector() && lhs.getROB() == rhs.getROB() && lhs.getMCM() < rhs.getMCM()) ||
+         (lhs.getDetector() == rhs.getDetector() && lhs.getROB() == rhs.getROB() && lhs.getMCM() == rhs.getMCM() && lhs.getPadRow() < rhs.getPadRow()) ||
+         (lhs.getDetector() == rhs.getDetector() && lhs.getROB() == rhs.getROB() && lhs.getMCM() == rhs.getMCM() && lhs.getPadRow() == rhs.getPadRow() && lhs.getPadCol() < rhs.getPadCol());
 }
 
 #endif // GPUCA_GPUCODE_DEVICE

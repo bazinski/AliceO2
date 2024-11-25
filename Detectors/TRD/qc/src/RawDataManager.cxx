@@ -1,4 +1,4 @@
-// Copyright 2019-2020 CERN and copyright holders of ALICE O2.
+// CopyrighT 2019-2020 CERN and copyright holders of ALICE O2.
 // See https://alice-o2.web.cern.ch/copyright for details of the copyright holders.
 // All rights not expressly granted are reserved.
 //
@@ -127,7 +127,7 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
     spanmap[key].tracklets = boost::make_iterator_range(cur, nxt);
     cur = nxt;
   }
-  
+
   // add tracklets to the map
   for (auto cur = simtracklets.begin(); cur != simtracklets.end(); /* noop */) {
     auto key = keyfunc::key(*cur);
@@ -318,7 +318,6 @@ RawDataManager::RawDataManager(std::filesystem::path dir)
   // set up the branches we want to read
   mDataTree->SetBranchAddress("Tracklet", &mTracklets);
   mDataTree->SetBranchAddress("TrackTrg", &mTrgRecords);
-  
 
   if (std::filesystem::exists(dir / "trddigits.root")) {
     mDataTree->AddFriend("o2sim", (dir / "trddigits.root").c_str());
@@ -374,15 +373,13 @@ bool RawDataManager::nextTimeFrame()
 
   mEventNo = 0;
   mTimeFrameNo++;
-  if(!mSimTracklets){
-  O2INFO("Loaded data for time frame #%d with %d TRD trigger records, %d digits and %d tracklets",
-         mTimeFrameNo, mTrgRecords->size(), mDigits->size(), mTracklets->size());
-    }
-  else {
-  O2INFO("Loaded data for time frame #%d with %d TRD trigger records, %d digits and %d tracklets and %d simtracklets",
-         mTimeFrameNo, mTrgRecords->size(), mDigits->size(), mTracklets->size(), mSimTracklets->size());
+  if (!mSimTracklets) {
+    //O2INFO("Loaded data for time frame #%d with %d TRD trigger records, %d digits and %d tracklets",
+     //      mTimeFrameNo, mTrgRecords->size(), mDigits->size(), mTracklets->size());
+  } else {
+    //O2INFO("Loaded data for time frame #%d with %d TRD trigger records, %d digits and %d tracklets and %d simtracklets",
+     //      mTimeFrameNo, mTrgRecords->size(), mDigits->size(), mTracklets->size(), mSimTracklets->size());
   }
-
 
   return true;
 }
@@ -394,10 +391,16 @@ bool RawDataManager::nextEvent()
     return false;
   }
   mTriggerRecord = mTrgRecords->at(mEventNo);
-  if(mSimTrgRecords) mSimTriggerRecord = mSimTrgRecords->at(mEventNo);
-  O2INFO("Processing event: orbit %d bc %04d with %d digits and %d tracklets",
-         mTriggerRecord.getBCData().orbit, mTriggerRecord.getBCData().bc,
-         mTriggerRecord.getNumberOfDigits(), mTriggerRecord.getNumberOfTracklets());
+  if (mSimTrgRecords) {
+    mSimTriggerRecord = mSimTrgRecords->at(mEventNo);
+    // LOGP(info, "Processing event: orbit {} (sim:{}) bc {:04d} (sim:{}) with {} digits and {} (sim:{}) tracklets",
+    //     mTriggerRecord.getBCData().orbit, mSimTriggerRecord.getBCData().orbit, mTriggerRecord.getBCData().bc, mSimTriggerRecord.getBCData().bc,
+    //    mTriggerRecord.getNumberOfDigits(), mTriggerRecord.getNumberOfTracklets(), mSimTriggerRecord.getNumberOfTracklets());
+  } else {
+    // O2INFO("Processing event: orbit %d bc %04d with %d digits and %d tracklets",
+    //        mTriggerRecord.getBCData().orbit, mTriggerRecord.getBCData().bc,
+    //        mTriggerRecord.getNumberOfDigits(), mTriggerRecord.getNumberOfTracklets());
+  }
 
   if (mCollisionContext) {
 
@@ -433,11 +436,17 @@ RawDataSpan RawDataManager::getEvent()
 
   ev.digits = boost::make_iterator_range_n(mDigits->begin() + mTriggerRecord.getFirstDigit(), mTriggerRecord.getNumberOfDigits());
   ev.tracklets = boost::make_iterator_range_n(mTracklets->begin() + mTriggerRecord.getFirstTracklet(), mTriggerRecord.getNumberOfTracklets());
-  if(!mSimTracklets) {
-    LOGP(info,"mSimTracklets is null");
-  }
-  else 
+  if (!mSimTracklets) {
+    LOGP(info, "mSimTracklets is null");
+  } else {
+    // check that triggers are equal :
+    if (mTriggerRecord.getBCData() == mSimTriggerRecord.getBCData()) {
+      // LOGP(info, "Trigger records for tracklets and sim tracklets are equal");
+    } else {
+      // LOGP(info, "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& Trigger records for tracklets and sim tracklets are equal");
+    }
     ev.simtracklets = boost::make_iterator_range_n(mSimTracklets->begin() + mSimTriggerRecord.getFirstTracklet(), mSimTriggerRecord.getNumberOfTracklets());
+  }
 
   ev.hits = boost::make_iterator_range(mHitPoints.begin(), mHitPoints.end());
 
@@ -541,6 +550,6 @@ std::string RawDataManager::describeEvent()
       //  << hits->getsize() << " hits   "
       << mTriggerRecord.getNumberOfDigits() << " digits and "
       << mTriggerRecord.getNumberOfTracklets() << " tracklets and ";
-     // << mSimTriggerRecord.getNumberOfTracklets() << " simulated tracklets";
+  // << mSimTriggerRecord.getNumberOfTracklets() << " simulated tracklets";
   return out.str();
 }

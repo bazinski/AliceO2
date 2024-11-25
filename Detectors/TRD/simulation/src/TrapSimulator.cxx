@@ -68,7 +68,7 @@ void TrapSimulator::init(TrapConfig* trapconfig, int det, int robPos, int mcmPos
   if (!mInitialized) {
     mTrapConfig = trapconfig;
     if (mTrapConfig != nullptr) {
-      mNTimeBin=30;// = getTrapReg(TrapConfig::kC13CPUA, mDetector, mRobPos, mMcmPos);
+      mNTimeBin = 30; // = getTrapReg(TrapConfig::kC13CPUA, mDetector, mRobPos, mMcmPos);
     } else {
       LOGP(error, "Initialising the TRAP simulator with a null TrapConfig");
     }
@@ -104,12 +104,12 @@ void TrapSimulator::init(TrapConfigEvent* trapconfigevent, int det, int robPos, 
     mTrapConfigEvent = trapconfigevent;
     if (mTrapConfigEvent != nullptr) {
       mNTimeBin = getTrapReg(TrapRegisters::kC13CPUA, mDetector, mRobPos, mMcmPos);
-      LOGP(error, "Initialising mNTimeBin with 24, but was set to {}",mNTimeBin);
-      mNTimeBin=30; //TODO find a better way of doing this.
+      LOGP(error, "Initialising mNTimeBin with 24, but was set to {}", mNTimeBin);
+      mNTimeBin = 30; // TODO find a better way of doing this.
     } else {
       LOGP(error, "Initialising the TRAP simulator with a null TrapConfigEvent");
     }
-    LOGP(debug,"Setting vectors : mZSMap : {} mADCR : {} mADCF : {} NADCMCM:{} mNTimeBin:{}",NADCMCM,mNTimeBin*NADCMCM,mNTimeBin*NADCMCM, NADCMCM,mNTimeBin);
+    LOGP(debug, "Setting vectors : mZSMap : {} mADCR : {} mADCF : {} NADCMCM:{} mNTimeBin:{}", NADCMCM, mNTimeBin * NADCMCM, mNTimeBin * NADCMCM, NADCMCM, mNTimeBin);
     mZSMap.resize(NADCMCM);
     mADCR.resize(mNTimeBin * NADCMCM);
     mADCF.resize(mNTimeBin * NADCMCM);
@@ -128,8 +128,8 @@ void TrapSimulator::reset()
     return;
   }
 
-  LOGP(debug,"Clearing vectors ADCR with size {} and ADCF with size {}",std::distance(mADCR.begin(),mADCR.end()),std::distance(mADCR.begin(),mADCR.end()));
-  //clear the adc data
+  LOGP(debug, "Clearing vectors ADCR with size {} and ADCF with size {}", std::distance(mADCR.begin(), mADCR.end()), std::distance(mADCR.begin(), mADCR.end()));
+  // clear the adc data
   std::fill(mADCR.begin(), mADCR.end(), 0);
   std::fill(mADCF.begin(), mADCF.end(), 0);
   std::fill(mADCDigitIndices.begin(), mADCDigitIndices.end(), -1);
@@ -143,7 +143,7 @@ void TrapSimulator::reset()
   std::fill(mMCMT.begin(), mMCMT.end(), 0);
 
   filterPedestalInit();
-  //filterGainInit(); // we do not use the gain filter anyway, so disable it completely
+  // filterGainInit(); // we do not use the gain filter anyway, so disable it completely
   filterTailInit();
 
   for (auto& fitreg : mFitReg) {
@@ -185,7 +185,7 @@ ostream& TrapSimulator::raw(ostream& os)
   return os;
 }
 
-//std::ostream& operator<<(std::ostream& os, const TrapSimulator& mcm); // data output using ostream (e.g. cout << mcm;)
+// std::ostream& operator<<(std::ostream& os, const TrapSimulator& mcm); // data output using ostream (e.g. cout << mcm;)
 std::ostream& o2::trd::operator<<(std::ostream& os, const TrapSimulator& mcm)
 {
   // output implementation
@@ -200,7 +200,7 @@ std::ostream& o2::trd::operator<<(std::ostream& os, const TrapSimulator& mcm)
 
     os << "TRAP " << mcm.getMcmPos() << " on ROB " << mcm.getRobPos() << " in detector " << mcm.getDetector() << std::endl;
 
-    os << "----- Unfiltered ADC data (10 bit) ----- timebins: "  << mcm.getNumberOfTimeBins() << std::endl;
+    os << "----- Unfiltered ADC data (10 bit) ----- timebins: " << mcm.getNumberOfTimeBins() << std::endl;
     os << "ch    ";
     for (int iChannel = 0; iChannel < NADCMCM; iChannel++) {
       os << std::setw(5) << iChannel;
@@ -321,7 +321,7 @@ void TrapSimulator::printFitRegXml(ostream& os) const
 void TrapSimulator::printTrackletsXml(ostream& os) const
 {
   // print tracklets in XML format
-  //TODO FIX this to new format
+  // TODO FIX this to new format
   const char* const cmdid{R"(" cmdid="0">)"};
   os << "<nginject>" << std::endl;
   os << "<ack roc=\"" << mDetector << cmdid << std::endl;
@@ -331,7 +331,7 @@ void TrapSimulator::printTrackletsXml(ostream& os) const
   os << "    <m mcm=\"" << mMcmPos << "\">" << std::endl;
 
   int pid, padrow, slope, offset;
-  //TODO take care of the 0th being the header, and cpu1,2,3 being 1 to 3 tracklets.
+  // TODO take care of the 0th being the header, and cpu1,2,3 being 1 to 3 tracklets.
   for (int cpu = 0; cpu < 4; cpu++) {
     if (mMCMT[cpu] == 0x10001000) {
       pid = -1;
@@ -535,7 +535,6 @@ void TrapSimulator::noiseTest(int nsamples, int mean, int sigma, int inputGain, 
   hft->Draw();
 }
 
-
 void TrapSimulator::print(int choice) const
 {
   // Prints the data stored and/or calculated for this TRAP
@@ -554,7 +553,7 @@ void TrapSimulator::print(int choice) const
 
   LOG(debug) << "MCM " << mMcmPos << "  on ROB " << mRobPos << " in detector " << mDetector;
 
-  //std::string opt = option;
+  // std::string opt = option;
   if ((choice & PRINTRAW) != 0 || (choice & PRINTFILTERED) != 0) {
     std::cout << *this;
   }
@@ -682,17 +681,17 @@ void TrapSimulator::setData(int adc, const ArrayADC& data, unsigned int digitIdx
 
 void TrapSimulator::setBaselines()
 {
-  //This function exists as in the old simulator, when data was fed into the trapsim, it was done via the whole adc block for the mcm.
-  //if the data was zero or out of spec, the baselines were added
-  //we now add it by singular ADC, so there are adc channels that never get touched.
-  //this fixes that.
+  // This function exists as in the old simulator, when data was fed into the trapsim, it was done via the whole adc block for the mcm.
+  // if the data was zero or out of spec, the baselines were added
+  // we now add it by singular ADC, so there are adc channels that never get touched.
+  // this fixes that.
 
   if (!checkInitialized()) {
     LOG(error) << "TRAP is not initialized, cannot call setBaselines()";
     return;
   }
 
-  //loop over all adcs.
+  // loop over all adcs.
   for (int adc = 0; adc < NADCMCM; adc++) {
     if ((mADCFilled & (1 << adc)) == 0) { // adc is empty by construction of mADCFilled.
       for (int timebin = 0; timebin < mNTimeBin; timebin++) {
@@ -728,7 +727,7 @@ int TrapSimulator::packData(std::vector<uint32_t>& rawdata, uint32_t offset) con
 {
   // return # of 32 bit words.
   //
-  //given the, up to 3 tracklets, pack them according to the define data format.
+  // given the, up to 3 tracklets, pack them according to the define data format.
   //
   uint32_t wordswritten = 0; // count the 32 bit words written;
                              //  std::cout << &raw[offset] << std::endl;
@@ -744,7 +743,7 @@ int TrapSimulator::packData(std::vector<uint32_t>& rawdata, uint32_t offset) con
   mcmhead.padrow = ((mRobPos >> 1) << 2) | (mMcmPos >> 2);
   int mcmcol = mMcmPos % NMCMROBINCOL + (mRobPos % 2) * NMCMROBINCOL;
   int padcol = mcmcol * NCOLMCM + NCOLMCM + 1;
-  mcmhead.col = 1; //TODO check this, cant call FeeParam due to virtual function
+  mcmhead.col = 1; // TODO check this, cant call FeeParam due to virtual function
   LOG(debug) << "packing data with trackletarry64 size of : " << mTrackletArray64.size();
   for (int i = 0; i < 3; i++) {
     if (i < mTrackletArray64.size()) { // we have  a tracklet
@@ -781,15 +780,15 @@ int TrapSimulator::packData(std::vector<uint32_t>& rawdata, uint32_t offset) con
   }
   //  raw.push_back((uint32_t)mcmhead)
   LOG(debug) << "pushing back mcm head of 0x" << std::hex << mcmhead.word << " with trackletcount of : " << std::dec << trackletcount << ":-:" << wordswritten;
-  rawdata.push_back(mcmhead.word); //memcpy(&rawdata[wordswritten++], &mcmhead, sizeof(mcmhead));
+  rawdata.push_back(mcmhead.word); // memcpy(&rawdata[wordswritten++], &mcmhead, sizeof(mcmhead));
   wordswritten++;
   for (int i = 0; i < trackletcount; i++) {
     LOG(debug) << "pushing back mcmtrackletword of 0x" << std::hex << tracklets[i].word;
-    rawdata.push_back(tracklets[i].word); //memcpy(&rawdata[wordswritten++], &tracklets[i], sizeof(TrackletMCMData));
+    rawdata.push_back(tracklets[i].word); // memcpy(&rawdata[wordswritten++], &tracklets[i], sizeof(TrackletMCMData));
     wordswritten++;
   }
 
-  //display the headers written
+  // display the headers written
   LOG(debug) << ">>>>> START info OUTPUT OF packData trackletcount:-:wordcount" << trackletcount << ":-:" << wordswritten;
   o2::trd::printTrackletMCMHeader(mcmhead);
   o2::trd::printTrackletMCMData(tracklets[0]);
@@ -800,9 +799,9 @@ int TrapSimulator::packData(std::vector<uint32_t>& rawdata, uint32_t offset) con
     o2::trd::printTrackletMCMData(tracklets[2]);
   }
   LOG(debug) << "<<<<<  END info OUTPUT OF packData";
-  //must produce between 2 and 4 words ... 1 and 3 tracklets.
-  //  assert(wordswritten<5);
-  //  assert(wordswritten>1);
+  // must produce between 2 and 4 words ... 1 and 3 tracklets.
+  //   assert(wordswritten<5);
+  //   assert(wordswritten>1);
   LOG(debug) << "now to leave pack data after passing asserts with wordswritten = " << wordswritten;
   return wordswritten; // in units of 32 bits.
 }
@@ -831,7 +830,7 @@ void TrapSimulator::filter()
 
   // Non-linearity filter not implemented.
   filterPedestal();
-  //filterGain(); // we do not use the gain filter anyway, so disable it completely
+  // filterGain(); // we do not use the gain filter anyway, so disable it completely
   filterTail();
   // Crosstalk filter not implemented.
 }
@@ -1259,8 +1258,8 @@ void TrapSimulator::calcFitreg()
                    ((getTrapReg(TrapRegisters::kTPVT, mDetector, mRobPos, mMcmPos) * adcCentral * adcCentral) >> 10));
         if (hitQual) {
           LOG(info) << "cluster quality cut passed with " << adcLeft << ", " << adcCentral << ", "
-                     << adcRight << " - threshold " << getTrapReg(TrapRegisters::kTPVT, mDetector, mRobPos, mMcmPos)
-                     << " -> " << getTrapReg(TrapRegisters::kTPVT, mDetector, mRobPos, mMcmPos) * adcCentral * adcCentral;
+                    << adcRight << " - threshold " << getTrapReg(TrapRegisters::kTPVT, mDetector, mRobPos, mMcmPos)
+                    << " -> " << getTrapReg(TrapRegisters::kTPVT, mDetector, mRobPos, mMcmPos) * adcCentral * adcCentral;
         }
       }
 
@@ -1359,8 +1358,8 @@ void TrapSimulator::calcFitreg()
 
         int regTPFP = getTrapReg(TrapRegisters::kTPFP, mDetector, mRobPos, mMcmPos); // TODO put this together with the others as members of trapsim, which is initiliased by det,rob,mcm.
         LOG(info) << "Hit found, time=" << timebin << ", adcch=" << adcch << "/" << adcch + 1 << "/"
-                   << adcch + 2 << ", adc values=" << adcLeft << "/" << adcCentral << "/"
-                   << adcRight << ", regTPFP=" << regTPFP << ", TPHT=" << getTrapReg(TrapRegisters::kTPHT, mDetector, mRobPos, mMcmPos);
+                  << adcch + 2 << ", adc values=" << adcLeft << "/" << adcCentral << "/"
+                  << adcRight << ", regTPFP=" << regTPFP << ", TPHT=" << getTrapReg(TrapRegisters::kTPHT, mDetector, mRobPos, mMcmPos);
         // regTPFP >>= 2; // OS: this line should be commented out when checking real data. It's only needed for comparison with Venelin's simulation if in addition mgkAddDigits == 0
         if (adcLeft < regTPFP) {
           adcLeft = 0;
@@ -1381,7 +1380,7 @@ void TrapSimulator::calcFitreg()
         // Calculate the center of gravity
         // checking for adcCentral != 0 (in case of "bad" configuration)
         if (adcCentral == 0) {
-          LOGP(info," bad configuration detected adcCentral={} adcRight:{} adcLeft:{}  det:rob:mcm {}:{}:{}",adcCentral,adcRight, adcLeft,mDetector,mRobPos,mMcmPos);
+          LOGP(info, " bad configuration detected adcCentral={} adcRight:{} adcLeft:{}  det:rob:mcm {}:{}:{}", adcCentral, adcRight, adcLeft, mDetector, mRobPos, mMcmPos);
           continue;
         }
         short ypos = 128 * (adcRight - adcLeft) / adcCentral;
@@ -1585,8 +1584,8 @@ void TrapSimulator::fitTracklet()
         yoffs += (int)mTrapConfig->getDmemUnsigned(mgkDmemAddrYcorr, mDetector, mRobPos, mMcmPos);
       } else {
         yoffs = 0;
-        //TODO this is not available in a trapconfigevent, TODO, awaiting changes to firmware.
-        //TODO yoffs += (int)mTrapConfig->getTrapReg(TrapRegisters::kYCORR, mDetector, mRobPos, mMcmPos);
+        // TODO this is not available in a trapconfigevent, TODO, awaiting changes to firmware.
+        // TODO yoffs += (int)mTrapConfig->getTrapReg(TrapRegisters::kYCORR, mDetector, mRobPos, mMcmPos);
       }
     }
 
@@ -1798,6 +1797,7 @@ void TrapSimulator::fitTracklet()
           uint64_t trkltWord64 = mTrkltWordEmpty;
           trkltWord64 |= (static_cast<uint64_t>(position & 0x7ff) << Tracklet64::posbs) | (static_cast<uint64_t>(slope & 0xff) << Tracklet64::slopebs) | (q2 << Tracklet64::Q2bs) | (q1 << Tracklet64::Q1bs) | q0;
           mTrackletArray64.emplace_back(trkltWord64);
+          LOGP(info, "We have added a tracklet! Vector is size : {} ", mTrackletArray64.size());
 
           // calculate number of hits and MC label
           mTrackletDigitCount.push_back(0);
@@ -1809,9 +1809,9 @@ void TrapSimulator::fitTracklet()
             }
           }
         } // tracklet did pass slope selection
-      }   // there is a tracklet available for this CPU
-    }     // loop over CPUs for tracklet calculation
-  }       // tracklet are available for at least one CPU for this MCM
+      } // there is a tracklet available for this CPU
+    } // loop over CPUs for tracklet calculation
+  } // tracklet are available for at least one CPU for this MCM
 
   // mMCMT[0] stores the MCM tracklet header, the part without HPIDs (mMcmHeaderEmpty) prepared already
   // < 1 | padrow (4 bits) | column (2 bits) | HPID2 (8 bit) | HPID1 (8 bit) | HPID0 (8 bit) | 1 >
@@ -1823,10 +1823,16 @@ void TrapSimulator::fitTracklet()
     mMCMT[0] = mMcmHeaderEmpty | (wrku << 1);
   }
 
-/*  LOG(info) << "4x32 bit tracklet data:";
+  LOGP(info, "Leaving fitTracklet Vector is size : {} ", mTrackletArray64.size());
+  LOG(info) << "4x32 bit tracklet data:";
   for (int i = 0; i < 4; ++i) {
     LOGF(info, "0x%08x", mMCMT[i]);
-  }*/
+  }
+  LOGP(info, "Corresponding tracklets are : ");
+  for (auto& trklt : mTrackletArray64) {
+    std::cout << trklt << std::endl;
+  }
+  LOGP(info, "Leaving fitTracklet Vector is size : {} ", mTrackletArray64.size());
 }
 
 void TrapSimulator::tracklet()
@@ -1839,9 +1845,11 @@ void TrapSimulator::tracklet()
     return;
   }
 
+  LOGP(info, "Entering tracklet() with Vector is size : {} ", mTrackletArray64.size());
   calcFitreg();
   trackletSelection();
   fitTracklet();
+  LOGP(info, "Leaving tracklet() with Vector is size : {} ", mTrackletArray64.size());
 }
 
 // help functions, to be cleaned up
@@ -2027,7 +2035,7 @@ uint32_t TrapSimulator::getTrapReg(uint32_t reg, uint32_t det, uint32_t rob, uin
   uint32_t regvalue = 0;
   if (mUseTrapConfigEvent) {
     if (mTrapConfigEvent->isMCMPresent(HelperMethods::getMCMId(det, rob, mcm))) {
-      LOGP(debug," We have a request for data from a present mcm, {} {} {} {}",reg, det, rob, mcm);
+      LOGP(debug, " We have a request for data from a present mcm, {} {} {} {}", reg, det, rob, mcm);
       return mTrapConfigEvent->getTrapReg(reg, det, rob, mcm);
     } else {
       // choose most likely
@@ -2037,8 +2045,8 @@ uint32_t TrapSimulator::getTrapReg(uint32_t reg, uint32_t det, uint32_t rob, uin
       //  if(mUseDefaultValue){
       //    mTrapConfigEvent->getDefault(reg);
       //  }
-      LOGP(debug," We have a request for data from a non present mcm, {} {} {} {}",reg, det, rob, mcm);
-      return 0;//mTrapConfigEvent->getTrapReg(reg, det, rob, mcm);
+      LOGP(debug, " We have a request for data from a non present mcm, {} {} {} {}", reg, det, rob, mcm);
+      return 0; // mTrapConfigEvent->getTrapReg(reg, det, rob, mcm);
     }
   } else {
     // use old trapconfig

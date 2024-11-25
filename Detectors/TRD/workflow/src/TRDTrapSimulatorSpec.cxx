@@ -49,31 +49,32 @@ using namespace constants;
 
 void TRDDPLTrapSimulatorTask::initTrapConfig(long timeStamp)
 {
-  //auto& ccdbmgr = o2::ccdb::BasicCCDBManager::instance();
-  //mTrapConfigEvent = ccdbmgr.getForTimeStamp<o2::trd::TrapConfigEvent>("TRD/TrapConfig/" + mTrapConfigName, timeStamp);
+  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
+  // auto& ccdbmgr = o2::ccdb::BasicCCDBManager::instance();
+  // mTrapConfigEvent = ccdbmgr.getForTimeStamp<o2::trd::TrapConfigEvent>("TRD/TrapConfig/" + mTrapConfigName, timeStamp);
   /******** TEmporary open a local file with a trapconfigevent   ****************************/
-  std::unique_ptr<TFile> file( TFile::Open("trdconfigevents.root") );
+  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
+  std::unique_ptr<TFile> file(TFile::Open("trdconfigevents.root"));
+  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
   if (!file || file->IsZombie()) {
-   std::cerr << "Error opening trdconfigevent file" << std::endl;
-   exit(-1);
+    std::cerr << "Error opening trdconfigevent file" << std::endl;
+    exit(-1);
   }
-//  std::unique_ptr<TTree> configTree(file->Get<TTree>("calib"));
-  mTrapConfigEvent =file->Get<TrapConfigEvent>("ccdb_object");
+  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
+  //  std::unique_ptr<TTree> configTree(file->Get<TTree>("calib"));
+  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
+  mTrapConfigEvent = file->Get<TrapConfigEvent>("ccdb_object");
   std::unique_ptr<TrapConfigEvent> configevent(file->Get<TrapConfigEvent>("ccdb_object"));
-  if(mTrapConfigEvent){
-    LOGP(debug," we have a valid trapconfigevent object");
+  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
+  if (mTrapConfigEvent) {
+    LOGP(debug, " we have a valid trapconfigevent object");
+  } else {
+    LOGP(debug, " we have a invalid trapconfigevent object");
   }
-  else{
-    LOGP(debug," we have a invalid trapconfigevent object");
-  }
-  //configTree->GetEntry(0);
+  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
+  // configTree->GetEntry(0);
   //
   /************************************/
-
-
-
-
-
 
   //  if (mEnableTrapConfigDump) {
   //    mTrapConfig->DumpTrapConfig2File("run3trapconfig_dump");
@@ -136,12 +137,13 @@ void TRDDPLTrapSimulatorTask::setOnlineGainTables()
 
 void TRDDPLTrapSimulatorTask::processTRAPchips(int& nTracklets, std::vector<Tracklet64>& trackletsAccum, std::array<TrapSimulator, NMCMHCMAX>& trapSimulators, std::vector<short>& digitCounts, std::vector<int>& digitIndices)
 {
+  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
   // TRAP processing for current half chamber
   for (int iTrap = 0; iTrap < NMCMHCMAX; ++iTrap) {
     if (!trapSimulators[iTrap].isDataSet()) {
       continue;
     }
-    LOGP(info,"Processing TRAP chip : {}", iTrap);
+    LOGP(info, "Processing TRAP chip : {}", iTrap);
     std::cout << trapSimulators[iTrap] << std::endl;
     trapSimulators[iTrap].setBaselines();
     trapSimulators[iTrap].filter();
@@ -157,10 +159,12 @@ void TRDDPLTrapSimulatorTask::processTRAPchips(int& nTracklets, std::vector<Trac
     }
     trapSimulators[iTrap].reset();
   }
+  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
 }
 
 void TRDDPLTrapSimulatorTask::init(o2::framework::InitContext& ic)
 {
+  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
   mTrapConfigName = ic.options().get<std::string>("trd-trapconfig");
   mEnableOnlineGainCorrection = ic.options().get<bool>("trd-onlinegaincorrection");
   //  mOnlineGainTableName = ic.options().get<std::string>("trd-onlinegaintable");
@@ -198,22 +202,23 @@ void TRDDPLTrapSimulatorTask::init(o2::framework::InitContext& ic)
   }
   LOG(info) << "Trap simulation running with " << mNumThreads << " threads ";
 #endif
+  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
 }
 
 void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
 {
   // this method steeres the processing of the TRAP simulation
-  LOGP(info,"TRD Trap Simulator Device running over incoming message TF : {}",mTimeFrameCounter);
-/*  if(mTF > -1 &&  mTF!=mTimeFrameCounter){
-    // ignore those timeframes other than the one selected.
-    LOGP(info,"Skipping time frame : {} requested tf : {} ",mTimeFrameCounter, mTF );
-    mTimeFrameCounter++;
-    return ;
-  }
-  */
-  if(mTimeFrameCounter > 100) {
-    LOGP(info,"Skipping time frame : {}",mTimeFrameCounter);
-    return ;
+  LOGP(info, "TRD Trap Simulator Device running over incoming message TF : {}", mTimeFrameCounter);
+  /*  if(mTF > -1 &&  mTF!=mTimeFrameCounter){
+      // ignore those timeframes other than the one selected.
+      LOGP(info,"Skipping time frame : {} requested tf : {} ",mTimeFrameCounter, mTF );
+      mTimeFrameCounter++;
+      return ;
+    }
+    */
+  if (mTimeFrameCounter > 100) {
+    LOGP(info, "Skipping time frame : {}", mTimeFrameCounter);
+    return;
   }
   mTimeFrameCounter++;
   if (!mInitCcdbObjectsDone) {
@@ -222,12 +227,11 @@ void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
     // mCalib = std::make_unique<Calibrations>();
     // mCalib->getCCDBObjects(timeStamp);
     initTrapConfig(timeStamp);
-  if(mTrapConfigEvent){
-    LOGP(info," after init we have a valid trapconfigevent object");
-  }
-  else{
-    LOGP(info," after init  we have a invalid trapconfigevent object");
-  }
+    if (mTrapConfigEvent) {
+      LOGP(info, " after init we have a valid trapconfigevent object");
+    } else {
+      LOGP(info, " after init  we have a invalid trapconfigevent object");
+    }
     // setOnlineGainTables();
     mInitCcdbObjectsDone = true;
   }
@@ -285,8 +289,8 @@ void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
 #endif
   for (size_t iTrig = 0; iTrig < triggerRecords.size(); ++iTrig) {
     int currHCId = -1;
-    int currDet =-1;
-    std::array<TrapSimulator, NMCMHCMAX> trapSimulators{}; //the up to 64 trap simulators for a single half chamber
+    int currDet = -1;
+    std::array<TrapSimulator, NMCMHCMAX> trapSimulators{}; // the up to 64 trap simulators for a single half chamber
     for (int iDigit = triggerRecords[iTrig].getFirstDigit(); iDigit < (triggerRecords[iTrig].getFirstDigit() + triggerRecords[iTrig].getNumberOfDigits()); ++iDigit) {
       const auto& digit = &digits[digitIdxArray[iDigit]];
       if (currHCId < 0) {
@@ -294,19 +298,18 @@ void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
       }
       if (currHCId != digit->getHCId()) {
         // we switch to a new half chamber, process all TRAPs of the previous half chamber which contain data
-        LOGP(info,"Processing half chamber : {} det : {}",currHCId, currDet);
+        LOGP(info, "Processing half chamber : {} det : {}", currHCId, currDet);
         processTRAPchips(nTracklets[iTrig], trackletsAccum[iTrig], trapSimulators, digitCountsAccum[iTrig], digitIndicesAccum[iTrig]);
-        LOGP(info,"Finished Processing half chamgber : {} det {}",currHCId, currDet);
+        LOGP(info, "Finished Processing half chamgber : {} det {}", currHCId, currDet);
         currHCId = digit->getHCId();
       }
       // fill the digit data into the corresponding TRAP chip
       int trapIdx = (digit->getROB() / 2) * NMCMROB + digit->getMCM();
       if (!trapSimulators[trapIdx].isDataSet()) {
-        if(mTrapConfigEvent){
-          LOGP(debug," About to init TrapSimulator with a valid mTrapConfigEvent");
-        }
-        else {
-          LOGP(debug,"oops About to init TrapSimulator with an invalid mTrapConfigEvent");
+        if (mTrapConfigEvent) {
+          LOGP(debug, " About to init TrapSimulator with a valid mTrapConfigEvent");
+        } else {
+          LOGP(debug, "oops About to init TrapSimulator with an invalid mTrapConfigEvent");
         }
         trapSimulators[trapIdx].init(mTrapConfigEvent, digit->getDetector(), digit->getROB(), digit->getMCM());
         if (mUseFloatingPointForQ) {
@@ -426,5 +429,5 @@ o2::framework::DataProcessorSpec getTRDTrapSimulatorSpec(bool useMC, int digitDo
                              {"trd-runnum", VariantType::Int, -1, {"Run number to use to anchor simulation to (from Run 2 297595 was used)"}}}};
 };
 
-} //end namespace trd
-} //end namespace o2
+} // end namespace trd
+} // end namespace o2
