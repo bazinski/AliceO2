@@ -96,6 +96,7 @@ void RawDataSpan::sort()
 {
   std::stable_sort(std::begin(digits), std::end(digits), comp_digit);
   std::stable_sort(std::begin(tracklets), std::end(tracklets), comp_tracklet);
+  std::stable_sort(std::begin(simtracklets), std::end(simtracklets), comp_tracklet);
   std::stable_sort(std::begin(hits), std::end(hits), comp_spacepoint);
 }
 
@@ -330,6 +331,9 @@ RawDataManager::RawDataManager(std::filesystem::path dir)
     mDataTree->SetBranchAddress("o2simsim.Tracklet", &mSimTracklets);
     mDataTree->SetBranchAddress("o2simsim.TrackTrg", &mSimTrgRecords);
   }
+  else{
+	  LOGP(warn,"Error opening sim tracklets file trdtracklets-sim.root");
+  }
 
   if (std::filesystem::exists(dir / "o2match_itstpc.root")) {
     mDataTree->AddFriend("matchTPCITS", (dir / "o2match_itstpc.root").c_str());
@@ -374,11 +378,11 @@ bool RawDataManager::nextTimeFrame()
   mEventNo = 0;
   mTimeFrameNo++;
   if (!mSimTracklets) {
-    //O2INFO("Loaded data for time frame #%d with %d TRD trigger records, %d digits and %d tracklets",
-     //      mTimeFrameNo, mTrgRecords->size(), mDigits->size(), mTracklets->size());
+    // O2INFO("Loaded data for time frame #%d with %d TRD trigger records, %d digits and %d tracklets",
+    //       mTimeFrameNo, mTrgRecords->size(), mDigits->size(), mTracklets->size());
   } else {
-    //O2INFO("Loaded data for time frame #%d with %d TRD trigger records, %d digits and %d tracklets and %d simtracklets",
-     //      mTimeFrameNo, mTrgRecords->size(), mDigits->size(), mTracklets->size(), mSimTracklets->size());
+    // O2INFO("Loaded data for time frame #%d with %d TRD trigger records, %d digits and %d tracklets and %d simtracklets",
+    //       mTimeFrameNo, mTrgRecords->size(), mDigits->size(), mTracklets->size(), mSimTracklets->size());
   }
 
   return true;
@@ -386,20 +390,35 @@ bool RawDataManager::nextTimeFrame()
 
 bool RawDataManager::nextEvent()
 {
+//	LOGP(info,"{} {}",__func__,__LINE__);
   // get the next trigger record
   if (mEventNo >= mTrgRecords->size()) {
+//	LOGP(info,"{} {}",__func__,__LINE__);
     return false;
   }
+//	LOGP(info,"{} {} mEventNo:{} mTrgRecords.size()={}",__func__,__LINE__,mEventNo,mTrgRecords->size());
   mTriggerRecord = mTrgRecords->at(mEventNo);
-  if (mSimTrgRecords) {
-    mSimTriggerRecord = mSimTrgRecords->at(mEventNo);
-    // LOGP(info, "Processing event: orbit {} (sim:{}) bc {:04d} (sim:{}) with {} digits and {} (sim:{}) tracklets",
-    //     mTriggerRecord.getBCData().orbit, mSimTriggerRecord.getBCData().orbit, mTriggerRecord.getBCData().bc, mSimTriggerRecord.getBCData().bc,
-    //    mTriggerRecord.getNumberOfDigits(), mTriggerRecord.getNumberOfTracklets(), mSimTriggerRecord.getNumberOfTracklets());
+//	LOGP(info,"{} {}",__func__,__LINE__);
+  if (mSimTrgRecords){
+	 if(mEventNo < mSimTrgRecords->size()) {
+//	LOGP(info,"{} {} meventno:{} mSimTrgRecrods.size()={}",__func__,__LINE__,mEventNo, mSimTrgRecords->size());
+	    mSimTriggerRecord = mSimTrgRecords->at(mEventNo);
+	     LOGP(info, "Processing event: orbit {} (sim:{}) bc {:04d} (sim:{}) with {} digits and {} (sim:{}) tracklets",
+		 mTriggerRecord.getBCData().orbit, mSimTriggerRecord.getBCData().orbit, mTriggerRecord.getBCData().bc, mSimTriggerRecord.getBCData().bc,
+		 mTriggerRecord.getNumberOfDigits(), mTriggerRecord.getNumberOfTracklets(), mSimTriggerRecord.getNumberOfTracklets());
+	 }
+	 else {
+             LOGP(info,"{} {} meventno:{} mSimTrgRecrods.size()={}",__func__,__LINE__,mEventNo, mSimTrgRecords->size());
+
+	     LOGP(info, "Processing event {}: orbit {} (sim:{}) bc {:04d} (sim:{}) with {} digits and {} (sim:{}) tracklets",
+		 mEventNo, mTriggerRecord.getBCData().orbit, mSimTriggerRecord.getBCData().orbit, mTriggerRecord.getBCData().bc, mSimTriggerRecord.getBCData().bc,
+		 mTriggerRecord.getNumberOfDigits(), mTriggerRecord.getNumberOfTracklets(), mSimTrgRecords->size());
+	     LOGP(info,"{} {} ",__func__,__LINE__);
+	 }
   } else {
-    // O2INFO("Processing event: orbit %d bc %04d with %d digits and %d tracklets",
-    //        mTriggerRecord.getBCData().orbit, mTriggerRecord.getBCData().bc,
-    //        mTriggerRecord.getNumberOfDigits(), mTriggerRecord.getNumberOfTracklets());
+     O2INFO("Processing event: orbit %d bc %04d with %d digits and %d tracklets",
+            mTriggerRecord.getBCData().orbit, mTriggerRecord.getBCData().bc,
+            mTriggerRecord.getNumberOfDigits(), mTriggerRecord.getNumberOfTracklets());
   }
 
   if (mCollisionContext) {

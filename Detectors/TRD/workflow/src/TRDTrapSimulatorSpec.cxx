@@ -49,29 +49,22 @@ using namespace constants;
 
 void TRDDPLTrapSimulatorTask::initTrapConfig(long timeStamp)
 {
-  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
   // auto& ccdbmgr = o2::ccdb::BasicCCDBManager::instance();
   // mTrapConfigEvent = ccdbmgr.getForTimeStamp<o2::trd::TrapConfigEvent>("TRD/TrapConfig/" + mTrapConfigName, timeStamp);
   /******** TEmporary open a local file with a trapconfigevent   ****************************/
-  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
   std::unique_ptr<TFile> file(TFile::Open("trdconfigevents.root"));
-  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
   if (!file || file->IsZombie()) {
     std::cerr << "Error opening trdconfigevent file" << std::endl;
     exit(-1);
   }
-  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
   //  std::unique_ptr<TTree> configTree(file->Get<TTree>("calib"));
-  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
   mTrapConfigEvent = file->Get<TrapConfigEvent>("ccdb_object");
   std::unique_ptr<TrapConfigEvent> configevent(file->Get<TrapConfigEvent>("ccdb_object"));
-  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
   if (mTrapConfigEvent) {
     LOGP(debug, " we have a valid trapconfigevent object");
   } else {
     LOGP(debug, " we have a invalid trapconfigevent object");
   }
-  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
   // configTree->GetEntry(0);
   //
   /************************************/
@@ -137,7 +130,6 @@ void TRDDPLTrapSimulatorTask::setOnlineGainTables()
 
 void TRDDPLTrapSimulatorTask::processTRAPchips(int& nTracklets, std::vector<Tracklet64>& trackletsAccum, std::array<TrapSimulator, NMCMHCMAX>& trapSimulators, std::vector<short>& digitCounts, std::vector<int>& digitIndices)
 {
-  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
   // TRAP processing for current half chamber
   for (int iTrap = 0; iTrap < NMCMHCMAX; ++iTrap) {
     if (!trapSimulators[iTrap].isDataSet()) {
@@ -145,10 +137,16 @@ void TRDDPLTrapSimulatorTask::processTRAPchips(int& nTracklets, std::vector<Trac
     }
     LOGP(info, "Processing TRAP chip : {}", iTrap);
     std::cout << trapSimulators[iTrap] << std::endl;
-    trapSimulators[iTrap].setBaselines();
+    //trapSimulators[iTrap].setBaselines();
     trapSimulators[iTrap].filter();
     trapSimulators[iTrap].tracklet();
     auto trackletsOut = trapSimulators[iTrap].getTrackletArray64();
+    LOGP(info ,"Received {} tracklets from simlator",trackletsOut.size());
+    for(auto &trklt : trackletsOut){
+      std::cout << trklt << std::endl;
+    }
+    LOGP(info ,"end of Received {} tracklets from simlator",trackletsOut.size());
+
     nTracklets += trackletsOut.size();
     trackletsAccum.insert(trackletsAccum.end(), trackletsOut.begin(), trackletsOut.end());
     if (mUseMC) {
@@ -159,12 +157,10 @@ void TRDDPLTrapSimulatorTask::processTRAPchips(int& nTracklets, std::vector<Trac
     }
     trapSimulators[iTrap].reset();
   }
-  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
 }
 
 void TRDDPLTrapSimulatorTask::init(o2::framework::InitContext& ic)
 {
-  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
   mTrapConfigName = ic.options().get<std::string>("trd-trapconfig");
   mEnableOnlineGainCorrection = ic.options().get<bool>("trd-onlinegaincorrection");
   //  mOnlineGainTableName = ic.options().get<std::string>("trd-onlinegaintable");
@@ -202,7 +198,6 @@ void TRDDPLTrapSimulatorTask::init(o2::framework::InitContext& ic)
   }
   LOG(info) << "Trap simulation running with " << mNumThreads << " threads ";
 #endif
-  LOGP(info, " {} {} {}", __FILE__, __func__, __LINE__);
 }
 
 void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)

@@ -58,6 +58,15 @@ o2_add_executable(trap2raw
                                         O2::CommonUtils
                                         O2::DataFormatsTRD
                                         Boost::program_options)
+o2_add_executable(trapsim-standalone
+                  COMPONENT_NAME trd
+                  SOURCES src/trapsim-standalone.cxx
+                  PUBLIC_LINK_LIBRARIES O2::TRDSimulation
+                                        O2::DetectorsRaw
+                                        O2::DetectorsCommonDataFormats
+                                        O2::CommonUtils
+                                        O2::DataFormatsTRD
+                                        Boost::program_options)
 
 o2_add_test(PileupTool
             SOURCES test/testPileupTool.cxx
