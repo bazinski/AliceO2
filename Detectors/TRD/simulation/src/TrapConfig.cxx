@@ -41,8 +41,11 @@ TrapConfig::TrapConfig()
   // default constructor
 
   // initialize and reset the TRAP registers
+  LOGP(info,"{} {}", __func__,__LINE__);
   initRegs();
+  LOGP(info,"{} {}", __func__,__LINE__);
   resetRegs();
+  LOGP(info,"{} {}", __func__,__LINE__);
 
   for (int iWord = 0; iWord < mgkDmemWords; ++iWord) {
     mDmem[iWord].setAddress(iWord + mgkDmemStartAddress);
@@ -539,11 +542,12 @@ int TrapConfig::getTrapReg(TrapReg_t reg, int det, int rob, int mcm)
   // get the value of an individual TRAP register
   // if it is individual for TRAPs a valid TRAP has to be specified
 
-  if ((reg < 0) || (reg >= kLastReg)) {
-    LOG(error) << "Non-existing register requested";
+  LOGP(info,"register requested reg:{} det:{} rob:{} mcm:{}",(int)reg,det,rob,mcm);
+  if ((reg < 0) || (reg >= kLastReg) && det >-1 && rob >-1 && mcm > -1) {
+    LOGP(error,"Non-existing register requested reg:{} det:{} rob:{} mcm:{}",(int)reg,det,rob,mcm);
     return 0;
   } else {
-    return mRegisterValue[reg].getValue(det, rob, mcm);
+    return mRegisterValue.at(reg).getValue(det, rob, mcm);
   }
 }
 
@@ -845,7 +849,8 @@ int TrapConfig::TrapValue::getIdx(int det, int rob, int mcm)
   // return Idx to access the data for the given position
 
   int idx = -1;
-
+LOGP(info,"about to try access mAllocMode");
+LOGP(info,"mAllocMode : {} ",mAllocMode);
   switch (mAllocMode) {
     case kAllocNone:
       idx = -1;
@@ -873,7 +878,7 @@ int TrapConfig::TrapValue::getIdx(int det, int rob, int mcm)
       LOG(error) << "Invalid allocation mode";
   }
   if (idx < mData.size()) {
-    // LOG(info) << "Index ok " << dec << idx << " (size " << mData.size() << ") for " << this->getName() << " getIdx : " << det <<"::"<< rob<< "::" << mcm << "::" << mAllocMode;
+     LOG(info) << "Index ok " << dec << idx << " (size " << mData.size() << ")  getIdx : " << det <<"::"<< rob<< "::" << mcm << "::" << mAllocMode;
     return idx;
   } else {
     LOG(warn) << "Index too large " << dec << idx << " (size " << mData.size() << ") for "

@@ -52,27 +52,42 @@ void TrapSimulator::init(TrapConfig* trapconfig, int det, int robPos, int mcmPos
   mDetector = det;
   mRobPos = robPos;
   mMcmPos = mcmPos;
-
+  LOGP(info,"{} {}",__func__,__LINE__);
   uint64_t row = mFeeParam->getPadRowFromMCM(mRobPos, mMcmPos); // need uint64_t type to assemble mTrkltWordEmpty below
+  LOGP(info,"{} {}",__func__,__LINE__);
   uint64_t column = mMcmPos % NMCMROBINCOL;
+  LOGP(info,"{} {}",__func__,__LINE__);
   // prepare a part of the MCM header, what still is missing are the 3 x 8 bits from the charges
   // < 1 | padrow (4 bits) | column (2 bits) | 00..0 (8 bit) | 00..0 (8 bit) | 00..0 (8 bit) | 1 >
   mMcmHeaderEmpty = (1 << 31) | (row << 27) | (column << 25) | 1;
+  LOGP(info,"{} {}",__func__,__LINE__);
   // prepare the part of the Tracklet64 which is common to all tracklets of this MCM
   uint64_t hcid = 2 * mDetector + (mRobPos % 2);
+  LOGP(info,"{} {}",__func__,__LINE__);
   uint64_t format = mUseFloatingPointForQ ? 1UL : 0UL;
+  LOGP(info,"{} {}",__func__,__LINE__);
   mTrkltWordEmpty = (format << Tracklet64::formatbs) | (hcid << Tracklet64::hcidbs) | (row << Tracklet64::padrowbs) | (column << Tracklet64::colbs);
+  LOGP(info,"{} {}",__func__,__LINE__);
 
   if (!mInitialized) {
+  LOGP(info,"{} {}",__func__,__LINE__);
     mTrapConfig = trapconfig;
+  LOGP(info,"{} {}",__func__,__LINE__);
     mNTimeBin = mTrapConfig->getTrapReg(TrapConfig::kC13CPUA, mDetector, mRobPos, mMcmPos);
+  LOGP(info,"{} {}",__func__,__LINE__);
     mZSMap.resize(NADCMCM);
+  LOGP(info,"{} {}",__func__,__LINE__);
     mADCR.resize(mNTimeBin * NADCMCM);
+  LOGP(info,"{} {}",__func__,__LINE__);
     mADCF.resize(mNTimeBin * NADCMCM);
+  LOGP(info,"{} {}",__func__,__LINE__);
   }
 
+  LOGP(info,"{} {}",__func__,__LINE__);
   mInitialized = true;
+  LOGP(info,"{} {}",__func__,__LINE__);
   reset();
+  LOGP(info,"{} {}",__func__,__LINE__);
 }
 
 void TrapSimulator::reset()
