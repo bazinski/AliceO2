@@ -46,6 +46,7 @@ namespace trd
 {
 
 using namespace constants;
+constexpr int debugprint=false;
 
 void TRDDPLTrapSimulatorTask::initTrapConfig(long timeStamp)
 {
@@ -135,17 +136,17 @@ void TRDDPLTrapSimulatorTask::processTRAPchips(int& nTracklets, std::vector<Trac
     if (!trapSimulators[iTrap].isDataSet()) {
       continue;
     }
-    LOGP(info, "Processing TRAP chip : {}", iTrap);
-    std::cout << trapSimulators[iTrap] << std::endl;
+    if(debugprint)LOGP(info, "Processing TRAP chip : {}", iTrap);
+    if(debugprint)std::cout << trapSimulators[iTrap] << std::endl;
     //trapSimulators[iTrap].setBaselines();
     trapSimulators[iTrap].filter();
     trapSimulators[iTrap].tracklet();
     auto trackletsOut = trapSimulators[iTrap].getTrackletArray64();
-    LOGP(info ,"Received {} tracklets from simlator",trackletsOut.size());
+    if(debugprint)LOGP(info ,"Received {} tracklets from simlator",trackletsOut.size());
     for(auto &trklt : trackletsOut){
-      std::cout << trklt << std::endl;
+      if(debugprint)std::cout << trklt << std::endl;
     }
-    LOGP(info ,"end of Received {} tracklets from simlator",trackletsOut.size());
+    if(debugprint)LOGP(info ,"end of Received {} tracklets from simlator",trackletsOut.size());
 
     nTracklets += trackletsOut.size();
     trackletsAccum.insert(trackletsAccum.end(), trackletsOut.begin(), trackletsOut.end());
@@ -293,9 +294,9 @@ void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
       }
       if (currHCId != digit->getHCId()) {
         // we switch to a new half chamber, process all TRAPs of the previous half chamber which contain data
-        LOGP(info, "Processing half chamber : {} det : {}", currHCId, currDet);
+        if(debugprint)LOGP(info, "Processing half chamber : {} det : {}", currHCId, currDet);
         processTRAPchips(nTracklets[iTrig], trackletsAccum[iTrig], trapSimulators, digitCountsAccum[iTrig], digitIndicesAccum[iTrig]);
-        LOGP(info, "Finished Processing half chamgber : {} det {}", currHCId, currDet);
+        if(debugprint)LOGP(info, "Finished Processing half chamgber : {} det {}", currHCId, currDet);
         currHCId = digit->getHCId();
       }
       // fill the digit data into the corresponding TRAP chip
