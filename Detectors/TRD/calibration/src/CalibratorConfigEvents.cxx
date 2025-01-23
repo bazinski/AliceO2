@@ -160,6 +160,7 @@ void CalibratorConfigEvents::collapseRegisterValues()
   // map to store unique values for each register to infer mo
   std::array<std::map<uint32_t, uint32_t>, TrapRegisters::kLastReg> registersvaluemap;
   // Collapse the frequency maps of registers into singular values
+  int32_t presentcount=0;
   for (uint32_t mcmid = 0; mcmid < constants::MAXMCMCOUNT; ++mcmid) {
 
     if (mCCDBObject.isMCMPresent(mcmid)) {
@@ -196,8 +197,9 @@ void CalibratorConfigEvents::collapseRegisterValues()
           }
         }
       }
+    presentcount++;
     } else {
-      LOGP(info, "Collapsing with mcmid {} is not present", mcmid);
+      LOGP(debug, "Collapsing with mcmid {} is not present", mcmid);
     }
   }
 

@@ -72,7 +72,7 @@ class TrapRegisters
     kCTGCTRL, kMEMRW, kMEMCOR, kDMDELA, kDMDELS, kNMOD, kNDLY, kNED, kNTRO, kNRRO, kNBND, kNP0, kNP1,
     kNP2, kNP3, kC08CPU0, kQ2VINFO /*C09CPU0  will be q2 pid window settings, and partial version info.*/,
     kC10CPU0, kC11CPU0, kC12CPUA, kC13CPUA, kC14CPUA, kC15CPUA, kC08CPU1, kVINFO/*kC09CPU1  version of trap code.*/,
-    kC10CPU1, kC11CPU1, kC08CPU2, kNDRIFT /*kC09CPU2*/, kC10CPU2, kC11CPU2, kC08CPU3, kYCORR /*kC09CPU3*/,
+    kC10CPU1, kC11CPU1, kC08CPU2, kNTIMEBINS /*kC09CPU2*/, kC10CPU2, kC11CPU2, kC08CPU3, kYCORR /*kC09CPU3*/,
     kC10CPU3, kC11CPU3, kNES, kNTP, kNCUT, kPASACHM, kLastReg
   };
   // clang-format on

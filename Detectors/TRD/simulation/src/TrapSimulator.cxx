@@ -155,6 +155,7 @@ void TrapSimulator::reset()
   mTrackletArray64.clear();
   mTrackletDigitCount.clear();
   mTrackletDigitIndices.clear();
+  //mTrapSimParts.reset();
 
   mDataIsSet = false;
 }
@@ -1188,8 +1189,8 @@ void TrapSimulator::calcFitreg()
         hitQual = true;
       } else {
         hitQual = ((adcLeft * adcRight) <
-                  // ((getTrapReg(TrapRegisters::kTPVT, mDetector, mRobPos, mMcmPos) * adcCentral * adcCentral) >> 10));
-                   ((getTrapReg(TrapRegisters::kTPVT, mDetector, mRobPos, mMcmPos) * adcCentral) ));
+                   ((getTrapReg(TrapRegisters::kTPVT, mDetector, mRobPos, mMcmPos) * adcCentral * adcCentral) >> 10));
+                  // ((getTrapReg(TrapRegisters::kTPVT, mDetector, mRobPos, mMcmPos) * adcCentral) ));
         if (hitQual) {
           if(debugprint)LOG(info) << "clus q cut " << adcLeft << ", " << adcCentral << ", "
                     << adcRight << " - th:" << getTrapReg(TrapRegisters::kTPVT, mDetector, mRobPos, mMcmPos)
@@ -1294,8 +1295,8 @@ void TrapSimulator::calcFitreg()
         //  hit detected, in TRAP we have 4 units and a hit-selection, here we proceed all channels!
         //  subtract the pedestal TPFP, clipping instead of wrapping
 
-        int regTPFP = getTrapReg(TrapRegisters::kTPFP, mDetector, mRobPos, mMcmPos); // TODO put this together with the others as members of trapsim, which is initiliased by det,rob,mcm.
-        if(debugprint)LOG(info) << "Hit found, time=" << timebin << ", adcch=" << adcch << "/" << adcch + 1 << "/"
+        int regTPFP = getTrapReg(TrapRegisters::kTPFP, mDetector, mRobPos, mMcmPos)>>1; // TODO put this together with the others as members of trapsim, which is initiliased by det,rob,mcm.
+        if(debugprint)LOG(info) << "YY Hit found, time=" << timebin << ", adcch=" << adcch << "/" << adcch + 1 << "/"
                   << adcch + 2 << ", adc values=" << adcLeft << "/" << adcCentral << "/"
                   << adcRight << ", regTPFP=" << regTPFP << ", TPHT=" << getTrapReg(TrapRegisters::kTPHT, mDetector, mRobPos, mMcmPos);
         // regTPFP >>= 2; // OS: this line should be commented out when checking real data. It's only needed for comparison with Venelin's simulation if in addition mgkAddDigits == 0
@@ -1328,15 +1329,16 @@ void TrapSimulator::calcFitreg()
         // ypos element of [0:128]
         //  make the correction using the position LUT
         // LOG(info) << "ypos raw is " << ypos << "  adcrigh-adcleft/adccentral " << adcRight << "-" << adcLeft << "/" << adcCentral << "==" << (adcRight - adcLeft) / adcCentral << " 128 * numerator : " << 128 * (adcRight - adcLeft) / adcCentral;
-        // LOG(info) << "ypos before lut correction : " << ypos;
-        ypos = ypos + getTrapReg(TrapRegisters::kTPL00 + (ypos & 0x7F),
-                                 mDetector, mRobPos, mMcmPos);
-        // ypos += LUT_POS[ypos & 0x7f]; // FIXME use this LUT to obtain the same results as Venelin
+        if(debugprint)LOGP(info,"ypos before lut correction : {}", ypos);
+        ypos = ypos + getTrapReg(TrapRegisters::kTPL00 + (ypos & 0x7F), mDetector, mRobPos, mMcmPos);
+        //ypos += LUT_POS[ypos & 0x7f]; // FIXME use this LUT to obtain the same results as Venelin
+        if(debugprint)LOGP(info,"ypos after lut correction : {}",ypos);
         //   LOG(info) << "ypos after lut correction : " << ypos;
         if (adcLeft > adcRight) {
           ypos = -ypos;
         }
-        if(debugprint)LOGP(info, "Add hit ch({}): left({}), central({}), right({}), ypos({}) qtot= {}", adcch, adcLeft, adcCentral, adcRight, ypos, qTotal[adcch]);
+        if(debugprint)LOGP(info,"ypos after leftright correction : {}", ypos);
+        if(debugprint)LOGP(info, "XX Add hit ch({}): left({}), central({}), right({}), ypos({}) qtot= {}", adcch, adcLeft, adcCentral, adcRight, ypos, qTotal[adcch]);
         addHitToFitreg(adcch, timebin, qTotal[adcch] >> mgkAddDigits, ypos);
       }
     }
@@ -1981,12 +1983,12 @@ void TrapSimulator::sort6To2Worst(uint16_t idx1i, uint16_t idx2i, uint16_t idx3i
   sort3(idx21s, idx22s, idx23s, val21s, val22s, val23s,
         &dummy1, &dummy2, idx6o,
         &dummy3, &dummy4, &dummy5);
-}
+} 
 
 uint32_t TrapSimulator::getTrapReg(uint32_t reg, uint32_t det, uint32_t rob, uint32_t mcm)
 {
   uint32_t regvalue = 0;
-  switch(reg){
+/*  switch(reg){
     case TrapRegisters::kTPFP: 
     return 10;
    case TrapRegisters::kTPFS :
@@ -2011,21 +2013,25 @@ uint32_t TrapSimulator::getTrapReg(uint32_t reg, uint32_t det, uint32_t rob, uin
   return 2;
   case TrapRegisters::kTPCT:
   return 8;
-  }
+  }*/
   if (mUseTrapConfigEvent) {
+    //LOGP(info,"using trap config event, now to check if mcm is present");
+    //LOGP(info,"id : {}",HelperMethods::getMCMId(det, rob, mcm));
+    
     if (mTrapConfigEvent->isMCMPresent(HelperMethods::getMCMId(det, rob, mcm))) {
-      //LOGP(debug,"We have a request for data from a present mcm, {} {} {} {}", reg, det, rob, mcm);
+     // LOGP(info,"We have a request for data from a present mcm, {} {} {} {}", reg, det, rob, mcm);
       return mTrapConfigEvent->getTrapReg(reg, det, rob, mcm);
       } else {
       // choose most likely
       //  if(mUseAverageValue){
       //    mTrapConfigEvent->getAverage(reg);
       //  }
-      //  if(mUseDefaultValue){
-      //    mTrapConfigEvent->getDefault(reg);
-      //  }
-      //LOGP(debug, " We have a request for data from a non present mcm, {} {} {} {}", reg, det, rob, mcm);
-      return 0; // mTrapConfigEvent->getTrapReg(reg, det, rob, mcm);
+      //if(mUseDefaultValue){
+      //LOGP(info, "Using default ... We have a request for data from a non present mcm, {} {} {} {}", reg, det, rob, mcm);
+      return mTrapConfigEvent->getDefaultRegisterValue(reg);
+      //}
+      //LOGP(info, " We have a request for data from a non present mcm, {} {} {} {}", reg, det, rob, mcm);
+      //return 0; // mTrapConfigEvent->getTrapReg(reg, det, rob, mcm);
       }
   } else {
     // use old trapconfig

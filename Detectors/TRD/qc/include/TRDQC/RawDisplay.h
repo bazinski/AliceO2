@@ -38,6 +38,7 @@ class RawDisplay
   void drawSimTracklets();
   void drawCalibratedTracklets();
   void drawClusters();
+  void drawSimHits();
   void drawHits();
   void drawMCTrackSegments();
 
@@ -58,6 +59,20 @@ class RawDisplay
   float mCalvdriftexb{};
   //  TrackletTransformer mTransformer;
   float mClusterThreshold{50}; /// threshold for drawing clusters
+  // Sort functions as in TRAP
+  void sort2(uint16_t idx1i, uint16_t idx2i, uint16_t val1i, uint16_t val2i,
+             uint16_t* idx1o, uint16_t* idx2o, uint16_t* val1o, uint16_t* val2o) const;
+  void sort3(uint16_t idx1i, uint16_t idx2i, uint16_t idx3i,
+             uint16_t val1i, uint16_t val2i, uint16_t val3i,
+             uint16_t* idx1o, uint16_t* idx2o, uint16_t* idx3o,
+             uint16_t* val1o, uint16_t* val2o, uint16_t* val3o) const;
+  void sort6To4(uint16_t idx1i, uint16_t idx2i, uint16_t idx3i, uint16_t idx4i, uint16_t idx5i, uint16_t idx6i,
+                uint16_t val1i, uint16_t val2i, uint16_t val3i, uint16_t val4i, uint16_t val5i, uint16_t val6i,
+                uint16_t* idx1o, uint16_t* idx2o, uint16_t* idx3o, uint16_t* idx4o,
+                uint16_t* val1o, uint16_t* val2o, uint16_t* val3o, uint16_t* val4o) const;
+  void sort6To2Worst(uint16_t idx1i, uint16_t idx2i, uint16_t idx3i, uint16_t idx4i, uint16_t idx5i, uint16_t idx6i,
+                     uint16_t val1i, uint16_t val2i, uint16_t val3i, uint16_t val4i, uint16_t val5i, uint16_t val6i,
+                     uint16_t* idx5o, uint16_t* idx6o) const;
 };
 
 /// The MCM display is a raw display specialized to display data for a single MCM

@@ -461,7 +461,7 @@ void TrapRegisters::initialiseRegisters()
   mTrapRegisters[kC10CPU1].init("C10CPU1", 0x0C0A, 32, 136, 0, true, 32);
   mTrapRegisters[kC11CPU1].init("C11CPU1", 0x0C0B, 32, 137, 0, true, 32);
   mTrapRegisters[kC08CPU2].init("C08CPU2", 0x0C10, 32, 138, 0, true, 32);
-  mTrapRegisters[kNDRIFT].init("NDRIFT", 0x0C11, 32, 139, 0, false, 32); // was called C09CPU2
+  mTrapRegisters[kNTIMEBINS].init("NTIMEBINS", 0x0C11, 32, 139, 0, false, 32); // was called C09CPU2
   mTrapRegisters[kC10CPU2].init("C10CPU2", 0x0C12, 32, 140, 0, true, 32);
   mTrapRegisters[kC11CPU2].init("C11CPU2", 0x0C13, 32, 141, 0, true, 32);
   mTrapRegisters[kC08CPU3].init("C08CPU3", 0x0C18, 32, 142, 0, true, 32);

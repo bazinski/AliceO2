@@ -57,7 +57,7 @@ class CalibratorConfigEvents
   bool timeLimitReached()
   {
     mTimeLimitCount++;
-    if (mTimeLimitCount > 10) {
+    if (mTimeLimitCount > 50) {
       mTimeLimitCount = 0;
       return true;
     } else

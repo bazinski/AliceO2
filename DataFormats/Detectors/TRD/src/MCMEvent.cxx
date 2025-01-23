@@ -37,24 +37,16 @@ const uint32_t MCMEvent::getRegister(const uint32_t regidx, const TrapRegInfo& t
 bool MCMEvent::setRegister(const uint32_t data, const uint32_t regidx, const TrapRegInfo& trapreg)
 {
   uint32_t regvalue = data;
-  LOGP(info,"setRegister ( {}, {}, trapreg",data,regidx);
-  LOGP(info,"base : {} datawordnumber : {} ", trapreg.getBase(), trapreg.getDataWordNumber());
+//  LOGP(info,"setRegister ( {}, {}, trapreg",data,regidx);
+ // LOGP(info,"base : {} datawordnumber : {} ", trapreg.getBase(), trapreg.getDataWordNumber());
   int regoffset = trapreg.getBase() + trapreg.getDataWordNumber(); // wordnumber; // get the offset to the register in question
-  LOGP(info,"{} : {} : {}",__LINE__, __func__, __FILE__);
   regvalue &= trapreg.getMask();                                   // mask the data off as need be.
-  LOGP(info,"{} : {} : {}",__LINE__, __func__, __FILE__);
   uint32_t notdatamask = ~(trapreg.getMask() << trapreg.getShift());
-  LOGP(info,"{} : {} : {}",__LINE__, __func__, __FILE__);
   regvalue = regvalue << trapreg.getShift();
-  LOGP(info,"{} : {} : {}",__LINE__, __func__, __FILE__);
-  LOGP(info,"regoffset : {} ", regoffset);
-  LOGP(info,"{} : {} : {}",__LINE__, __func__, __FILE__);
+  //LOGP(info,"regoffset : {} ", regoffset);
   auto trapregvalue = mRegisterData[regoffset];
-  LOGP(info,"{} : {} : {}",__LINE__, __func__, __FILE__);
   mRegisterData[regoffset] = mRegisterData[regoffset] & notdatamask;
-  LOGP(info,"{} : {} : {}",__LINE__, __func__, __FILE__);
   mRegisterData[regoffset] = mRegisterData[regoffset] | regvalue;
-  LOGP(info,"{} : {} : {}",__LINE__, __func__, __FILE__);
   return true;
 }
 

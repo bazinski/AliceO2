@@ -50,12 +50,14 @@ uint32_t TrapConfigEvent::getRegisterValue(const uint32_t regidx, const int mcmi
   // find register in mTrapRegisters.
   // calculate the offset from the base for the register and get the mask.
 
+//  LOGP(info, "get reg value : for regidx : {} for mcm : {} one or other is out of bounds of [0,{}] and [0,{}] respectively", (int)regidx, (int)mcmidx, (int)TrapRegisters::kLastReg, (int)constants::MAXMCMCOUNT);
   if ((regidx < 0) || (regidx >= TrapRegisters::kLastReg) || (mcmidx < 0 || mcmidx >= o2::trd::constants::MAXMCMCOUNT)) {
     LOGP(warning, "get reg value : for regidx : {} for mcm : {} one or other is out of bounds of [0,{}] and [0,{}] respectively", (int)regidx, (int)mcmidx, (int)TrapRegisters::kLastReg, (int)constants::MAXMCMCOUNT);
     return 0; // TODO this could be a problem ?!
   }
   int regbase = mTrapRegisters[regidx].getBase();                       // get the base of this register in the underlying storage block
   int regoffset = regbase + mTrapRegisters[regidx].getDataWordNumber(); // get the offset to the register in question
+ // LOGP(info, "configdata index : {} for mcm {} mConfigData size : {} ",mConfigDataIndex[mcmidx],mcmidx, mConfigData.size());
 
   uint32_t data = mConfigData[mConfigDataIndex[mcmidx]].getRegister(regidx, mTrapRegisters[regidx]);
   return data;

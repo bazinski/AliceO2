@@ -212,10 +212,10 @@ void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
       return ;
     }
     */
-  if (mTimeFrameCounter > 100) {
-    LOGP(info, "Skipping time frame : {}", mTimeFrameCounter);
-    return;
-  }
+//  if (mTimeFrameCounter > 100) {
+//    LOGP(info, "Skipping time frame : {}", mTimeFrameCounter);
+//    return;
+//  }
   mTimeFrameCounter++;
   if (!mInitCcdbObjectsDone) {
     auto creationTime = pc.services().get<o2::framework::TimingInfo>().creation;

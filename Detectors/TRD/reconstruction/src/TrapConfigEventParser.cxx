@@ -40,7 +40,7 @@ using namespace o2::trd;
 
 TrapConfigEventParser::TrapConfigEventParser()
 {
-  LOGP(info, "Creating trapconfig event object");
+  LOGP(debug, "Creating trapconfig event object");
   mTrapConfigEvent = std::make_unique<o2::trd::TrapConfigEvent>();
   mMCMDataIndex.fill(-1);
   buildAddressMap();
@@ -52,13 +52,13 @@ TrapConfigEventParser::~TrapConfigEventParser()
 
 void TrapConfigEventParser::buildAddressMap()
 {
-  LOGP(info, "Initing registers, build the map : ");
+  LOGP(debug, "Initing registers, build the map : ");
   for (int reg = 0; reg < TrapRegisters::kLastReg; ++reg) {
     // reindex to speed things up, this time by address, map instead of a rather large lookup table.
     auto addr = mTrapConfigEvent.get()->getRegisterAddress(reg);
     mTrapRegistersAddressIndexMap[addr] = reg;
   }
-  LOGP(info, "finished buildng the map ");
+  LOGP(debug, "finished buildng the map ");
 }
 bool TrapConfigEventParser::checkRegister(uint32_t& registeraddr, uint32_t& registerdata)
 {
@@ -144,7 +144,7 @@ void TrapConfigEventParser::printMCMRegisterCount(int hcid)
     roboffset = 0;
   }
   std::stringstream errorMCM;
-  LOGP(info, "bp rob for hcid : {}....", hcid);
+  LOGP(debug, "bp rob for hcid : {}....", hcid);
   for (int robidx = roboffset; robidx < 8; robidx += 2) {
     std::stringstream display;
     display << "bp rob:" << robidx << " ";
@@ -196,12 +196,12 @@ bool TrapConfigEventParser::parse(std::vector<uint32_t>& data)
     end = start + length;
     //   mTrapConfigEvent->isHCIDPresent(mCurrentHCID);
     //   LOGP(debug, "HCIDHCIDP HC={}", mCurrentHCID);
-    if (mHCHasBeenSeen.test(mCurrentHCID)) {
+   /* if (mHCHasBeenSeen.test(mCurrentHCID)) {
       // we have already seen this HC, so we must be on a new event.
-      LOGP(debug, "HC based analysis because of hc : {}", mCurrentHCID);
+      LOGP(info, "HC based analysis because of hc : {} total hc : {} total MCM : {}", mCurrentHCID,countHCIDPresent(),countMCMPresent());
       analyseEventBaseStats();
       clearEventBasedStats();
-    }
+    }*/
     mHCHasBeenSeen.set(mCurrentHCID);
     parseLink(data, start, end);
     position += end - start;
@@ -509,7 +509,7 @@ int TrapConfigEventParser::parseLink(std::vector<uint32_t>& data, uint32_t start
       if (data[idx] == constants::CONFIGEVENTBLOCKENDMARKER || data[idx] == 0xeeeeeeee) {
         LOGP(debug, " we have a the first part of a config event block end marker");
         if (data[idx + 1] == constants::CONFIGEVENTBLOCKENDMARKER || data[idx] == 0xeeeeeeee) {
-          LOGP(debug, " yip we have a double config event block end marker");
+          LOGP(debug, " yes we have a double config event block end marker");
         }
         while (idx < end && data[idx] == 0xeeeeeeee) {
           idx++;
@@ -537,8 +537,8 @@ int TrapConfigEventParser::parseLink(std::vector<uint32_t>& data, uint32_t start
 
       if (mMCMHasBeenSeen.test(mCurrentMCMID)) {
         // we are now on a new trapconfig event
-        LOGP(debug, "MCM based analysis because of mcm : {}", mCurrentMCMID);
-        // analyseEventBaseStats();
+        if(!dualmcm) LOGP(info, "MCM based analysis because of mcm : {} HCID: {} total hc : {} total MCM : {}", mCurrentMCMID,mCurrentHCID, countHCIDPresent(),countMCMPresent());
+        //analyseEventBaseStats();
         dualmcm = true;
       }
 
@@ -613,9 +613,11 @@ int TrapConfigEventParser::parseLink(std::vector<uint32_t>& data, uint32_t start
   }   // end while
   // printMCMRegisterCount(mCurrentHCID);
   if (dualmcm) {
+    LOGP(info, " dual mcm if statement triggered");
     analyseEventBaseStats();
     clearEventBasedStats();
     mTrapConfigEventCounter++;
+    dualmcm=false;
   }
   return false; // we only get here if the max length of the block reached
 }
@@ -661,7 +663,7 @@ int TrapConfigEventParser::flushParsingStats()
 
 void TrapConfigEventParser::sendTrapConfigEvent(framework::ProcessingContext& pc)
 {
-  LOGP(info, "About to send message with mMCMData having size : {}", mMCMData.size());
+  LOGP(debug, "About to send message with mMCMData having size : {}", mMCMData.size());
   pc.outputs().snapshot(framework::Output{o2::header::gDataOriginTRD, "TRDCFG", 0}, mMCMData);
   pc.outputs().snapshot(framework::Output{o2::header::gDataOriginTRD, "TRDCFGQC", 0}, mQCData);
   //  pc.outputs().snapshot(framework::Output{o2::header::gDataOriginTRD, "TRDCFG", 0, framework::Lifetime::Condition}, mMCMData);

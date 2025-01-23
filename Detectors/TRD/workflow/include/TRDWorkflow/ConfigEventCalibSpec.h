@@ -74,8 +74,14 @@ class ConfigEventCalibDevice : public o2::framework::Task
       o2::base::TFIDInfoHelper::fillTFIDInfo(pc, ti);
       if (!ti.isDummy()) {
         mStartTime = ti.creation;
+        LOGP(info,"Setting start time to : {}",mStartTime);
+      }
+      else{
+        mStartTime=tinfo.creation;
+        LOGP(info,"Setting start time to : {} from tinfo",mStartTime);
       }
     }
+
     // consume the incoming partial configuration events.
     mCalibrator->process(trapConfigEvent);
     if (mCalibrator->timeLimitReached()) {
@@ -122,7 +128,6 @@ class ConfigEventCalibDevice : public o2::framework::Task
   void sendOutput(DataAllocator& output)
   {
     const auto& payload = mCalibrator->getCcdbObject();
-
     auto clName = o2::utils::MemFileHelper::getClassName(payload);
     auto flName = o2::ccdb::CcdbApi::generateFileName(clName);
     std::map<std::string, std::string> metadata;
