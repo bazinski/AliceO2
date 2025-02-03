@@ -41,24 +41,24 @@ struct TRDSimParams : public o2::conf::ConfigurableParamHelper<TRDSimParams> {
   int trf = 0;                  // Sampled TRF function. 0: default TRF, 1: TRF described in TRF TDR, 2: No TRF, 3: Landau dist as TRF (parameters specified below)
   float trf_landau_mu = 0.;     // Mu of the Landau distribution used to describe TRF
   float trf_landau_sigma = .03; // Sigma of the Landau distribution used to describe TRF
-  int tpht = 0; //  Hit threshold 
-  bool settpht = false; //  Do we want to set the hit threshold
-  int tpqe1 = 0; // 
-  bool settpqe1 = false; // 
-  int tpqs1 = 0; // 
-  bool settpqs1 = false; // 
-  int tpqe0 = 0; // 
-  bool settpqe0 = false; // 
-  int tpqs0 = 0; // 
-  bool settpqs0 = false; // 
-  int tpfs = 0; // 
-  bool settpfs = false; // 
-  int tpfe = 0; // 
-  bool settpfe = false; // 
-  int tpcl = 0; // 
-  bool settpcl = false; // 
-  int tpct = 0; // 
-  bool settpct = false; // 
+  int tpht = 0;                 //  Hit threshold
+  bool settpht = false;         //  Do we want to set the hit threshold
+  int tpqe1 = 0;                //
+  bool settpqe1 = false;        //
+  int tpqs1 = 0;                //
+  bool settpqs1 = false;        //
+  int tpqe0 = 0;                //
+  bool settpqe0 = false;        //
+  int tpqs0 = 0;                //
+  bool settpqs0 = false;        //
+  int tpfs = 0;                 //
+  bool settpfs = false;         //
+  int tpfe = 0;                 //
+  bool settpfe = false;         //
+  int tpcl = 0;                 //
+  bool settpcl = false;         //
+  int tpct = 0;                 //
+  bool settpct = false;         //
   O2ParamDef(TRDSimParams, "TRDSimParams");
 };
 

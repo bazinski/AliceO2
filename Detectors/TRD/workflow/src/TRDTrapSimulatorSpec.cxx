@@ -158,7 +158,6 @@ void TRDDPLTrapSimulatorTask::init(o2::framework::InitContext& ic)
     LOG(info) << "Tracklet charges will be calculated using a fixed multiplier";
   }
 
-
 #ifdef WITH_OPENMP
   int askedThreads = TRDSimParams::Instance().digithreads;
   int maxThreads = omp_get_max_threads();
@@ -171,55 +170,53 @@ void TRDDPLTrapSimulatorTask::init(o2::framework::InitContext& ic)
 #endif
 }
 
-
 void TRDDPLTrapSimulatorTask::setCustomConfigValue(int value, int regaddress)
 {
-    int tpht = value;
-    TrapConfig::TrapReg_t regtpht=mTrapConfig->getRegByAddress(regaddress);
-    LOGP(info, "***************** {} hard set to {} is set  {}",mTrapConfig->getRegName(regtpht),tpht,TRDSimParams::Instance().settpht);
-    for(int det=0;det<540;++det){
-      int regvalue = mTrapConfig->getTrapReg(regtpht);
-      if(det==0)LOGP(info,"TrapReg {} was {} and changing to {}",mTrapConfig->getRegName(regtpht),regvalue, tpht);
-      mTrapConfig->setTrapReg(regtpht, tpht, det);
-      int regvalue1 = mTrapConfig->getTrapReg(regtpht);
-      if(det==0)LOGP(info,"TrapReg {} readback as {} ",mTrapConfig->getRegName(regtpht),regvalue1);
-    }
-
+  int tpht = value;
+  TrapConfig::TrapReg_t regtpht = mTrapConfig->getRegByAddress(regaddress);
+  LOGP(info, "***************** {} hard set to {} is set  {}", mTrapConfig->getRegName(regtpht), tpht, TRDSimParams::Instance().settpht);
+  for (int det = 0; det < 540; ++det) {
+    int regvalue = mTrapConfig->getTrapReg(regtpht);
+    if (det == 0)
+      LOGP(info, "TrapReg {} was {} and changing to {}", mTrapConfig->getRegName(regtpht), regvalue, tpht);
+    mTrapConfig->setTrapReg(regtpht, tpht, det);
+    int regvalue1 = mTrapConfig->getTrapReg(regtpht);
+    if (det == 0)
+      LOGP(info, "TrapReg {} readback as {} ", mTrapConfig->getRegName(regtpht), regvalue1);
+  }
 }
 
 void TRDDPLTrapSimulatorTask::setCustomConfigValues()
 {
 
-  if(TRDSimParams::Instance().settpht){
-    setCustomConfigValue(TRDSimParams::Instance().tpht,0x3041);
+  if (TRDSimParams::Instance().settpht) {
+    setCustomConfigValue(TRDSimParams::Instance().tpht, 0x3041);
   }
-  if(TRDSimParams::Instance().settpqs1){
-    setCustomConfigValue(TRDSimParams::Instance().tpqs1,0x3007);
+  if (TRDSimParams::Instance().settpqs1) {
+    setCustomConfigValue(TRDSimParams::Instance().tpqs1, 0x3007);
   }
-  if(TRDSimParams::Instance().settpqe1){
-    setCustomConfigValue(TRDSimParams::Instance().tpqe1,0x3008);
+  if (TRDSimParams::Instance().settpqe1) {
+    setCustomConfigValue(TRDSimParams::Instance().tpqe1, 0x3008);
   }
-  if(TRDSimParams::Instance().settpqs0){
-    setCustomConfigValue(TRDSimParams::Instance().tpqs0,0x3005);
+  if (TRDSimParams::Instance().settpqs0) {
+    setCustomConfigValue(TRDSimParams::Instance().tpqs0, 0x3005);
   }
-  if(TRDSimParams::Instance().settpqe0){
-    setCustomConfigValue(TRDSimParams::Instance().tpqe0,0x3006);
+  if (TRDSimParams::Instance().settpqe0) {
+    setCustomConfigValue(TRDSimParams::Instance().tpqe0, 0x3006);
   }
-  if(TRDSimParams::Instance().settpfs){
-    setCustomConfigValue(TRDSimParams::Instance().tpfs,0x3001);
+  if (TRDSimParams::Instance().settpfs) {
+    setCustomConfigValue(TRDSimParams::Instance().tpfs, 0x3001);
   }
-  if(TRDSimParams::Instance().settpfe){
-    setCustomConfigValue(TRDSimParams::Instance().tpfe,0x3002);
+  if (TRDSimParams::Instance().settpfe) {
+    setCustomConfigValue(TRDSimParams::Instance().tpfe, 0x3002);
   }
-  if(TRDSimParams::Instance().settpct){
-    setCustomConfigValue(TRDSimParams::Instance().tpct,0x3044);
+  if (TRDSimParams::Instance().settpct) {
+    setCustomConfigValue(TRDSimParams::Instance().tpct, 0x3044);
   }
-  if(TRDSimParams::Instance().settpcl){
-    setCustomConfigValue(TRDSimParams::Instance().tpcl,0x3045);
+  if (TRDSimParams::Instance().settpcl) {
+    setCustomConfigValue(TRDSimParams::Instance().tpcl, 0x3045);
   }
-
 }
-
 
 void TRDDPLTrapSimulatorTask::run(o2::framework::ProcessingContext& pc)
 {
