@@ -23,6 +23,8 @@
 
 #include <set>
 #include <utility>
+#include <algorithm>
+#include <execution>
 
 using namespace o2::trd;
 
@@ -94,9 +96,9 @@ bool comp_spacepoint(const ChamberSpacePoint& a, const ChamberSpacePoint& b)
 
 void RawDataSpan::sort()
 {
-  std::stable_sort(std::begin(digits), std::end(digits), comp_digit);
-  std::stable_sort(std::begin(tracklets), std::end(tracklets), comp_tracklet);
-  std::stable_sort(std::begin(hits), std::end(hits), comp_spacepoint);
+  std::sort(std::execution::par, std::begin(digits), std::end(digits), comp_digit);
+  std::sort(std::execution::par, std::begin(tracklets), std::end(tracklets), comp_tracklet);
+  std::sort(std::execution::par, std::begin(hits), std::end(hits), comp_spacepoint);
 }
 
 template <typename keyfunc>
