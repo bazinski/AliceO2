@@ -186,6 +186,54 @@ void TRDDPLTrapSimulatorTask::setCustomConfigValue(int value, int regaddress)
   }
 }
 
+std::map<std::string, int> TRDDPLTrapSimulatorTask::parseCustomConfigValue(const std::string& input)
+{
+// namevalues contains a comma seperated string opSimulatorTask::f tpht=313,fvby=1,etc.
+
+    std::map<std::string, int> tokenMap;
+    std::istringstream stream(input);
+    std::string token;
+    
+    // Split the string using comma as a delimiter.
+    while (std::getline(stream, token, ',')) {
+        // Find the '=' character in the token.
+        size_t pos = token.find('=');
+        if (pos != std::string::npos) {
+            // Extract key and value substrings.
+            std::string key = token.substr(0, pos);
+            std::string valueStr = token.substr(pos + 1);
+            
+            try {
+                // Convert the value string to an integer.
+                int value = std::stoi(valueStr);
+                tokenMap[key] = value;
+            } catch (const std::invalid_argument& e) {
+                std::cerr << "Invalid integer for token: " << token << "\n";
+            } catch (const std::out_of_range& e) {
+                std::cerr << "Integer value out of range for token: " << token << "\n";
+            }
+        } else {
+            std::cerr << "Warning: Token '" << token << "' does not contain '=' and will be skipped.\n";
+        }
+    }
+    
+    return tokenMap;
+}
+
+
+int TRDDPLTrapSimulatorTask::findReg(const std::string& regname)
+{
+  int regidx=0;
+  while(regidx<TrapConfig::kLastReg){
+    if(mTrapConfig->getRegName((TrapConfig::TrapReg_t)regidx)==regname){
+      //LOGP(info,"Got Reg Address of {:x}",mTrapConfig->getRegAddress((TrapConfig::TrapReg_t)regidx));
+      return regidx;
+    }
+    ++regidx; 
+  }
+  return 0;
+}
+
 void TRDDPLTrapSimulatorTask::setCustomConfigValues()
 {
 
@@ -215,6 +263,25 @@ void TRDDPLTrapSimulatorTask::setCustomConfigValues()
   }
   if (TRDSimParams::Instance().settpcl) {
     setCustomConfigValue(TRDSimParams::Instance().tpcl, 0x3045);
+  }
+  if (TRDSimParams::Instance().configoptions!="") {
+    LOGP(info,"CONFIG SET OPTIONS : {}",TRDSimParams::Instance().configoptions);
+    std::map<std::string, int> optionstoset;
+    optionstoset=parseCustomConfigValue(TRDSimParams::Instance().configoptions);
+    for (const auto &[k, v] : optionstoset){
+      //std::cout << "m[" << k << "] = (" << v << ") " << std::endl;
+      int reg=findReg(k); 
+      //now set the value across the configs
+      if(reg>0){
+        LOGP(info,"Set Reg {} with value {}",k,v);
+        for(int det=0;det<540;++det){//TOOD can minimise the loop if interrogate allocationmode
+          mTrapConfig->setTrapReg((TrapConfig::TrapReg_t) reg, v, det);
+        }
+      }
+      else{
+        LOGP(error,"Failure to find requested register : {} in lookup of registeraddress, please fix",k);
+      }
+    }
   }
 }
 

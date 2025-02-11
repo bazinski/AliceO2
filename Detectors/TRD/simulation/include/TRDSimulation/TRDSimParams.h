@@ -59,6 +59,7 @@ struct TRDSimParams : public o2::conf::ConfigurableParamHelper<TRDSimParams> {
   bool settpcl = false;         //
   int tpct = 0;                 //
   bool settpct = false;         //
+  std::string configoptions;
   O2ParamDef(TRDSimParams, "TRDSimParams");
 };
 

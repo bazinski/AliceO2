@@ -59,6 +59,8 @@ class TRDDPLTrapSimulatorTask : public o2::framework::Task
   void setOnlineGainTables();
   void setCustomConfigValues();
   void setCustomConfigValue(int value, int regaddress);
+  int  findReg(const std::string& regname);
+  std::map<std::string, int> parseCustomConfigValue(const std::string& input);
   void processTRAPchips(int& nTracklets, std::vector<Tracklet64>& trackletsAccum, std::array<TrapSimulator, constants::NMCMHCMAX>& trapSimulators, std::vector<short>& digitCounts, std::vector<int>& digitIndices);
 };
 
