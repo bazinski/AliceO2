@@ -23,6 +23,7 @@ GPUd() int GeometryBase::getStack(float z, int layer) const
   // The return function has to be protected for positiveness !!
   //
 
+  //printf("getStack z %f layer : %d\n",z,layer);
   if ((layer < 0) || (layer >= NLAYER)) {
     return -1;
   }
@@ -40,8 +41,10 @@ GPUd() int GeometryBase::getStack(float z, int layer) const
     zmax = pp->getRow0();
     int nrows = pp->getNrows();
     zmin = zmax - 2 * pp->getLengthOPad() - (nrows - 2) * pp->getLengthIPad() - (nrows - 1) * pp->getRowSpacing();
+ //   printf("zmax : %f, zmin: %f nrows: %d, ipadlength : %f, padrowspacing: %f\n",zmax,zmin,nrows,pp->getLengthIPad(), pp->getRowSpacing());
   } while ((z < zmin) || (z > zmax));
-
+//    printf("z %f zmax : %f, zmin: %f \n",z,zmax,zmin);
+  
   return istck;
 }
 
