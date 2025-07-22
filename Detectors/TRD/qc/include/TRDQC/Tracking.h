@@ -128,6 +128,55 @@ class Tracking
   ClassDefNV(Tracking, 2);
 };
 
+
+struct TrackletTrackDebug{
+  // this object exists for each track(non trd) in each chamber layer it passes through.
+  // if it is matched it additionally contains the trd matching info.
+  int mITSTPCTrackIdx;
+  int mITSTPCTOFTrackIdx;
+  int mTPCTrackIdx;
+  int mTOFTrackIdx;
+  int mTRDTrackIdx;
+  int mITSTPCTRDTrackIdx;
+  int mITSTPCTRDTOFTrackIdx;
+  o2::dataformats::TrackTPCITS mITSTPCTrack;
+  o2::tpc::TrackTPC mTPCTrack;
+  o2::dataformat::MatchInfoTOF mTOFInfo;
+  o2::track::TrackParCov trackSeed;  ///< outer param of the seeding track
+  
+  // if trd match :  
+  o2::trd::TRDTrack mTRDITSTPCTrack;
+  o2::trd::TRDTrack mTRDTPCTrack;
+  o2::trd::TrackTRD mTRDTrack;
+  std::array<o2::track::TrackPar, constants::NLAYER> trackProp{}; ///< the track parameters stored at the radius where the track is updated with TRD info
+  std::array<Tracklet64, constants::NLAYER> trklt64{};            ///< the raw tracklet used for the update (includes uncorrected charges)
+  std::array<CalibratedTracklet, constants::NLAYER> trkltCalib{}; ///< the TRD space point used for the update (not yet tilt-corrected and z-shift corrected)
+
+  std::array<float, constants::NLAYER> trackletY{};            ///< y-position of tracklet used for track update (including correction)
+  std::array<float, constants::NLAYER> trackletZ{};            ///< z-position of tracklet used for track update (including correction)
+  std::array<float, constants::NLAYER> trackletChi2{};         ///< estimated chi2 for the update of the track with the given tracklet
+  std::array<std::array<float, constants::NCHARGES>, constants::NLAYER> trackletCorCharges{}; ///< corrected charges of tracklets
+  // end of trd matched
+
+  o2::trd::LocalGainFactor mLocalGain; ///< local gain factors from krypton calibration
+  int detector;
+  std::vector<o2::trd::Tracklet64> mTracklets;
+  std::vector<float> mT0;  // values used for calibration of tracklets 
+  std::vector<float> mExB; // ""
+  std::vector<float> mVDrift; // ""
+  std::vector<int> mGlobalTrackletIndex;
+  std::array<float,3> mB;
+  float mroadZ;
+  float mroadY;
+  float mtilt;
+  int mLayer;
+  int mColiiisionId;
+};
+
+
+
+
+
 } // namespace trd
 
 namespace framework

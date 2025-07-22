@@ -49,6 +49,55 @@ RawDisplay::RawDisplay(RawDataSpan& dataspan, TVirtualPad* pad)
 {
 }
 
+PadRowDisplay::PadRowDisplay(RawDataSpan& mcmdata, TVirtualPad* pad)
+{
+// 
+  int det = -1, padrow = -1, padcol=-1;
+
+  if (std::distance(mDataSpan.digits.begin(), mDataSpan.digits.end())) {
+    auto x = *mDataSpan.digits.begin();
+    det = x.getDetector();
+    padrow = x.getPadRow();
+    padcol = x.getPadCol();
+  } else if (std::distance(mDataSpan.tracklets.begin(), mDataSpan.tracklets.end())) {
+    auto x = *mDataSpan.tracklets.begin();
+    det = x.getDetector();
+    rob = x.getPadRow();
+  } else {
+    O2ERROR("found neither digits nor tracklets in PadRow Display");
+    assert(false);
+  }
+
+  mName = Form("det%03d_padrow%d", det, padrow);
+  mDesc = Form("Detector %02d_%d_%d ", det / 30, (det % 30) / 6, padrow, padcol, rob, mcm);
+  ;
+
+  // MCM column number on ROC [0..7]
+//  int mcmcol = mcm % constants::NMCMROBINCOL + HelperMethods::getROBSide(rob) * constants::NMCMROBINCOL;
+
+  mFirstPad = 0;
+  mLastPad = 143;
+
+  if (pad == nullptr) {
+    mPad = new TCanvas(mName.c_str(), mDesc.c_str(), 800, 600);
+  } else {
+    mPad = pad;
+    mPad->SetName(mName.c_str());
+    mPad->SetTitle(mDesc.c_str());
+  }
+
+  mDigitsHisto = new TH2F(mName.c_str(), (mDesc + ";pad;time bin").c_str(), 144, 0., 144., 30, 0., 30.);
+
+  for (auto digit : mDataSpan.digits) {
+    auto adc = digit.getADC();
+    for (int tb = 0; tb < 30; ++tb) {
+      mDigitsHisto->Fill(digit.getPadCol(), tb, adc[tb]);
+    }
+  }
+  mDigitsHisto->SetStats(0);
+ 
+}
+
 MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad)
   : RawDisplay(mcmdata, pad) // initializes mDataSpan, mPad
 {

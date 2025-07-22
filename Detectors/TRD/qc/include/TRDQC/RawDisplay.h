@@ -63,6 +63,19 @@ class MCMDisplay : public RawDisplay
   MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad = nullptr);
 };
 
+class PadRowDisplay 
+{
+
+  public:
+    PadRowDisplay(RawDataSpan& padrowdata, TVirtualPad* pad = nullptr);
+
+  private:
+    int mPadRow;
+    int mMCM;
+    
+};
+
+
 } // namespace o2::trd
 
 #endif // ALICEO2_TRD_RAWDISPLAY_H_
