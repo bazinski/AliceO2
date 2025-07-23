@@ -28,5 +28,8 @@
 #pragma link C++ class o2::trd::CoordinateTransformer + ;
 #pragma link C++ class o2::trd::RawDisplay + ;
 #pragma link C++ class o2::trd::MCMDisplay + ;
+#pragma link C++ class o2::trd::TrackletTrackDebug + ;
+#pragma link C++ class std::vector<o2::trd::TrackletTrackDebug> + ;
+
 
 #endif
