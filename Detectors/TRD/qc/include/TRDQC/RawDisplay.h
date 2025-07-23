@@ -63,7 +63,7 @@ class MCMDisplay : public RawDisplay
   MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad = nullptr);
 };
 
-class PadRowDisplay 
+class PadRowDisplay : public RawDisplay
 {
 
   public:

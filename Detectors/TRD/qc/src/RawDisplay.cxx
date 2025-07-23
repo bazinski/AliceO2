@@ -49,11 +49,12 @@ RawDisplay::RawDisplay(RawDataSpan& dataspan, TVirtualPad* pad)
 {
 }
 
-PadRowDisplay::PadRowDisplay(RawDataSpan& mcmdata, TVirtualPad* pad)
+PadRowDisplay::PadRowDisplay(RawDataSpan& padrowdata, TVirtualPad* pad)
+  : RawDisplay(padrowdata, pad) // initializes mDataSpan, mPad
 {
 // 
   int det = -1, padrow = -1, padcol=-1;
-
+  int rob = -1;
   if (std::distance(mDataSpan.digits.begin(), mDataSpan.digits.end())) {
     auto x = *mDataSpan.digits.begin();
     det = x.getDetector();
@@ -69,7 +70,7 @@ PadRowDisplay::PadRowDisplay(RawDataSpan& mcmdata, TVirtualPad* pad)
   }
 
   mName = Form("det%03d_padrow%d", det, padrow);
-  mDesc = Form("Detector %02d_%d_%d ", det / 30, (det % 30) / 6, padrow, padcol, rob, mcm);
+  //mDesc = Form("Detector %02d_%d_%d ", det / 30, (det % 30) / 6, padrow, padcol, rob, mcm);
   ;
 
   // MCM column number on ROC [0..7]

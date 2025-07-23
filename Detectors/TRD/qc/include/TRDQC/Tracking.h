@@ -23,6 +23,7 @@
 #include "DataFormatsTRD/Constants.h"
 #include "ReconstructionDataFormats/TrackTPCITS.h"
 #include "ReconstructionDataFormats/GlobalTrackID.h"
+#include "ReconstructionDataFormats/MatchInfoTOF.h"
 #include "DataFormatsTPC/TrackTPC.h"
 #include "DetectorsBase/Propagator.h"
 #include "GPUTRDRecoParam.h"
@@ -141,12 +142,12 @@ struct TrackletTrackDebug{
   int mITSTPCTRDTOFTrackIdx;
   o2::dataformats::TrackTPCITS mITSTPCTrack;
   o2::tpc::TrackTPC mTPCTrack;
-  o2::dataformat::MatchInfoTOF mTOFInfo;
+  o2::dataformats::MatchInfoTOF mTOFInfo;
   o2::track::TrackParCov trackSeed;  ///< outer param of the seeding track
   
   // if trd match :  
-  o2::trd::TRDTrack mTRDITSTPCTrack;
-  o2::trd::TRDTrack mTRDTPCTrack;
+  o2::trd::TrackTRD mTRDITSTPCTrack;
+  o2::trd::TrackTRD mTRDTPCTrack;
   o2::trd::TrackTRD mTRDTrack;
   std::array<o2::track::TrackPar, constants::NLAYER> trackProp{}; ///< the track parameters stored at the radius where the track is updated with TRD info
   std::array<Tracklet64, constants::NLAYER> trklt64{};            ///< the raw tracklet used for the update (includes uncorrected charges)
@@ -161,6 +162,7 @@ struct TrackletTrackDebug{
   o2::trd::LocalGainFactor mLocalGain; ///< local gain factors from krypton calibration
   int detector;
   std::vector<o2::trd::Tracklet64> mTracklets;
+  std::vector<o2::trd::CalibratedTracklet> mCalTracklets;
   std::vector<float> mT0;  // values used for calibration of tracklets 
   std::vector<float> mExB; // ""
   std::vector<float> mVDrift; // ""
@@ -171,6 +173,7 @@ struct TrackletTrackDebug{
   float mtilt;
   int mLayer;
   int mColiiisionId;
+  ClassDefNV(TrackletTrackDebug, 2);
 };
 
 
