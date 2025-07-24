@@ -73,7 +73,7 @@ struct RawDataSpan {
 
   std::vector<RawDataSpan> iterateByMCM();
   std::vector<RawDataSpan> iterateByPadRow();
-  std::vector<RawDataSpan> iterateDetector();
+  std::vector<RawDataSpan> iterateByDetector();
 
   std::vector<TrackSegment> makeMCTrackSegments();
 
