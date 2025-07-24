@@ -185,7 +185,6 @@ struct PadRowID {
 
 // instantiate the template to iterate by padrow
 template std::vector<RawDataSpan> RawDataSpan::iterateBy<PadRowID>();
-
 // non-template wrapper function to keep PadRowID within the .cxx file
 std::vector<RawDataSpan> RawDataSpan::iterateByPadRow() { return iterateBy<PadRowID>(); }
 
@@ -223,6 +222,26 @@ struct MCM_ID {
 // template instantion and non-template wrapper function
 template std::vector<RawDataSpan> RawDataSpan::iterateBy<MCM_ID>();
 std::vector<RawDataSpan> RawDataSpan::iterateByMCM() { return iterateBy<MCM_ID>(); }
+
+struct DET_ID {
+  template <typename T>
+  static uint32_t key(const T& x)
+  {
+    return x.getDetector();
+  }
+
+  static std::set<uint32_t> keys(const o2::trd::ChamberSpacePoint& x)
+  {
+    uint32_t det = x.getDetector();
+    return det;
+  }
+
+  static int getDetector(uint32_t k) { return k; }
+  // static int getPadRow(key) {return (key%1000) / 8;}
+  static int getMcmRowCol(uint32_t k) { return k % 1000; }
+};
+template std::vector<RawDataSpan> RawDataSpan::iterateBy<DET_ID>();
+std::vector<RawDataSpan> RawDataSpan::iterateByDetector() { return iterateBy<DET_ID>(); }
 
 // I started to implement a struct to iterate by detector, but did not finish this
 // struct DetectorID {
