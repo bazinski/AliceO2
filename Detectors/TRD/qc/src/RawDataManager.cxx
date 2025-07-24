@@ -161,7 +161,7 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
 /// PadRowID is a struct to calculate unique identifiers per pad row.
 /// The struct can be passed as a template parameter to the RawDataSpan::IterateBy
 /// method to split the data span by pad row and iterate over the pad rows.
-struct PadRowID {
+struct PADROW_ID {
   /// The static `key` method calculates a padrow ID for digits and tracklets
   template <typename T>
   static uint32_t key(const T& x)
@@ -179,12 +179,15 @@ struct PadRowID {
   {
     return key == 100 * x.getDetector() + x.getPadRow();
   }
+  static int getDetector(uint32_t k) { return k / 1000; }
+  // static int getPadRow(key) {return (key%1000) / 8;}
+  static int getMcmRowCol(uint32_t k) { return k % 1000; }
 };
 
 // instantiate the template to iterate by padrow
-template std::vector<RawDataSpan> RawDataSpan::iterateBy<PadRowID>();
+template std::vector<RawDataSpan> RawDataSpan::iterateBy<PADROW_ID>();
 // non-template wrapper function to keep PadRowID within the .cxx file
-std::vector<RawDataSpan> RawDataSpan::iterateByPadRow() { return iterateBy<PadRowID>(); }
+std::vector<RawDataSpan> RawDataSpan::iterateByPadRow() { return iterateBy<PADROW_ID>(); }
 
 /// A struct that can be used to calculate unique identifiers for MCMs, to be
 /// used to split ranges by MCM.
@@ -221,46 +224,29 @@ struct MCM_ID {
 template std::vector<RawDataSpan> RawDataSpan::iterateBy<MCM_ID>();
 std::vector<RawDataSpan> RawDataSpan::iterateByMCM() { return iterateBy<MCM_ID>(); }
 
+
 struct DET_ID {
-  template <typename T>
-  static uint32_t key(const T& x)
-  {
-    return x.getDetector();
-  }
+   template <typename T>
+   static uint32_t key(const T& x)
+   {
+     return x.getDetector();
+   }
 
-  static std::set<uint32_t> keys(const o2::trd::ChamberSpacePoint& x)
-  {
-    uint32_t det = x.getDetector();
-    return det;
-  }
-
-  static int getDetector(uint32_t k) { return k; }
-  // static int getPadRow(key) {return (key%1000) / 8;}
-  static int getMcmRowCol(uint32_t k) { return k % 1000; }
+   static std::set<uint32_t> keys(const o2::trd::ChamberSpacePoint& x)
+   {
+     uint32_t det = x.getDetector();
+     return {det};
+   }
+/*
+   static bool match(const uint32_t key, const o2::trd::ChamberSpacePoint& x)
+   {
+     return key == x.getDetector();
+   }*/
 };
+
 template std::vector<RawDataSpan> RawDataSpan::iterateBy<DET_ID>();
 std::vector<RawDataSpan> RawDataSpan::iterateByDetector() { return iterateBy<DET_ID>(); }
 
-// I started to implement a struct to iterate by detector, but did not finish this
-// struct DetectorID {
-//   /// The static `key` method calculates a padrow ID for digits and tracklets
-//   template <typename T>
-//   static uint32_t key(const T& x)
-//   {
-//     return x.getDetector();
-//   }
-
-//   static std::vector<uint32_t> keys(const o2::trd::ChamberSpacePoint& x)
-//   {
-//     uint32_t key = x.getDetector();
-//     return {key};
-//   }
-
-//   static bool match(const uint32_t key, const o2::trd::ChamberSpacePoint& x)
-//   {
-//     return key == x.getDetector();
-//   }
-// };
 
 std::vector<TrackSegment> RawDataSpan::makeMCTrackSegments()
 {
