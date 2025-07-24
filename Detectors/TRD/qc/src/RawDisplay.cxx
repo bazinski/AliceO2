@@ -229,3 +229,7 @@ void RawDisplay::drawMCTrackSegments()
     line.DrawLine(trkl.getStartPoint().getPadCol(), trkl.getStartPoint().getTimeBin(), trkl.getEndPoint().getPadCol(), trkl.getEndPoint().getTimeBin());
   }
 }
+
+void RawDisplay::drawTracks(){
+
+}

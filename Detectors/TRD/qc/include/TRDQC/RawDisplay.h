@@ -37,11 +37,13 @@ class RawDisplay
   void drawClusters();
   void drawHits();
   void drawMCTrackSegments();
+  void drawTracks();
 
   void draw()
   {
     drawDigits();
     drawTracklets();
+    drawTracks();
   }
 
  protected:
@@ -72,7 +74,7 @@ class PadRowDisplay : public RawDisplay
   private:
     int mPadRow;
     int mMCM;
-    
+     
 };
 
 
