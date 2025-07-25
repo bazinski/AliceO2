@@ -474,8 +474,8 @@ RawDataSpan RawDataManager::getEvent()
   //   }
   // }
 
-  if (mTracks) {
-    for (auto& track : *mTracks) {
+  if (mITSTPCTracks) {
+    for (auto& track : *mITSTPCTracks) {
       //   // auto tracktime = track.getTimeMUS().getTimeStamp();
       // auto dtime = track.getTimeMUS().getTimeStamp() - evtime;
       // if (dtime > mMatchTimeMinTPC && dtime < mMatchTimeMaxTPC) {
