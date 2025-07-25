@@ -97,6 +97,9 @@ void RawDataSpan::sort()
   std::stable_sort(std::begin(digits), std::end(digits), comp_digit);
   std::stable_sort(std::begin(tracklets), std::end(tracklets), comp_tracklet);
   std::stable_sort(std::begin(hits), std::end(hits), comp_spacepoint);
+  //how to handle multiple mcm per track ?
+  //do i do 6 tracks and 1 per layer ?
+  std::stable_sort(std::begin(tracks_itstpc), std::end(tracks_itstpc), comp_spacepoint);
 }
 
 template <typename keyfunc>
@@ -154,7 +157,25 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
   // spanmap contains all TRD data - either digits or tracklets. Now we insert tracking information into these spans. The
   // tricky part is that space points or hits can belong to more than one MCM, i.e. they could appear in two spans.
   // We keep the begin iterator for each key in a map
-  std::map<uint32_t, std::vector<HitPoint>::iterator> firsttrack;
+  // ITSTPC, ITSTPCTRD first.
+  std::map<uint32_t, std::vector<o2::DataFormats::TrackTPCITS>::iterator> firsttrack_itstpc;
+  for (auto cur = tracks_itstpc.begin(); cur != tracks_itsstpc.end(); ++cur) {
+    // calculate the keys for this track
+    auto keys = keyfunc::keys(*cur);
+    // if we are not yet aware of this key, register the current track as the first track
+    for (auto key : keys) {
+      firsttrack_itstpc.insert({key, cur});
+    }
+    // remote the keys from the firsthit map that are no longer found in the hits
+    for (auto it = firsttrack_itstpc.cbegin(); it != firsttrack_itstpc.cend(); /* no increment */) {
+      if (keys.find(it->first) == keys.end()) {
+        spanmap[it->first].hits = boost::make_iterator_range(it->second, cur);
+        it = firsttrack_itstpc.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
 
   // convert the map of spans into a vector, as we do not need the access by key
   // any longer, and having a vector makes the looping by the user easier.
