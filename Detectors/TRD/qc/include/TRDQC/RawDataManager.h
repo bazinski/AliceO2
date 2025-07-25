@@ -28,6 +28,7 @@
 
 #include "CommonDataFormat/TFIDInfo.h"
 #include "ReconstructionDataFormats/TrackTPCITS.h"
+#include "ReconstructionDataFormats/MatchInfoTOF.h"
 #include "SimulationDataFormat/DigitizationContext.h"
 #include "SimulationDataFormat/MCEventHeader.h"
 #include "SimulationDataFormat/MCTrack.h"
