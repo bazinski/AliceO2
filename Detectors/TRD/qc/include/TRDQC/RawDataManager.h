@@ -21,6 +21,8 @@
 #include "DataFormatsTRD/Tracklet64.h"
 #include "DataFormatsTRD/TriggerRecord.h"
 #include "DataFormatsTRD/Hit.h"
+#include "DataFormatsTRD/TrackTriggerRecord.h"
+#include "DataFormatsTRD/TrackTRD.h"
 
 #include "TRDQC/CoordinateTransformer.h"
 
@@ -126,7 +128,7 @@ class RawDataManager
   o2::dataformats::TFIDInfo getTimeFrameInfo();
 
   // TTreeReaderArray<o2::tpc::TrackTPC> *GetTimeFrameTPCTracks() {return mTpcTracks; }
-  std::vector<o2::dataformats::TrackTPCITS>* getTimeFrameTracks() { return mTracks; }
+  std::vector<o2::dataformats::TrackTPCITS>* getTimeFrameTracks() { return mITSTPCTracks; }
 
   // access event info
   RawDataSpan getEvent();
