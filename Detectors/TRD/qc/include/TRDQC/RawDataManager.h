@@ -152,7 +152,33 @@ class RawDataManager
   std::vector<o2::trd::TriggerRecord>* mTrgRecords{0};
 
   // access tracks
-  std::vector<o2::dataformats::TrackTPCITS>* mTracks{0};
+  std::vector<o2::dataformats::TrackTPCITS>* mITSTPCTracks{0};
+  std::vector<o2::dataformats::MatchInfoTOF>* mITSTPCTracks_TOF{0};
+  std::vector<o2::dataformats::MatchInfoTOF>* mITSTPCTRDTracks_TOF{0};
+  std::vector<o2::trd::TrackTRD>* mITSTPCTOFTracks_TRD{0};
+  std::vector<o2::trd::TrackTriggerRecord>* mITSTPCTOFTracksTrigRec_TRD{0};
+  std::vector<o2::trd::TrackTRD>* mITSTPCTracks_TRD{0};
+  std::vector<o2::trd::TrackTriggerRecord>* mITSTPCTracksTrigRec_TRD{0};
+  std::vector<o2::trd::TrackTRD>* mTPCTracks_TRD{0};
+  std::vector<o2::trd::TrackTriggerRecord>* mTPCTracksTrigRec_TRD{0};
+  
+  // o2match_tpc.root ??
+  //std::vector<o2::tpc::TrackTPC>* mTPCTracks{0};
+  // trdmatches_tpc.root
+  std::vector<o2::trd::TrackTRD>* mTPCTRDTracks{0};
+  std::vector<o2::trd::TrackTriggerRecord>* mTPCTRDTracksTrigRec{0};
+  // trdmatches_itstpc.root
+  std::vector<o2::trd::TrackTRD>* mITSTPCTRDTracks{0};
+  std::vector<o2::trd::TrackTriggerRecord>* mITSTPCTRDTracksTrigRec{0};
+  // o2match_tof_itstpctrd.root
+  std::vector<o2::dataformats::>* mITSTPCTRDTOFTracks{0};
+  // o2match_tof_itstpc.root
+  std::vector<o2::dataformats::MatchInfoTOF>* mITSTPCTOFTracks{0};
+  // o2match_tof_tpc.root
+  std::vector<o2::dataformats::MatchInfoTOF>* mTPCTOFTracks{0};
+  // trdQC.root
+  std::vector<o2::trd::TrackQC>* mTRDQCTracks{0};
+
   // TTreeReaderArray<o2::tpc::TrackTPC> *mTpcTracks{0};
 
   // access to Monte-Carlo events, tracks, hits

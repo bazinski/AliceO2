@@ -151,9 +151,15 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
       }
     }
   }
+  //now for tracks .....
+  //
+  // spanmap contains all TRD data - either digits or tracklets. Now we insert tracking information into these spans. The
+  // tricky part is that space points or hits can belong to more than one MCM, i.e. they could appear in two spans.
+  // We keep the begin iterator for each key in a map
+  std::map<uint32_t, std::vector<HitPoint>::iterator> firsttrack;
 
   // convert the map of spans into a vector, as we do not need the access by key
-  // and longer, and having a vector makes the looping by the user easier.
+  // any longer, and having a vector makes the looping by the user easier.
   std::vector<RawDataSpan> spans;
   transform(spanmap.begin(), spanmap.end(), back_inserter(spans), [](auto const& pair) { return pair.second; });
 
@@ -320,13 +326,50 @@ RawDataManager::RawDataManager(std::filesystem::path dir)
   mDataTree->SetBranchAddress("TrackTrg", &mTrgRecords);
 
   if (std::filesystem::exists(dir / "trddigits.root")) {
+    LOGP(info,"trddigits exists {} {}",__func__,__LINE__);
     mDataTree->AddFriend("o2sim", (dir / "trddigits.root").c_str());
     mDataTree->SetBranchAddress("TRDDigit", &mDigits);
+    LOGP(info,"trddigits branches set {} {}",__func__,__LINE__);
   }
 
   if (std::filesystem::exists(dir / "o2match_itstpc.root")) {
+    LOGP(info,"o2match_itstpc exists {} {}",__func__,__LINE__);
     mDataTree->AddFriend("matchTPCITS", (dir / "o2match_itstpc.root").c_str());
-    mDataTree->SetBranchAddress("TPCITS", &mTracks);
+    mDataTree->SetBranchAddress("TPCITS", &mITSTPCTracks);
+    LOGP(info,"o2match_itstp branches set {} {}",__func__,__LINE__);
+  }
+  if (std::filesystem::exists(dir / "o2match_tof_itstpc.root")) {
+    LOGP(info,"o2match_tof_itstpc exists {} {}",__func__,__LINE__);
+    mDataTree->AddFriend("matchTOF", (dir / "o2match_tof_itstpc.root").c_str());
+    mDataTree->SetBranchAddress("TOFMatchInfo", &mITSTPCTracks_TOF);
+    LOGP(info,"o2match_tof_itstpc branches set {} {}",__func__,__LINE__);
+  }
+  if (std::filesystem::exists(dir / "o2match_tof_itstpctrd.root")) {
+    LOGP(info,"o2match_tof_itstpctrd exists {} {}",__func__,__LINE__);
+    mDataTree->AddFriend("matchTOF", (dir / "o2match_tof_itstpctrd.root").c_str());
+    mDataTree->SetBranchAddress("TOFMatchInfo", &mITSTPCTRDTracks_TOF);
+    LOGP(info,"o2match_tof_itstpctrd branches set {} {}",__func__,__LINE__);
+  }
+  if (std::filesystem::exists(dir / "trdmatches_itstpc.root")) {
+    LOGP(info,"trdmatches_itstpc exists {} {}",__func__,__LINE__);
+    mDataTree->AddFriend("tracksTRD", (dir / "trdmatches_itstpc.root").c_str());
+    mDataTree->SetBranchAddress("tracks", &mITSTPCTracks_TRD);
+    mDataTree->SetBranchAddress("trgrec", &mITSTPCTracksTrigRec_TRD);
+    LOGP(info,"trdmatches_itstpc branches set {} {}",__func__,__LINE__);
+  }
+  if (std::filesystem::exists(dir / "trdmatches_itstpctof.root")) {
+    LOGP(info,"trdmatches_itstpctof exists {} {}",__func__,__LINE__);
+    mDataTree->AddFriend("tracksTRD", (dir / "trdmatches_itstpctof.root").c_str());
+    mDataTree->SetBranchAddress("tracks", &mITSTPCTOFTracks_TRD);
+    mDataTree->SetBranchAddress("trgrec", &mITSTPCTOFTracksTrigRec_TRD);
+    LOGP(info,"trdmatches_itstpctof branches set {} {}",__func__,__LINE__);
+  }
+  if (std::filesystem::exists(dir / "trdmatches_tpc.root")) {
+    LOGP(info,"trdmatches_tpc exists {} {}",__func__,__LINE__);
+    mDataTree->AddFriend("tracksTRD", (dir / "trdmatches_tpc.root").c_str());
+    mDataTree->SetBranchAddress("tracks", &mTPCTracks_TRD);
+    mDataTree->SetBranchAddress("trgrec", &mTPCTracksTrigRec_TRD);
+    LOGP(info,"trdmatches_tpc branches set {} {}",__func__,__LINE__);
   }
 
   // For data, we need info about time frames to match ITS and TPC tracks to trigger records.
