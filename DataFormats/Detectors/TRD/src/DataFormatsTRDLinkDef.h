@@ -59,6 +59,8 @@
 #pragma link C++ class std::vector < o2::trd::KrCluster> + ;
 #pragma link C++ class std::vector < o2::trd::KrClusterTriggerRecord> + ;
 #pragma link C++ class std::vector < o2::trd::DataCountersPerTrigger> + ;
+#pragma link C++ class o2::trd::TrackTRD + ;
+#pragma link C++ class std::vector < o2::trd::TrackTRD> + ;
 
 #pragma link C++ struct o2::trd::CTFHeader + ;
 #pragma link C++ struct o2::trd::CTF + ;
