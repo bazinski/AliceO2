@@ -160,7 +160,7 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
   // ITSTPC, ITSTPCTRD first.
   std::map<uint32_t, std::vector<o2::dataformats::TrackTPCITS>::iterator> firsttrack_itstpc;
   std::map<uint32_t, std::vector<o2::trd::TrackTRD>::iterator> firsttrack_itstpctrd;
-  for (auto cur = tracks_itstpc.begin(); cur != tracks_itsstpc.end(); ++cur) {
+  for (auto cur = tracks_itstpc.begin(); cur != tracks_itstpc.end(); ++cur) {
     // calculate the keys for this track
     auto keys = keyfunc::keys(*cur);
     // if we are not yet aware of this key, register the current track as the first track
