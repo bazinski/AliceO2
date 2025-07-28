@@ -42,7 +42,7 @@
 #pragma link C++ class o2::trd::LinkToHCIDMapping + ;
 #pragma link C++ class o2::trd::ChannelInfo + ;
 #pragma link C++ class o2::trd::ChannelInfoContainer + ;
-#pragma link C++ class o2::trd::TrackTRD + ;
+// #pragma link C++ class o2::trd::TrackTRD + ;
 #pragma link C++ struct o2::trd::PHData + ;
 #pragma link C++ class o2::trd::TRDDataCountersPerTimeFrame + ;
 #pragma link C++ class o2::trd::DataCountersPerTrigger + ;
@@ -60,7 +60,7 @@
 #pragma link C++ class std::vector < o2::trd::KrCluster> + ;
 #pragma link C++ class std::vector < o2::trd::KrClusterTriggerRecord> + ;
 #pragma link C++ class std::vector < o2::trd::DataCountersPerTrigger> + ;
-#pragma link C++ class std::vector < o2::trd::TrackTRD> + ;
+// #pragma link C++ class std::vector < o2::trd::TrackTRD> + ;
 
 #pragma link C++ struct o2::trd::CTFHeader + ;
 #pragma link C++ struct o2::trd::CTF + ;
