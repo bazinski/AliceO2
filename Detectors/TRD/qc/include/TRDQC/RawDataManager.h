@@ -56,9 +56,9 @@ struct RawDataSpan {
   boost::iterator_range<std::vector<o2::trd::Digit>::iterator> digits;
   boost::iterator_range<std::vector<o2::trd::Tracklet64>::iterator> tracklets;
   boost::iterator_range<std::vector<HitPoint>::iterator> hits;
-  boost::iterator_range<std::vector<o2::DataFormats::TrackTPCITS>::iterator> tracks_itstpc;
-  boost::iterator_range<std::vector<o2::DataFormats::MatchInfoTOF>::iterator> tracks_itstpc_tof;
-  boost::iterator_range<std::vector<o2::DataFormats::MatchInfoTOF>::iterator> tracks_itstpctrd_tof;
+  boost::iterator_range<std::vector<o2::dataformats::TrackTPCITS>::iterator> tracks_itstpc;
+  boost::iterator_range<std::vector<o2::dataformats::MatchInfoTOF>::iterator> tracks_itstpc_tof;
+  boost::iterator_range<std::vector<o2::dataformats::MatchInfoTOF>::iterator> tracks_itstpctrd_tof;
   boost::iterator_range<std::vector<o2::trd::TrackTRD>::iterator> tracks_itstpctof_trd;
   boost::iterator_range<std::vector<o2::trd::TrackTRD>::iterator> tracks_itstpc_trd;
   boost::iterator_range<std::vector<o2::trd::TrackTRD>::iterator> tracks_tpc_trd;
