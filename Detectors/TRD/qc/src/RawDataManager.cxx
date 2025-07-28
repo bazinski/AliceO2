@@ -160,7 +160,8 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
   // tricky part is that space points or hits can belong to more than one MCM, i.e. they could appear in two spans.
   // We keep the begin iterator for each key in a map
   // ITSTPC, ITSTPCTRD first.
-  std::map<uint32_t, std::vector<o2::DataFormats::TrackTPCITS>::iterator> firsttrack_itstpc;
+  std::map<uint32_t, std::vector<o2::dataformats::TrackTPCITS>::iterator> firsttrack_itstpc;
+  std::map<uint32_t, std::vector<o2::trd::TrackTRD>::iterator> firsttrack_itstpctrd;
   for (auto cur = tracks_itstpc.begin(); cur != tracks_itsstpc.end(); ++cur) {
     // calculate the keys for this track
     auto keys = keyfunc::keys(*cur);
