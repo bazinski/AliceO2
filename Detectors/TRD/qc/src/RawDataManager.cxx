@@ -158,9 +158,12 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
   // tricky part is that space points or hits can belong to more than one MCM, i.e. they could appear in two spans.
   // We keep the begin iterator for each key in a map
   // ITSTPC, ITSTPCTRD first.
+  // 1. track all the tracks through the detector, finding the detector, and the entry and exit points of the drift and ionisation regions, 3 points, and the curvature.
+  // 2. store said points as a structure TrackSegment.
   std::map<uint32_t, std::vector<o2::dataformats::TrackTPCITS>::iterator> firsttrack_itstpc;
+  std::map<uint32_t, std::vector<TrackSegment>::iterator> firsttrack_itstpc_segment;
   std::map<uint32_t, std::vector<o2::trd::TrackTRD>::iterator> firsttrack_itstpctrd;
-  for (auto cur = tracks_itstpc.begin(); cur != tracks_itstpc.end(); ++cur) {
+  for (auto cur = tracks_itstpc_segment.begin(); cur != tracks_itstpc_segment.end(); ++cur) {
     // calculate the keys for this track
     auto keys = keyfunc::keys(*cur);
     // if we are not yet aware of this key, register the current track as the first track
@@ -420,6 +423,12 @@ RawDataManager::RawDataManager(std::filesystem::path dir)
   }
 }
 
+bool RawDataManager::buildTrackSegments()
+{
+
+}
+
+
 bool RawDataManager::nextTimeFrame()
 {
   if (!mDataTree->GetEntry(mTimeFrameNo)) {
@@ -430,9 +439,13 @@ bool RawDataManager::nextTimeFrame()
   mEventNo = 0;
   mTimeFrameNo++;
 
-  O2INFO("Loaded data for time frame #%d with %d TRD trigger records, %d digits and %d tracklets",
+  LOGP(info,"Loaded data for time frame #{} with {} TRD trigger records, {} digits and {} tracklets",
          mTimeFrameNo, mTrgRecords->size(), mDigits->size(), mTracklets->size());
-
+  LOGP(info"Building track segments for time frame {}",mTimeFrameNo);
+  auto tracksegmentstart = std::chrono::high_resolution_clock::now(); // measure total processing time
+  buildTrackSegments();
+  auto tracksegmenttime = std::chrono::high_resolution_clock::now() - tracksegmentstart;
+  LOGP(info"Built track segments for time frame {} in {} ms",mTimeFrameNo,std::chrono::duration_cast<std::chrono::milliseconds>(tracksegmenttime).count());
   return true;
 }
 

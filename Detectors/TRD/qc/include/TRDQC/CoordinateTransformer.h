@@ -148,8 +148,9 @@ class TrackSegment
  protected:
   ChamberSpacePoint mStartPoint, mEndPoint;
   int mTrackID;
-
-  // int mDetector;
+  float mSagita; // this is findable from the TrackID
+  int mDetector;
+  int mDetector2; // for those instances where the track finishes a layer in a different detector to that which is starts in.
 };
 
 // std::ostream& operator<<(std::ostream& os, const ChamberSpacePoint& p);

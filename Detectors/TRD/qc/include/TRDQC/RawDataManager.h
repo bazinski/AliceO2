@@ -150,7 +150,8 @@ class RawDataManager
   std::string describeFiles();
   std::string describeTimeFrame();
   std::string describeEvent();
-
+  //walk through the available tracks and build track segments through the detectors with 10 points per detector.
+  void buildTrackSegments();
  private:
   // access to TRD digits and tracklets
   TFile* mMainFile{0}; // the main trdtracklets.root file
