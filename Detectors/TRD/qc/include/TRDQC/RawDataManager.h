@@ -172,8 +172,12 @@ class RawDataManager
   std::vector<o2::trd::TrackTriggerRecord>* mITSTPCTracksTrigRec_TRD{0};
   std::vector<o2::trd::TrackTRD>* mTPCTracks_TRD{0};
   std::vector<o2::trd::TrackTriggerRecord>* mTPCTracksTrigRec_TRD{0};
-  
-  // TTreeReaderArray<o2::tpc::TrackTPC> *mTpcTracks{0};
+  std::vector<TrackSegment> mITSTPCTracks_segments{0};
+  std::vector<TrackSegment> mITSTPCTracks_TOF_segments{0};
+  std::vector<TrackSegment> mITSTPCTRDTracks_TOF_segments{0};
+  std::vector<TrackSegment> mITSTPCTOFTracks_TRD_segments{0}; 
+  std::vector<TrackSegment> mITSTPCTracks_TRD_segments{0}; 
+  std::vector<TrackSegment> mTPCTracks_TRD_segments{0}; 
 
   // access to Monte-Carlo events, tracks, hits
   TFile* mMCFile{0};
