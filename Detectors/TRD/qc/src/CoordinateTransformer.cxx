@@ -129,6 +129,20 @@ std::array<float, 3> CoordinateTransformer::OrigLocal2RCT(int det, float x, floa
   return rct;
 }
 
+std::array<float, 3> CoordinateTransformer::RecalculateRCT(int det, float x, float y, float z, float t0, float vdrift, float exb)
+{
+  mT0=t0;
+  mExB=exb;
+  mVdrift=vdrift;
+  return Local2RCT(det,x,y,z);
+}
+
+std::array<float, 3> CoordinateTransformer::RecalculateRCT(int det, float x, float y, float z)
+{
+  return Local2RCT(det,x,y,z);
+}
+
+
 o2::trd::ChamberSpacePoint CoordinateTransformer::MakeSpacePoint(o2::trd::Hit& hit)
 {
   float x = hit.getLocalT();

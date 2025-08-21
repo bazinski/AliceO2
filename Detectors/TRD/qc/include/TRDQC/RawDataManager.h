@@ -23,6 +23,7 @@
 #include "DataFormatsTRD/Hit.h"
 #include "DataFormatsTRD/TrackTriggerRecord.h"
 #include "DataFormatsTRD/TrackTRD.h"
+#include "TRDBase/TrackletTransformer.h"
 
 #include "TRDQC/CoordinateTransformer.h"
 
@@ -32,6 +33,7 @@
 #include "SimulationDataFormat/DigitizationContext.h"
 #include "SimulationDataFormat/MCEventHeader.h"
 #include "SimulationDataFormat/MCTrack.h"
+#include "DetectorsBase/Propagator.h"
 
 // #include <TTreeReaderArray.h>
 
@@ -43,6 +45,7 @@
 class TFile;
 class TTree;
 
+static constexpr  int32_t mMaxTriggers=100;
 namespace o2::trd
 {
 
@@ -56,22 +59,25 @@ struct RawDataSpan {
   boost::iterator_range<std::vector<o2::trd::Digit>::iterator> digits;
   boost::iterator_range<std::vector<o2::trd::Tracklet64>::iterator> tracklets;
   boost::iterator_range<std::vector<HitPoint>::iterator> hits;
-  boost::iterator_range<std::vector<o2::dataformats::TrackTPCITS>::iterator> tracks_itstpc;
+ /* boost::iterator_range<std::vector<o2::dataformats::TrackTPCITS>::iterator> tracks_itstpc;
   boost::iterator_range<std::vector<o2::dataformats::MatchInfoTOF>::iterator> tracks_itstpc_tof;
   boost::iterator_range<std::vector<o2::dataformats::MatchInfoTOF>::iterator> tracks_itstpctrd_tof;
   boost::iterator_range<std::vector<o2::trd::TrackTRD>::iterator> tracks_itstpctof_trd;
   boost::iterator_range<std::vector<o2::trd::TrackTRD>::iterator> tracks_itstpc_trd;
   boost::iterator_range<std::vector<o2::trd::TrackTRD>::iterator> tracks_tpc_trd;
-  
+*/
+
+  boost::iterator_range<std::vector<TrackSegment>::iterator> tracks_itstpc_seg;
+  boost::iterator_range<std::vector<TrackSegment>::iterator> tracks_itstpc_tof_seg;
+  boost::iterator_range<std::vector<TrackSegment>::iterator> tracks_itstpctrd_tof_seg;
+  boost::iterator_range<std::vector<TrackSegment>::iterator> tracks_itstpctof_trd_seg;
+  boost::iterator_range<std::vector<TrackSegment>::iterator> tracks_itstpc_trd_seg;
+  boost::iterator_range<std::vector<TrackSegment>::iterator> tracks_tpc_trd_seg;
 
   /// Sort digits, tracklets and space points by detector, pad row, column
   /// The digits, tracklets, hits and other future data members must be sorted
   /// for the IterateBy method.
   void sort();
-
-  /// Return a vector with one data span for each MCM that has digits, tracklets or both
-  /// IterateBy provides a more flexible interface, and should replace this method.
-  // std::vector<RawDataSpan> ByMCM();
 
   /// Return a vector with data spans, split according to the keyfunc struct
   /// The keyfunc struct must have a method `key` to calculate a key for tracklets
@@ -119,6 +125,7 @@ struct RawDataSpan {
 /// but need further cleanup before integration into O2:
 ///   -  o2match_itstpc.root: ITS-TPC tracks
 ///   -  tpctracks.root: TPC-only tracks
+///   -  tpctracks.root: TPC-only tracks
 class RawDataManager
 {
 
@@ -151,7 +158,7 @@ class RawDataManager
   std::string describeTimeFrame();
   std::string describeEvent();
   //walk through the available tracks and build track segments through the detectors with 10 points per detector.
-  void buildTrackSegments();
+ // void buildTrackSegments();
  private:
   // access to TRD digits and tracklets
   TFile* mMainFile{0}; // the main trdtracklets.root file
@@ -163,6 +170,7 @@ class RawDataManager
   std::vector<o2::trd::TriggerRecord>* mTrgRecords{0};
 
   // access tracks
+  std::array<int32_t,mMaxTriggers*o2::trd::constants::NCHAMBER> mTrackletIndexArray;
   std::vector<o2::dataformats::TrackTPCITS>* mITSTPCTracks{0};
   std::vector<o2::dataformats::MatchInfoTOF>* mITSTPCTracks_TOF{0};
   std::vector<o2::dataformats::MatchInfoTOF>* mITSTPCTRDTracks_TOF{0};
@@ -178,6 +186,25 @@ class RawDataManager
   std::vector<TrackSegment> mITSTPCTOFTracks_TRD_segments{0}; 
   std::vector<TrackSegment> mITSTPCTracks_TRD_segments{0}; 
   std::vector<TrackSegment> mTPCTracks_TRD_segments{0}; 
+  
+  bool buildTrackSegments(bool onlydigits);
+  // build the tracksegments from tracking 
+  o2::trd::TrackletTransformer mTransformer;
+  bool propagateToLayerX(o2::dataformats::TrackTPCITS& track, float xToGo, float e, float maxStep);
+  void prepareTracking();//std::array<int32_t,540*mMaxTriggers>& trdTrackletIndexArray);
+  bool propagateTrack(o2::dataformats::TrackTPCITS& track, float e, float maxStep, float triggertime, int& glbTrkltIdxOffset,  int collisionId);
+  int32_t getSector(float alpha);
+  float getAlphaOfSector(const int32_t sec);
+  int32_t getDetectorNumber(const float zPos, const float alpha, const int32_t layer);
+  bool isGeoFindable(o2::dataformats::TrackTPCITS& track, const int32_t layer, const float alpha, const float zShiftTrk);
+  void findChambersInRoad(o2::dataformats::TrackTPCITS& track, const float roadY, const float roadZ, const int32_t iLayer, std::array<int,18>& det, const float zMax, const float alpha, const float zShiftTrk);
+  bool getYZAt(float xk, float b, float& y, float& z, o2::dataformats::TrackTPCITS& track);
+  bool trackMatchesCollision(const float& triggertime, const float& tracktime);
+  float getTriggerTime(const o2::trd::TriggerRecord& trig, const std::vector<o2::dataformats::TFIDInfo>& tfids, const int timeframeno);
+  std::array<float,540> mR{0};
+  std::array<float,540>  mRdriftstart{0};
+  std::array<float,540> mRdriftend{0};
+  std::array<float,540>  mRamplificationend{0};
 
   // access to Monte-Carlo events, tracks, hits
   TFile* mMCFile{0};
@@ -207,6 +234,17 @@ class RawDataManager
 
   // template <typename T>
   // void addReaderArray(TTreeReaderArray<T>*& array, std::filesystem::path file, std::string tree, std::string branch);
+  //
+  //
+  o2::trd::Geometry* mGeo{0};     // TRD geometry
+                                  // 
+  o2::base::Propagator* prop{0};  
+//GPUTRDGeometry mGeogpu;     // TRD geometry
+//
+//
+//const int kNStacks=5;
+//const int kNLayers=6;
+//const int kNChambers=540;
 };
 
 } // namespace o2::trd
