@@ -142,15 +142,19 @@ class TrackSegment
   /// detector number
   int getDetector() const { return mStartPoint.getDetector(); }
 
-  ChamberSpacePoint& getStartPoint() { return mStartPoint; }
-  ChamberSpacePoint& getEndPoint() { return mEndPoint; }
+  ChamberSpacePoint getStartPoint()const  { return mStartPoint; }
+  ChamberSpacePoint getEndPoint() const { return mEndPoint; }
+  void setStartPoint(const ChamberSpacePoint& startpoint)  { mStartPoint=startpoint; }
+  void setEndPoint(const ChamberSpacePoint& endpoint) {mEndPoint=endpoint; }
 
  protected:
   ChamberSpacePoint mStartPoint, mEndPoint;
+  std::array<ChamberSpacePoint,6> mDriftPoints, mAnodePoints; // [0] is the point of drift start and anode wires respectively
   int mTrackID;
   float mSagita; // this is findable from the TrackID
   int mDetector;
   int mDetector2; // for those instances where the track finishes a layer in a different detector to that which is starts in.
+                                                               // 6 points in each
 };
 
 // std::ostream& operator<<(std::ostream& os, const ChamberSpacePoint& p);
@@ -191,6 +195,10 @@ class CoordinateTransformer
   /// Legacy, less accurate method to convert local spatial to row/column/time coordinate.
   /// This method is only included for comparision, and should be removed in the future.
   std::array<float, 3> OrigLocal2RCT(int det, float x, float y, float z);
+
+  // recalculate given a new t0, cdrift and exb
+  std::array<float, 3> RecalculateRCT(int det, float x, float y, float z, float t0, float vdrift, float exb);
+  std::array<float, 3> RecalculateRCT(int det, float x, float y, float z);
 
   /// Legacy, less accurate method to convert local spatial to row/column/time coordinate.
   /// This method is only included for comparision, and should be removed in the future.
