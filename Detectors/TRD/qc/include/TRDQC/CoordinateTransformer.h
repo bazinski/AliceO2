@@ -183,6 +183,7 @@ class CoordinateTransformer
   /// The pad row is returned as a floating point number that indicates also the position within the padrow.
   /// The fractional part of the pad row is not available for digits and tracklets, and only
   std::array<float, 3> Local2RCT(int det, float x, float y, float z);
+  std::array<float, 3> Global2Local(int det, float x, float y, float z);
 
   /// Wrapper to conveniently calculate the row/column/time coordinate of a MC hit.
   std::array<float, 3> Local2RCT(o2::trd::Hit& hit)
