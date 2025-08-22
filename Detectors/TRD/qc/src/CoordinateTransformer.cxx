@@ -49,6 +49,7 @@ CoordinateTransformer::CoordinateTransformer()
 
 std::array<float, 3> CoordinateTransformer::Local2RCT(int det, float x, float y, float z)
 {
+  LOGP(info," {} {} det:{} x:{} y:{} z:{}",__func__,__LINE__,det,x,y,z);
   std::array<float, 3> rct;
 
   auto padPlane = mGeo->getPadPlane((det) % 6, (det / 6) % 5);
@@ -78,7 +79,15 @@ std::array<float, 3> CoordinateTransformer::Local2RCT(int det, float x, float y,
   // Correct for Lorentz angle, but only in the drift region. ExB in the anode region causes a small offset (ca. 0.1
   // pads) that is constant for all clusters in the drift region.
   rct[1] += (x + 0.35) * mExB;
+  LOGP(info," {} {} det:{} rct:{:.2f}:{:.2f}:{:.2f}",__func__,__LINE__,det,rct[0],rct[1],rct[2]);
   return rct;
+}
+
+// convert global tracking coordinates to locate x,y,z in the local coordinate system
+std::array<float, 3> CoordinateTransformer::Global2Local(int det, float x, float y, float z)
+{
+  std::array<float, 3> local;
+  return local;
 }
 
 std::array<float, 3> CoordinateTransformer::OrigLocal2RCT(int det, float x, float y, float z)
