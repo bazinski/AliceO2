@@ -238,7 +238,9 @@ class RawDataManager
   //
   o2::trd::Geometry* mGeo{0};     // TRD geometry
                                   // 
-  o2::base::Propagator* prop{0};  
+  o2::base::Propagator* mProp{0};  
+  
+  float mAverageRadii[6] = {300.2f, 312.8f, 325.4f, 338.0f, 350.6f, 363.2f}; // used as default value in case no transformation matrix can be obtained
 //GPUTRDGeometry mGeogpu;     // TRD geometry
 //
 //
