@@ -32,9 +32,8 @@
 #include "DataFormatsGlobalTracking/RecoContainer.h"
 #include "Framework/Logger.h"
 
-
 using namespace o2::trd;
-
+constexpr bool debugprint = false;
 /// comparison function to order digits by det / row / MCM / -channel
 bool comp_digit(const o2::trd::Digit& a, const o2::trd::Digit& b)
 {
@@ -97,6 +96,25 @@ bool comp_spacepoint(const ChamberSpacePoint& a, const ChamberSpacePoint& b)
   if (a.getPadCol() != b.getPadCol()) {
     return a.getPadCol() < b.getPadCol();
   }
+  return true;
+}
+
+bool comp_tracksegments(const TrackSegment& a, const TrackSegment& b)
+{
+  if(a.getCollisionId() != b.getCollisionId()){
+    return a.getCollisionId() < b.getCollisionId();
+  }
+  if (a.getDetector() != b.getDetector()) {
+    return a.getDetector() < b.getDetector();
+  }
+
+  if (a.getPadRow() != b.getPadRow()) {
+    return a.getPadRow() < b.getPadRow();
+  }
+
+  if (a.getPadCol() != b.getPadCol()) {
+    return a.getPadCol() < b.getPadCol();
+  }
 
   return true;
 }
@@ -106,9 +124,9 @@ void RawDataSpan::sort()
   std::stable_sort(std::begin(digits), std::end(digits), comp_digit);
   std::stable_sort(std::begin(tracklets), std::end(tracklets), comp_tracklet);
   std::stable_sort(std::begin(hits), std::end(hits), comp_spacepoint);
-  //how to handle multiple mcm per track ?
-  //do i do 6 tracks and 1 per layer ?
-  //std::stable_sort(std::begin(tracks_itstpc), std::end(tracks_itstpc), comp_spacepoint);
+  // how to handle multiple mcm per track ?
+  // do i do 6 tracks and 1 per layer ?
+  std::stable_sort(std::begin(tracks_itstpc_seg), std::end(tracks_itstpc_seg), comp_tracksegments);
 }
 
 template <typename keyfunc>
@@ -161,20 +179,20 @@ std::vector<RawDataSpan> RawDataSpan::iterateBy()
       }
     }
   }
-  //now for tracks .....
+  // now for tracks .....
   //
-  // spanmap contains all TRD data - either digits or tracklets. Now we insert tracking information into these spans. The
-  // tricky part is that space points or hits can belong to more than one MCM, i.e. they could appear in two spans.
-  // We keep the begin iterator for each key in a map
-  // ITSTPC, ITSTPCTRD first.
-  // 1. track all the tracks through the detector, finding the detector, and the entry and exit points of the drift and ionisation regions, 3 points, and the curvature.
-  // 2. store said points as a structure TrackSegment.
- // std::vector<TrackSegment> mITSTPCTracks_segments{0};
- // std::map<uint32_t, std::vector<o2::dataformats::TrackTPCITS>::iterator> firsttrack_itstpc;
+  //  spanmap contains all TRD data - either digits or tracklets. Now we insert tracking information into these spans. The
+  //  tricky part is that space points or hits can belong to more than one MCM, i.e. they could appear in two spans.
+  //  We keep the begin iterator for each key in a map
+  //  ITSTPC, ITSTPCTRD first.
+  //  1. track all the tracks through the detector, finding the detector, and the entry and exit points of the drift and ionisation regions, 3 points, and the curvature.
+  //  2. store said points as a structure TrackSegment.
+  // std::vector<TrackSegment> mITSTPCTracks_segments{0};
+  // std::map<uint32_t, std::vector<o2::dataformats::TrackTPCITS>::iterator> firsttrack_itstpc;
   std::map<uint32_t, std::vector<TrackSegment>::iterator> firsttrack_itstpc_segment;
   std::map<uint32_t, std::vector<TrackSegment>::iterator> firsttrack_itstpctrd_segment;
- // std::map<uint32_t, std::vector<o2::trd::TrackTRD>::iterator> firsttrack_itstpctrd;
- for (auto cur = tracks_itstpc_seg.begin(); cur != tracks_itstpc_seg.end(); ++cur) {
+  // std::map<uint32_t, std::vector<o2::trd::TrackTRD>::iterator> firsttrack_itstpctrd;
+  for (auto cur = tracks_itstpc_seg.begin(); cur != tracks_itstpc_seg.end(); ++cur) {
     // calculate the keys for this track
     auto keys = keyfunc::keys(*cur);
     // if we are not yet aware of this key, register the current track as the first track
@@ -280,33 +298,31 @@ struct MCM_ID {
 template std::vector<RawDataSpan> RawDataSpan::iterateBy<MCM_ID>();
 std::vector<RawDataSpan> RawDataSpan::iterateByMCM() { return iterateBy<MCM_ID>(); }
 
-
 struct DET_ID {
-   template <typename T>
-   static uint32_t key(const T& x)
-   {
-     return x.getDetector();
-   }
+  template <typename T>
+  static uint32_t key(const T& x)
+  {
+    return x.getDetector();
+  }
 
-   static std::set<uint32_t> keys(const o2::trd::ChamberSpacePoint& x)
-   {
-     uint32_t det = x.getDetector();
-     return {det};
-   }
-   static std::set<uint32_t> keys(const o2::trd::TrackSegment& x)
-   {
-     return keys(x.getStartPoint());
-   }
-/*
-   static bool match(const uint32_t key, const o2::trd::ChamberSpacePoint& x)
-   {
-     return key == x.getDetector();
-   }*/
+  static std::set<uint32_t> keys(const o2::trd::ChamberSpacePoint& x)
+  {
+    uint32_t det = x.getDetector();
+    return {det};
+  }
+  static std::set<uint32_t> keys(const o2::trd::TrackSegment& x)
+  {
+    return keys(x.getStartPoint());
+  }
+  /*
+     static bool match(const uint32_t key, const o2::trd::ChamberSpacePoint& x)
+     {
+       return key == x.getDetector();
+     }*/
 };
 
 template std::vector<RawDataSpan> RawDataSpan::iterateBy<DET_ID>();
 std::vector<RawDataSpan> RawDataSpan::iterateByDetector() { return iterateBy<DET_ID>(); }
-
 
 std::vector<TrackSegment> RawDataSpan::makeMCTrackSegments()
 {
@@ -385,9 +401,8 @@ RawDataManager::RawDataManager(std::filesystem::path dir)
   if (std::filesystem::exists(dir / "o2match_itstpc.root")) {
     mDataTree->AddFriend("matchTPCITS", (dir / "o2match_itstpc.root").c_str());
     mDataTree->SetBranchAddress("TPCITS", &mITSTPCTracks);
-  }
-  else{
-    LOGP(info," o2match_itstpc.root not found!");
+  } else {
+    LOGP(info, " o2match_itstpc.root not found!");
   }
   if (std::filesystem::exists(dir / "o2match_tof_itstpc.root")) {
     mDataTree->AddFriend("matchTOF", (dir / "o2match_tof_itstpc.root").c_str());
@@ -442,61 +457,56 @@ RawDataManager::RawDataManager(std::filesystem::path dir)
 }
 /***********************************************************************************************/
 
-
 float RawDataManager::getTriggerTime(const o2::trd::TriggerRecord& trig, const std::vector<o2::dataformats::TFIDInfo>& tfids, const int timeframeno)
 {
   o2::dataformats::TFIDInfo tfid;
-  if (tfids.size()!=0 && timeframeno!=0) {
-    tfid=tfids.at(timeframeno);
+  if (tfids.size() != 0 && timeframeno != 0) {
+    tfid = tfids.at(timeframeno);
   } else {
-    tfid= o2::dataformats::TFIDInfo();
+    tfid = o2::dataformats::TFIDInfo();
   }
-  
 
   if (tfid.isDummy()) {
-   // LOGP(info,"Triggertime : dummy {}",trig.getBCData().bc2ns() * 1e-3);
+    // LOGP(info,"Triggertime : dummy {}",trig.getBCData().bc2ns() * 1e-3);
     return trig.getBCData().bc2ns() * 1e-3;
   } else {
     o2::InteractionRecord intrec = {0, tfid.firstTForbit};
-//    std::cout << "returning time diff of "  << trig.getBCData().differenceInBCMUS(intrec) << " trig time : " << trig.getBCData().toLong() << "  from trig : " << tfid.tfCounter << "  and firstorbit : " <<  tfid.firstTForbit << "\n";
-    //LOGP(info,"Triggertime : {}", trig.getBCData().differenceInBCMUS(intrec));
+    //    std::cout << "returning time diff of "  << trig.getBCData().differenceInBCMUS(intrec) << " trig time : " << trig.getBCData().toLong() << "  from trig : " << tfid.tfCounter << "  and firstorbit : " <<  tfid.firstTForbit << "\n";
+    // LOGP(info,"Triggertime : {}", trig.getBCData().differenceInBCMUS(intrec));
     return trig.getBCData().differenceInBCMUS(intrec);
-
   }
 }
-
-
 
 bool RawDataManager::trackMatchesCollision(const float& triggertime, const float& tracktime)
 {
 
-  float timestamperror=1.0;
+  float timestamperror = 1.0;
   float timestampedeviations;
-  float timewindow=2.0;
-  float max=tracktime + timewindow;//timestampeerror*timestampdeviation+2.5; // in us
-  float min=tracktime - timewindow;//timestampeerror*timestampdeviation-2.5; // in us
+  float timewindow = 2.0;
+  float max = tracktime + timewindow; // timestampeerror*timestampdeviation+2.5; // in us
+  float min = tracktime - timewindow; // timestampeerror*timestampdeviation-2.5; // in us
   if (triggertime > min && triggertime < max) {
- //   LOGP(info,"{} < {} < {} ----- ",min,triggertime,max);
+    //   LOGP(info,"{} < {} < {} ----- ",min,triggertime,max);
     return true;
   }
-//  LOGP(info,"{} < {} < {} !!!! ",min,triggertime,max);
-return false;
+  //  LOGP(info,"{} < {} < {} !!!! ",min,triggertime,max);
+  return false;
 }
 
-void RawDataManager::prepareTracking()//std::vector<o2::trd::TriggerRecord>& trdTriggerRecords, std::vector<o2::trd::Tracklet64>& trdTracklets, std::array<int32_t,540*mMaxTriggers>& mTrackletIndexArray)//,  trdTrigRecMask)
+void RawDataManager::prepareTracking() // std::vector<o2::trd::TriggerRecord>& trdTriggerRecords, std::vector<o2::trd::Tracklet64>& trdTracklets, std::array<int32_t,540*mMaxTriggers>& mTrackletIndexArray)//,  trdTrigRecMask)
 {
   //--------------------------------------------------------------------
   // Prepare tracklet index array and if requested calculate space points
   // in part duplicated from DoTracking() method to allow for calling
   // this function on the host prior to GPU processing
   //--------------------------------------------------------------------
-  for (uint32_t iColl = 0; iColl < mTrgRecords->size();/*trdTriggerRecords.size();*/ ++iColl) {
+  for (uint32_t iColl = 0; iColl < mTrgRecords->size(); /*trdTriggerRecords.size();*/ ++iColl) {
     int32_t nTrklts = 0;
     int32_t idxOffset = 0;
-      idxOffset = (*mTrgRecords)[iColl].getFirstTracklet();
-      //auto idxOffset1 = trdTriggerRecords[iColl].getFirstTracklet();
-      //nTrklts = (iColl < trdTriggerRecords.size() - 1) ? trdTriggerRecords[iColl + 1].getFirstTracklet() - trdTriggerRecords[iColl].getFirstTracklet() : trdTracklets.size() - trdTriggerRecords[iColl].getFirstTracklet();
-      nTrklts = (iColl < mTrgRecords->size() - 1) ? (*mTrgRecords)[iColl + 1].getFirstTracklet() - (*mTrgRecords)[iColl].getFirstTracklet() : mTrgRecords->size() - (*mTrgRecords)[iColl].getFirstTracklet();
+    idxOffset = (*mTrgRecords)[iColl].getFirstTracklet();
+    // auto idxOffset1 = trdTriggerRecords[iColl].getFirstTracklet();
+    // nTrklts = (iColl < trdTriggerRecords.size() - 1) ? trdTriggerRecords[iColl + 1].getFirstTracklet() - trdTriggerRecords[iColl].getFirstTracklet() : trdTracklets.size() - trdTriggerRecords[iColl].getFirstTracklet();
+    nTrklts = (iColl < mTrgRecords->size() - 1) ? (*mTrgRecords)[iColl + 1].getFirstTracklet() - (*mTrgRecords)[iColl].getFirstTracklet() : mTrgRecords->size() - (*mTrgRecords)[iColl].getFirstTracklet();
     const o2::trd::Tracklet64* tracklets = &((*mTracklets)[idxOffset]);
     int32_t* trkltIndexArray = &mTrackletIndexArray[iColl * (540 + 1) + 1];
     trkltIndexArray[-1] = 0;
@@ -516,10 +526,10 @@ void RawDataManager::prepareTracking()//std::vector<o2::trd::TriggerRecord>& trd
     for (int32_t iDet = currDet; iDet <= o2::trd::constants::NCHAMBER; ++iDet) {
       trkltIndexArray[iDet] = trkltCounter;
     }
-/*    if (!CalculateSpacePoints(iColl)) {
-    }*/
+    /*    if (!CalculateSpacePoints(iColl)) {
+        }*/
   }
-//  mNEvents++;
+  //  mNEvents++;
 }
 
 bool RawDataManager::propagateToLayerX(o2::dataformats::TrackTPCITS& track, float xToGo, float e, float maxStep)
@@ -537,9 +547,9 @@ bool RawDataManager::propagateToLayerX(o2::dataformats::TrackTPCITS& track, floa
   //
   // matCorr  - material correction type, it is up to the user to make sure the pointer is attached (if LUT is requested)
   //----------------------------------------------------------------
-  //LOGP(info,"propagate track to xToGo:{} track at : {}",xToGo,track.getX());
+  // LOGP(info,"propagate track to xToGo:{} track at : {}",xToGo,track.getX());
   auto dx = xToGo - track.getX();
-//  LOGP(info,"a dx : {}",dx);
+  //  LOGP(info,"a dx : {}",dx);
   int dir = dx > 0.f ? 1 : -1;
 
   std::array<float, 3> b{};
@@ -550,54 +560,53 @@ bool RawDataManager::propagateToLayerX(o2::dataformats::TrackTPCITS& track, floa
     }
     auto x = track.getX() + step;
     auto xyz0 = track.getXYZGlo();
-  std::array<float, 3> b{};
+    std::array<float, 3> b{};
     mProp->getFieldXYZ(xyz0, &b[0]);
 
-// commented out to ignore material budget for now.
-/*    auto correct = [&track, &xyz0, tofInfo, matCorr, signCorr, this]() {
-      bool res = true;
-      if (matCorr != MatCorrType::USEMatCorrNONE) {
-        auto xyz1 = track.getXYZGlo();
-        auto mb = this->getMatBudget(matCorr, xyz0, xyz1);
-        if (!track.correctForMaterial(mb.meanX2X0, mb.getXRho(signCorr))) {
-          res = false;
-        }
-        if (tofInfo) {
-          tofInfo->addStep(mb.length, track.getQ2P2()); // fill L,ToF info using already calculated step length
-          tofInfo->addX2X0(mb.meanX2X0);
-          tofInfo->addXRho(mb.getXRho(signCorr));
-        }
-      } else if (tofInfo) { // if tofInfo filling was requested w/o material correction, we need to calculate the step lenght
-        auto xyz1 = track.getXYZGlo();
-        math_utils::Vector3D<value_type> stepV(xyz1.X() - xyz0.X(), xyz1.Y() - xyz0.Y(), xyz1.Z() - xyz0.Z());
-        tofInfo->addStep(stepV.R(), track.getQ2P2());
-      }
-      return res;
-    };*/
+    // commented out to ignore material budget for now.
+    /*    auto correct = [&track, &xyz0, tofInfo, matCorr, signCorr, this]() {
+          bool res = true;
+          if (matCorr != MatCorrType::USEMatCorrNONE) {
+            auto xyz1 = track.getXYZGlo();
+            auto mb = this->getMatBudget(matCorr, xyz0, xyz1);
+            if (!track.correctForMaterial(mb.meanX2X0, mb.getXRho(signCorr))) {
+              res = false;
+            }
+            if (tofInfo) {
+              tofInfo->addStep(mb.length, track.getQ2P2()); // fill L,ToF info using already calculated step length
+              tofInfo->addX2X0(mb.meanX2X0);
+              tofInfo->addXRho(mb.getXRho(signCorr));
+            }
+          } else if (tofInfo) { // if tofInfo filling was requested w/o material correction, we need to calculate the step lenght
+            auto xyz1 = track.getXYZGlo();
+            math_utils::Vector3D<value_type> stepV(xyz1.X() - xyz0.X(), xyz1.Y() - xyz0.Y(), xyz1.Z() - xyz0.Z());
+            tofInfo->addStep(stepV.R(), track.getQ2P2());
+          }
+          return res;
+        };*/
 
     if (!track.propagateTo(x, b)) {
-      LOGP(info," returning false trying to propagate track to x:{} ",x);
+      if (debugprint)
+        LOGP(info, " returning false trying to propagate track to x:{} ", x);
       return false;
     }
-/*    if (maxSnp > 0 && math_utils::detail::abs<value_type>(track.getSnp()) >= maxSnp) {
-      correct();
-      return false;
-    }*/
-/*    if (!correct()) {
-      return false;
-    }*/
+    /*    if (maxSnp > 0 && math_utils::detail::abs<value_type>(track.getSnp()) >= maxSnp) {
+          correct();
+          return false;
+        }*/
+    /*    if (!correct()) {
+          return false;
+        }*/
     dx = xToGo - track.getX();
- //   LOGP(info,"b dx : {} xToGo:{} trackX:{}",dx,xToGo, track.getX());
-
+    //   LOGP(info,"b dx : {} xToGo:{} trackX:{}",dx,xToGo, track.getX());
   }
   track.setX(xToGo);
-  //LOGP(info,"XXXXXXXXXXXXXXXXXXX x moved by {} to ",xToGo,track.getX());
-//  LOGP(info,"{} at line {}",__func__,__LINE__);
+  // LOGP(info,"XXXXXXXXXXXXXXXXXXX x moved by {} to ",xToGo,track.getX());
+  //  LOGP(info,"{} at line {}",__func__,__LINE__);
   return true;
 }
 
-
-int32_t RawDataManager::getSector(float alpha) 
+int32_t RawDataManager::getSector(float alpha)
 {
   //--------------------------------------------------------------------
   // TRD sector number for reference system alpha
@@ -610,7 +619,7 @@ int32_t RawDataManager::getSector(float alpha)
   return (int32_t)(alpha * (float)18 / (2.f * std::numbers::pi));
 }
 
-float RawDataManager::getAlphaOfSector(const int32_t sec) 
+float RawDataManager::getAlphaOfSector(const int32_t sec)
 {
   //--------------------------------------------------------------------
   // rotation angle for TRD sector sec
@@ -619,7 +628,7 @@ float RawDataManager::getAlphaOfSector(const int32_t sec)
   if (alpha > std::numbers::pi) {
     alpha -= 2 * std::numbers::pi;
   }
-  //LOGP(info,"alpha for sector {} is {} ",sec,alpha);
+  // LOGP(info,"alpha for sector {} is {} ",sec,alpha);
   return alpha;
 }
 
@@ -631,18 +640,17 @@ int32_t RawDataManager::getDetectorNumber(const float zPos, const float alpha, c
   //--------------------------------------------------------------------
   int32_t stack = mGeo->getStack(zPos, layer);
   if (stack < 0) {
-  //LOGP(info, " get detector number :: stack : {}, zpos: {} layer: {}",stack,zPos, layer);
+    // LOGP(info, " get detector number :: stack : {}, zpos: {} layer: {}",stack,zPos, layer);
     return -1;
   }
   int32_t sector = getSector(alpha);
-  //LOGP(info, " sector : {}",sector);
-  //LOGP(info, " det number : : {}",sector,mGeo->getDetector(layer, stack, sector));
+  // LOGP(info, " sector : {}",sector);
+  // LOGP(info, " det number : : {}",sector,mGeo->getDetector(layer, stack, sector));
 
   return mGeo->getDetector(layer, stack, sector);
 }
 
-
-bool RawDataManager::isGeoFindable(o2::dataformats::TrackTPCITS& track, const int32_t layer, const float alpha, const float zShiftTrk) 
+bool RawDataManager::isGeoFindable(o2::dataformats::TrackTPCITS& track, const int32_t layer, const float alpha, const float zShiftTrk)
 {
   //--------------------------------------------------------------------
   // returns true if track position inside active area of the TRD
@@ -652,15 +660,15 @@ bool RawDataManager::isGeoFindable(o2::dataformats::TrackTPCITS& track, const in
   float zTrk = track.getZ() + zShiftTrk;
 
   int32_t det = getDetectorNumber(zTrk, alpha, layer);
-  //LOGP(info, " Det : {} zShiftTrk {} getZ() {}, zTrk: {}",det,zShiftTrk,track.getZ(),zTrk);
-  // reject tracks between stacks
+  // LOGP(info, " Det : {} zShiftTrk {} getZ() {}, zTrk: {}",det,zShiftTrk,track.getZ(),zTrk);
+  //  reject tracks between stacks
   if (det < 0) {
     return false;
   }
 
   // reject tracks in PHOS hole and for non existent chamber 17_4_4
   if (!mGeo->chamberInGeometry(det)) {
-   // LOGP(info, " Chamber not in gemoetry for Det : {}",det);
+    // LOGP(info, " Chamber not in gemoetry for Det : {}",det);
     return false;
   }
 
@@ -674,21 +682,20 @@ bool RawDataManager::isGeoFindable(o2::dataformats::TrackTPCITS& track, const in
 
   // reject tracks closer than epsY cm to pad plane boundary
   if (yMax - std::abs(track.getY()) < epsY) {
-   // LOGP(info, " Track too close to plane boundary in Y : {} - {} < {}",yMax,std::abs(track.getY()),epsY);
+    // LOGP(info, " Track too close to plane boundary in Y : {} - {} < {}",yMax,std::abs(track.getY()),epsY);
     return false;
   }
   // reject tracks closer than epsZ cm to stack boundary
   if (!((zTrk > zMin + epsZ) && (zTrk < zMax - epsZ))) {
-    //LOGP(info, " Track too close to plane boundary in Z : {} > {} +{} && {} < {}= {}",zTrk,zMin,epsZ,zTrk,zMax,epsZ);
+    // LOGP(info, " Track too close to plane boundary in Z : {} > {} +{} && {} < {}= {}",zTrk,zMin,epsZ,zTrk,zMax,epsZ);
     return false;
   }
-  //LOGP(info, "Is findable");
+  // LOGP(info, "Is findable");
 
   return true;
 }
 
-
-void RawDataManager::findChambersInRoad(o2::dataformats::TrackTPCITS& track, const float roadY, const float roadZ, const int32_t iLayer, std::array<int,18>& det, const float zMax, const float alpha, const float zShiftTrk)
+void RawDataManager::findChambersInRoad(o2::dataformats::TrackTPCITS& track, const float roadY, const float roadZ, const int32_t iLayer, std::array<int, 18>& det, const float zMax, const float alpha, const float zShiftTrk)
 {
   //--------------------------------------------------------------------
   // determine initial chamber where the track ends up
@@ -708,7 +715,7 @@ void RawDataManager::findChambersInRoad(o2::dataformats::TrackTPCITS& track, con
   if (currStack > -1) {
     // chamber unambiguous
     currDet = mGeo->getDetector(iLayer, currStack, currSec);
-    //LOGP(info,"Adding for det {} with currstack {} for det {}",nDets,currStack, mGeo->getDetector(iLayer, currStack, currSec));
+    // LOGP(info,"Adding for det {} with currstack {} for det {}",nDets,currStack, mGeo->getDetector(iLayer, currStack, currSec));
     det[nDets++] = currDet;
     const o2::trd::PadPlane* pp = mGeo->getPadPlane(iLayer, currStack);
     int32_t lastPadRow = mGeo->getRowMax(iLayer, currStack, 0);
@@ -716,7 +723,7 @@ void RawDataManager::findChambersInRoad(o2::dataformats::TrackTPCITS& track, con
     if ((zTrk + roadZ) > pp->getRow0() || (zTrk - roadZ) < pp->getRowEnd()) {
       int32_t addStack = zTrk > zCenter ? currStack - 1 : currStack + 1;
       if (addStack < 5 && addStack > -1) {
-     //   LOGP(info,"Adding for det {} with stack {} for det {}",nDets,addStack, mGeo->getDetector(iLayer, addStack, currSec));
+        //   LOGP(info,"Adding for det {} with stack {} for det {}",nDets,addStack, mGeo->getDetector(iLayer, addStack, currSec));
         det[nDets++] = mGeo->getDetector(iLayer, addStack, currSec);
       }
     }
@@ -729,7 +736,7 @@ void RawDataManager::findChambersInRoad(o2::dataformats::TrackTPCITS& track, con
         currDet = mGeo->getDetector(iLayer, o2::trd::constants::NSTACK - 1, currSec);
       }
       det[nDets++] = currDet;
-     // LOGP(info,"Adding for det {} with currDet {} for currStack {}",nDets,currDet, mGeo->getStack(currDet));
+      // LOGP(info,"Adding for det {} with currDet {} for currStack {}",nDets,currDet, mGeo->getStack(currDet));
       currStack = mGeo->getStack(currDet);
     } else {
       // track in between two stacks, add both surrounding chambers
@@ -765,7 +772,7 @@ void RawDataManager::findChambersInRoad(o2::dataformats::TrackTPCITS& track, con
     }
   }
   */
-  //LOGP(info," {} {} ndets:{}",__func__,__LINE__,nDets);
+  // LOGP(info," {} {} ndets:{}",__func__,__LINE__,nDets);
 }
 
 bool RawDataManager::getYZAt(float xk, float b, float& y, float& z, o2::dataformats::TrackTPCITS& track)
@@ -773,18 +780,18 @@ bool RawDataManager::getYZAt(float xk, float b, float& y, float& z, o2::dataform
   //----------------------------------------------------------------
   // estimate Y,Z in tracking frame at given X
   //----------------------------------------------------------------
-  float almost0=0x1.0p-126f;
-  float almost1=1.f - 1.0e-6f;
+  float almost0 = 0x1.0p-126f;
+  float almost1 = 1.f - 1.0e-6f;
   float dx = xk - track.getX();
-  y = track.getY();//mP[kY];
-  z = track.getZ();//mP[kZ];
+  y = track.getY(); // mP[kY];
+  z = track.getZ(); // mP[kZ];
   if (std::abs(dx) < almost0) {
     return true;
   }
   float crv = track.getCurvature(b);
   float x2r = crv * dx;
   float f1 = track.getSnp(), f2 = f1 + x2r;
-  if ((std::abs(f1) > almost1 ) || (std::abs(f2) > almost1)) {
+  if ((std::abs(f1) > almost1) || (std::abs(f2) > almost1)) {
     return false;
   }
   float r1 = std::sqrt((1.f - f1) * (1.f + f1));
@@ -808,7 +815,7 @@ bool RawDataManager::getYZAt(float xk, float b, float& y, float& z, o2::dataform
     //    double rot = 2*TMath::ASin(0.5*chord*crv); // angular difference seen from the circle center
     //    track1 += rot/crv*track3;
     //
-    float rot = std::sin(r1 * f2 - r2 * f1);  // more economic version from Yura.
+    float rot = std::sin(r1 * f2 - r2 * f1);        // more economic version from Yura.
     if (f1 * f1 + f2 * f2 > 1.f && f1 * f2 < 0.f) { // special cases of large rotations or large abs angles
       if (f2 > 0.f) {
         rot = std::numbers::pi - rot; //
@@ -823,240 +830,269 @@ bool RawDataManager::getYZAt(float xk, float b, float& y, float& z, o2::dataform
 
 bool RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e, float maxStep, float triggertime, int& glbTrkltIdxOffset, int collisionId)
 {
-  LOGP(info,"{} {} Propagating track with track pos {:.2f} {:.2f} {:.2f} pt:{:.4f} its:{} tpc:{}",__func__,__LINE__,track.getX(),track.getY(),track.getZ(),track.getPt(),(int)track.getRefITS(),(int)track.getRefTPC());
+  if (debugprint)
+    LOGP(info, "{} {} Propagating track with track pos {:.2f} {:.2f} {:.2f} pt:{:.4f} its:{} tpc:{}", __func__, __LINE__, track.getX(), track.getY(), track.getZ(), track.getPt(), (int)track.getRefITS(), (int)track.getRefTPC());
   // Propagates the track to the plane X=xk (cm) for each respective layer
-//  float zShiftTrk = (mTrackAttribs[iTrk].mTime - GetConstantMem()->ioPtrs.trdTriggerTimes[collisionId]) * mTPCVdrift * mTrackAttribs[iTrk].mSide;
-  int layerCount=0;
-   const int32_t nMaxChambersToSearch = 18;
-  int32_t trkltIdxOffset = collisionId * (o2::trd::constants::NCHAMBER + 1);                                                            // offset for accessing mTrackletIndexArray for given collision
+  //  float zShiftTrk = (mTrackAttribs[iTrk].mTime - GetConstantMem()->ioPtrs.trdTriggerTimes[collisionId]) * mTPCVdrift * mTrackAttribs[iTrk].mSide;
+  int layerCount = 0;
+  const int32_t nMaxChambersToSearch = 18;
+  int32_t trkltIdxOffset = collisionId * (o2::trd::constants::NCHAMBER + 1); // offset for accessing mTrackletIndexArray for given collision
   for (int32_t iLayer = 0; iLayer < 6; ++iLayer) {
- //   nCurrHypothesis = 0;
-    LOGP(info," $$$$ Layer : {} ", iLayer);
+    //   nCurrHypothesis = 0;
+    if (debugprint)
+      LOGP(info, " $$$$ Layer : {} ", iLayer);
     const o2::trd::PadPlane* pad = mGeo->getPadPlane(iLayer, 0);
     float tilt = std::tan(std::numbers::pi / 180.f * pad->getTiltingAngle());
     const float zMaxTRD = pad->getRow0();
 
-
-    std::array<int32_t,18>det{-1}; // TRD chambers to be searched for tracklets
+    std::array<int32_t, 18> det{-1}; // TRD chambers to be searched for tracklets
     det.fill(-1);
-      // propagate track to average radius of TRD layer iLayer (sector 0, stack 2 is chosen as a reference)
-      if (!propagateToLayerX(track,mRdriftstart[2*6+iLayer]-1.0f, e,maxStep)) {   // unwind by 1cm so inside the radiator.
+    // propagate track to average radius of TRD layer iLayer (sector 0, stack 2 is chosen as a reference)
+    if (!propagateToLayerX(track, mRdriftstart[2 * 6 + iLayer] - 1.0f, e, maxStep)) { // unwind by 1cm so inside the radiator.
 
-          //LOGP(info,"Track propagation failed for in layer {} (pt={}, x={}, mR[layer]={})",iLayer, track.getPt(), track.getX(), mR[2 * 6 + iLayer]);
-        continue;
+      // LOGP(info,"Track propagation failed for in layer {} (pt={}, x={}, mR[layer]={})",iLayer, track.getPt(), track.getX(), mR[2 * 6 + iLayer]);
+      continue;
+    }
+    // LOGP(info," {} {} track.x={}",__func__,__LINE__,track.getX());
+    /*
+    // rotate track in new sector in case of sector crossing
+    if (!AdjustSector(prop, trkWork)) {
+      if (ENABLE_INFO) {
+        GPUInfo("Adjusting sector failed for track %i candidate %i in layer %i", iTrk, iCandidate, iLayer);
       }
-  //LOGP(info," {} {} track.x={}",__func__,__LINE__,track.getX());
-      /*
-      // rotate track in new sector in case of sector crossing
-      if (!AdjustSector(prop, trkWork)) {
-        if (ENABLE_INFO) {
-          GPUInfo("Adjusting sector failed for track %i candidate %i in layer %i", iTrk, iCandidate, iLayer);
-        }
-        continue;
-      }
+      continue;
+    }
 */
-      // check if track is findable
-      float mTPCVdrift=2.58f;
-      float side=1.0f;
-      float zShiftTrk = (track.getTimeMUS().getTimeStamp()-triggertime) * mTPCVdrift * side;
+    // check if track is findable
+    float mTPCVdrift = 2.58f;
+    float side = 1.0f;
+    float zShiftTrk = (track.getTimeMUS().getTimeStamp() - triggertime) * mTPCVdrift * side;
 
-      if (!isGeoFindable(track, iLayer, track.getAlpha(), zShiftTrk)) {
-        continue;
+    if (!isGeoFindable(track, iLayer, track.getAlpha(), zShiftTrk)) {
+      continue;
+    }
+    layerCount++;
+
+    // define search window
+    float roadY = 7.f * std::sqrt(track.getSigmaY2() + 0.1f * 0.1f) + 4; // Param().rec.trd.extraRoadY; // add constant to the road to account for uncertainty due to radial deviations (few mm)
+    // roadZ = 7.f * CAMath::Sqrt(trkWork->getSigmaZ2() + 9.f * 9.f / 12.f); // take longest pad length
+    // mRoadZ=18 is the default, extraRoadZ is 10 by default
+    float roadZ = 18 + 10; // Param().rec.trd.extraRoadZ; // simply twice the longest pad length -> efficiency 99.996%
+    //
+    if (std::abs(track.getZ() + zShiftTrk) - roadZ >= zMaxTRD) {
+      //     LOGP(info,"Track out of TRD acceptance with z={} in layer {} (eta={})", track.getZ() + zShiftTrk, iLayer, track.getEta());
+      continue;
+    }
+
+    findChambersInRoad(track, roadY, roadZ, iLayer, det, zMaxTRD, track.getAlpha(), zShiftTrk);
+    int detcounter = 0;
+    int totaltrkltcounter = 0;
+
+    std::string s = std::accumulate(
+      det.begin(), det.end(), std::string{},
+      [](std::string acc, int x) { return acc + std::format("[{}] ", x); }
+      //[](std::string acc, int x) { return acc + (x>-1)?std::format("[{}] ", x): std::format("[{}] ", 0); }
+    );
+    std::string aa;
+    for (auto& x : det) {
+      aa += std::format("[{}]", x);
+    }
+    //     LOGP(info,"chambers to search : {}",s);
+    //    LOGP(info,"chambers to search : {}",aa);
+
+    // look for tracklets in chamber(s)
+    for (int32_t iDet = 0; iDet < nMaxChambersToSearch; iDet++) {
+      int32_t currDet = det[iDet];
+      if (currDet == -1) {
+        break; // continue;
       }
-      layerCount++;
+      pad = mGeo->getPadPlane(currDet);
+      int32_t currSec = mGeo->getSector(currDet);
 
-
-      // define search window
-      float roadY = 7.f * std::sqrt(track.getSigmaY2() + 0.1f * 0.1f) + 4;//Param().rec.trd.extraRoadY; // add constant to the road to account for uncertainty due to radial deviations (few mm)
-      // roadZ = 7.f * CAMath::Sqrt(trkWork->getSigmaZ2() + 9.f * 9.f / 12.f); // take longest pad length
-      // mRoadZ=18 is the default, extraRoadZ is 10 by default
-      float roadZ = 18 + 10;//Param().rec.trd.extraRoadZ; // simply twice the longest pad length -> efficiency 99.996%
-      //
-      if (std::abs(track.getZ() + zShiftTrk) - roadZ >= zMaxTRD) {
-     //     LOGP(info,"Track out of TRD acceptance with z={} in layer {} (eta={})", track.getZ() + zShiftTrk, iLayer, track.getEta());
-        continue;
-      }
-
-      findChambersInRoad(track, roadY, roadZ, iLayer, det, zMaxTRD, track.getAlpha(), zShiftTrk);
-      int detcounter=0;
-      int totaltrkltcounter=0;
-
-      std::string s = std::accumulate(
-          det.begin(), det.end(), std::string{},
-          [](std::string acc, int x) { return acc + std::format("[{}] ", x); }
-          //[](std::string acc, int x) { return acc + (x>-1)?std::format("[{}] ", x): std::format("[{}] ", 0); }
-      );
-      std::string aa;
-      for(auto &x : det){
-         aa += std::format("[{}]",x);
-      }
-      //     LOGP(info,"chambers to search : {}",s);
-      //    LOGP(info,"chambers to search : {}",aa);
-
-      // look for tracklets in chamber(s)
-      for (int32_t iDet = 0; iDet < nMaxChambersToSearch; iDet++) {
-        int32_t currDet = det[iDet];
-       // LOGP(info," {} {} track.x={} currdet:{}",__func__,__LINE__,track.getX(),currDet);
-        if (currDet == -1) {
-          break;//continue;
+      if (currSec != getSector(track.getAlpha())) {
+        if (!track.rotate(getAlphaOfSector(currSec))) {
+          if (debugprint)
+            LOGP(warn, "Track could not be rotated in tracklet coordinate system currSec:{} alpha:{}", currSec, getAlphaOfSector(currSec));
+          break;
         }
-        pad = mGeo->getPadPlane(currDet);
-        int32_t currSec = mGeo->getSector(currDet);
-
-        if (currSec != getSector(track.getAlpha())) {
-          if (!track.rotate(getAlphaOfSector(currSec))) {
-            LOGP(warn,"Track could not be rotated in tracklet coordinate system currSec:{} alpha:{}",currSec,getAlphaOfSector(currSec));
-            break;
-          }
-        }
-        if (currSec != getSector(track.getAlpha())) {
+      }
+      if (currSec != getSector(track.getAlpha())) {
+        if (debugprint)
           LOGP(info, "Track is in sector {} and we are in sector {}", getSector(track.getAlpha()), currSec);
-          continue;
-        }
-        // propagate track to radius of chamber
-        const PadPlane* pp = mGeo->getPadPlane(currDet);
-        if (propagateToLayerX(track,mRdriftstart[currDet],0.8f,0.2f)){ //prop.propagateToX(mR[currDet], .8f, .2f)) {
-          // we are at the start of a layer now propagate to the outter radius and build a tracksegment for the voxel of an mcm. TODO voxel of a padrow
-          LOGP(info,"{} {} Propagating to start track with track pos {:.2f} {:.2f} {:.2f} pt:{:.4f} its:{} tpc:{}",__func__,__LINE__,track.getX(),track.getY(),track.getZ(),track.getPt(),(int)track.getRefITS(),(int)track.getRefTPC());
-          float projY, projZ;
-          auto ctrans = o2::trd::CoordinateTransformer::instance();
-          TrackSegment tracksegment;
-          std::array<float, 3> b{};
-          auto xyz0 = track.getXYZGlo();
-          math_utils::Point3D<float> trackxyz={track.getX(),track.getY(),track.getZ()};
-          //mProp->getFieldXYZ(xyz0, &b[0]);
-          std::array<float, 3> rct{};
-          std::array<float, 3> rcts{};
-          //-------------------------------------/
-          auto l2gmatrix = mGeo->getMatrixL2G(currDet);
-          auto t2gmatrix = mGeo->getMatrixT2G(currDet);
-          auto localpointa = t2gmatrix * trackxyz; 
-          auto localpoint = l2gmatrix * localpointa; 
-          //-------------------------------------/
-          //convert global to local ROC x,y,z:
-          rct = ctrans->RecalculateRCT(currDet,localpoint.X(),localpoint.Y(),localpoint.Z(),ctrans->GetT0(),ctrans->GetVdrift(),ctrans->GetExB());
-          ChamberSpacePoint a(currDet,0,localpoint.X(),localpoint.Y(),localpoint.Z(),rct,false);
+        continue;
+      }
+      // propagate track to radius of chamber
+      const PadPlane* pp = mGeo->getPadPlane(currDet);
+      if (propagateToLayerX(track, mRdriftstart[currDet], 0.8f, 0.2f)) { // prop.propagateToX(mR[currDet], .8f, .2f)) {
+        // we are at the start of a layer now propagate to the outter radius and build a tracksegment for the voxel of an mcm. TODO voxel of a padrow
+        if (debugprint)
+          LOGP(info, "{} {} Propagating to start track in det:{} with track pos {:.2f} {:.2f} {:.2f} pt:{:.4f} its:{} tpc:{}", __func__, __LINE__, currDet, track.getX(), track.getY(), track.getZ(), track.getPt(), (int)track.getRefITS(), (int)track.getRefTPC());
+        float projY, projZ;
+        auto ctrans = o2::trd::CoordinateTransformer::instance();
+        TrackSegment tracksegment;
+        std::array<float, 3> b{};
+        auto xyz0 = track.getXYZGlo();
+        math_utils::Point3D<float> trackxyz = {track.getX(), track.getY(), track.getZ()};
+        // mProp->getFieldXYZ(xyz0, &b[0]);
+        std::array<float, 3> rct{};
+        std::array<float, 3> rcts{};
+        //-------------------------------------/
+        auto l2gmatrix = mGeo->getMatrixL2G(currDet);
+        auto t2gmatrix = mGeo->getMatrixT2G(currDet);
+        auto localpointG = t2gmatrix * trackxyz;
+        auto localpoint = l2gmatrix * localpointG;
+        // LOGP(info,"{} {} start of track local pos: {:.2f} {:.2f} {:.2f} pt:{:.4f} its:{} tpc:{}",__func__,__LINE__, localpoint.X(),localpoint.Y(),localpoint.Z(),track.getPt(),(int)track.getRefITS(),(int)track.getRefTPC());
+        //-------------------------------------/
+        // convert global to local ROC x,y,z:
+        rct = ctrans->RecalculateRCT(currDet, localpoint.X(), localpoint.Y(), localpoint.Z(), ctrans->GetT0(), ctrans->GetVdrift(), ctrans->GetExB());
+        ChamberSpacePoint a(currDet, 0, localpoint.X(), localpoint.Y(), localpoint.Z(), rct, false);
 
-          tracksegment.setStartPoint(a); 
-          // correction for tilted pads (only applied if deltaZ < lPad && track z err << lPad)
-          float tiltCorr = tilt * (track.getZ() - projZ);
-          float lPad = pad->getRowSize(a.getPadRow());
-          if (!((std::abs(track.getZ() - projZ) < lPad) && (track.getSigmaZ2() < (lPad * lPad / 12.f)))) {
-            tiltCorr = 0.f; // will be zero also for TPC tracks which are shifted in z
-          }
-          // correction for mean z position of tracklet (is not the center of the pad if track eta != 0)
-          float mZCorrCoefNRC=1.4f;
-          //float zPosCorr -= zShiftTrk; // shift tracklet instead of track in order to avoid having to do a re-fit for each collision
-          propagateToLayerX(track,mRamplificationend[currDet],0.8f,0.2f);
-          LOGP(info,"{} {} Propagating to end track with track pos {:.2f} {:.2f} {:.2f} pt:{:.4f} its:{} tpc:{}",__func__,__LINE__,track.getX(),track.getY(),track.getZ(),track.getPt(),(int)track.getRefITS(),(int)track.getRefTPC());
-          math_utils::Point3D<float> trackxyzend={track.getX(),track.getY(),track.getZ()};
-          xyz0 = track.getXYZGlo();
-          //mProp->getFieldXYZ(xyz0, &b[0]);
-          auto localpointend = t2gmatrix * trackxyzend; 
-          localpointend = l2gmatrix * localpointend; 
-          rcts= ctrans->RecalculateRCT(currDet,localpointend.X(),localpointend.Y(),localpointend.Z(),ctrans->GetT0(),ctrans->GetVdrift(),ctrans->GetExB());
-          ChamberSpacePoint ae(currDet,0,localpointend.X(),localpointend.Y(),localpointend.Z(),rcts,false);
-          tracksegment.setEndPoint(ae); 
-          LOGP(info,"TrackSegment start padrow:padcol:timebin {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f}",tracksegment.getStartPoint().getPadRowF(),tracksegment.getStartPoint().getPadCol(),tracksegment.getStartPoint().getTimeBin(),tracksegment.getEndPoint().getPadRowF(),tracksegment.getEndPoint().getPadCol(),tracksegment.getEndPoint().getTimeBin());
+        tracksegment.setStartPoint(a);
+        // correction for tilted pads (only applied if deltaZ < lPad && track z err << lPad)
+        float tiltCorr = tilt * (track.getZ() - projZ);
+        float lPad = pad->getRowSize(a.getPadRow());
+        if (!((std::abs(track.getZ() - projZ) < lPad) && (track.getSigmaZ2() < (lPad * lPad / 12.f)))) {
+          tiltCorr = 0.f; // will be zero also for TPC tracks which are shifted in z
         }
-        else {
-          LOGP(info,"Track could not be propagated to radius of chamber {}",currDet);
-        }
-      } // chamber loop 
-      
+        // correction for mean z position of tracklet (is not the center of the pad if track eta != 0)
+        float mZCorrCoefNRC = 1.4f;
+        // float zPosCorr -= zShiftTrk; // shift tracklet instead of track in order to avoid having to do a re-fit for each collision
+        propagateToLayerX(track, mRamplificationend[currDet], 0.8f, 0.2f);
+        if (debugprint)
+          LOGP(info, "{} {} Propagating to end track in det:{} with track pos {:.2f} {:.2f} {:.2f} pt:{:.4f} its:{} tpc:{}", __func__, __LINE__, currDet, track.getX(), track.getY(), track.getZ(), track.getPt(), (int)track.getRefITS(), (int)track.getRefTPC());
+        math_utils::Point3D<float> trackxyzend = {track.getX(), track.getY(), track.getZ()};
+        xyz0 = track.getXYZGlo();
+        // mProp->getFieldXYZ(xyz0, &b[0]);
+        auto localpointendG = t2gmatrix * trackxyzend;
+        auto localpointend = l2gmatrix * localpointendG;
+        if (debugprint)
+          LOGP(info, "{} {} end of track local pos: {:.2f} {:.2f} {:.2f} pt:{:.4f} its:{} tpc:{}", __func__, __LINE__, localpointend.X(), localpointend.Y(), localpointend.Z(), track.getPt(), (int)track.getRefITS(), (int)track.getRefTPC());
+        rcts = ctrans->RecalculateRCT(currDet, localpointend.X(), localpointend.Y(), localpointend.Z(), ctrans->GetT0(), ctrans->GetVdrift(), ctrans->GetExB());
+        ChamberSpacePoint ae(currDet, 0, localpointend.X(), localpointend.Y(), localpointend.Z(), rcts, false);
+        tracksegment.setEndPoint(ae);
+        tracksegment.setCollisionId(collisionId);
+        //TODO what to do if the tracksegment spans a padrow or mcm ?
+        //postprocess the tracksegment and split it up?
 
-      // add no update to hypothesis list
+        if (debugprint)
+          LOGP(info, "TrackSegment padrow:padcol:timebin {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f}", tracksegment.getStartPoint().getPadRowF(), tracksegment.getStartPoint().getPadCol(), tracksegment.getStartPoint().getTimeBin(), tracksegment.getEndPoint().getPadRowF(), tracksegment.getEndPoint().getPadCol(), tracksegment.getEndPoint().getTimeBin());
+        if (debugprint)
+          LOGP(info, "TrackSegment  x:y:z {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f}", localpoint.X(), localpoint.Y(), localpoint.Z(), localpointend.X(), localpointend.Y(), localpointend.Z());
+        if (debugprint)
+          LOGP(info, "TrackSegmentG x:y:z {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f}", localpointG.X(), localpointG.Y(), localpointG.Z(), localpointendG.X(), localpointendG.Y(), localpointendG.Z());
+        mITSTPCTracks_segments.push_back(tracksegment);
+      } else {
+        LOGP(info, "Track could not be propagated to radius of chamber {}", currDet);
+      }
+    } // chamber loop
+
+    // add no update to hypothesis list
     //} // end candidate loop
   } // end of layer loop
-  //if(layerCount>0) LOGP(info,"Layer count : {}",layerCount);
-/****************************************************************************************/
-  if(layerCount>2 )return true;
-return false;
+  // if(layerCount>0) LOGP(info,"Layer count : {}",layerCount);
+  /****************************************************************************************/
+  if (layerCount > 2)
+    return true;
+  return false;
 }
 /***********************************************************************************************/
 
 bool RawDataManager::buildTrackSegments(bool onlydigits)
 {
-  //take the track, step it through the relevant detectors/mcm/padrow etc. and build the tracksegment objects.
-  // just ITSTPC for now.
+  // take the track, step it through the relevant detectors/mcm/padrow etc. and build the tracksegment objects.
+  //  just ITSTPC for now.
   //
-  bool timeframehasdigits=false;
-  bool timeframehastracks=false;
-  if(onlydigits){
-    for(auto &trig: *mTrgRecords){
-      if(trig.getNumberOfDigits()>0){
-        LOGP(info, "time frame has {} digits",trig.getNumberOfDigits());
-        timeframehasdigits=true;
+  bool timeframehasdigits = false;
+  bool timeframehastracks = false;
+  if (onlydigits) {
+    for (auto& trig : *mTrgRecords) {
+      if (trig.getNumberOfDigits() > 0) {
+        LOGP(info, "time frame has {} digits", trig.getNumberOfDigits());
+        timeframehasdigits = true;
       }
     }
   }
-  if((*mITSTPCTracks).size()>0){
-    timeframehastracks=true;
-  }
-  if(!timeframehasdigits) {
-    LOGP(info, "time frame does not have digits");
-    return false;
-  }
-  if(!timeframehastracks) {
-    LOGP(info, "time frame does not have ITSTPC tracks");
-    return false;
+  else {
+    timeframehasdigits=true;
   }
 
-  LOGP(info,"itstpc track count : {} ",(*mITSTPCTracks).size());
+  if ((*mITSTPCTracks).size() > 0) {
+    timeframehastracks = true;
+  }
+  if (!timeframehasdigits) {
+    LOGP(info, "time frame does not have digits");
+  //  return false;
+  }
+  if (!timeframehastracks) {
+    LOGP(info, "time frame does not have ITSTPC tracks");
+   // return false;
+  }
+
+  LOGP(info, "itstpc track count : {} ", (*mITSTPCTracks).size());
 
   // instantiate the class that handles all the data access
   //--------------------------------
   // load up the geometry
   // //TODO move this to only run once
   mGeo = o2::trd::Geometry::instance();
-//  auto mGeogpu = GPUTRDGeometry();
+  //  auto mGeogpu = GPUTRDGeometry();
 
   //-------- init geometry and field --------//
   o2::base::GeometryManager::loadGeometry();
   o2::base::Propagator::initFieldFromGRP();
-  mProp = o2::base::Propagator::Instance();  
-  //auto geo = o2::trd::Geometry::instance();
+  mProp = o2::base::Propagator::Instance();
+  // auto geo = o2::trd::Geometry::instance();
   mGeo->createPadPlaneArray();
   mGeo->createClusterMatrixArray();
   const o2::trd::GeometryFlat geoFlat(*mGeo);
 
-/*
-  auto& elParam = o2::tpc::ParameterElectronics::Instance();
-  auto& gasParam = o2::tpc::ParameterGas::Instance();
-  auto& detParam = o2::tpc::ParameterDetector::Instance();
-  auto tpcTBinMUS = elParam.ZbinWidth;
-  auto tpcVdrift = gasParam.DriftV;
-  auto tpcTOffset = detParam.DriftTimeOffset;
- */ 
+  /*
+    auto& elParam = o2::tpc::ParameterElectronics::Instance();
+    auto& gasParam = o2::tpc::ParameterGas::Instance();
+    auto& detParam = o2::tpc::ParameterDetector::Instance();
+    auto tpcTBinMUS = elParam.ZbinWidth;
+    auto tpcVdrift = gasParam.DriftV;
+    auto tpcTOffset = detParam.DriftTimeOffset;
+   */
 
-  //GPUTRDGeometry mGeogpu;     // TRD geometry
-  if(mGeo == nullptr) {
-   LOGP(error," mGeo is null");
+  // GPUTRDGeometry mGeogpu;     // TRD geometry
+  if (mGeo == nullptr) {
+    LOGP(error, " mGeo is null");
+  } else {
+    LOGP(info, " mGeo is not null");
   }
-  else {
-   LOGP(info," mGeo is not null");
-  } 
   //
   // obtain average radius of TRD chambers
   o2::math_utils::Transform3D matrix = mGeo->getMatrixT2L(0);
-  //o2::math_utilgpu::Transform3D matrix = geo->getMatrixT2L(0);
-  //double loc[3] = {geo->anodePos(), 0.f, 0.f};
-  //double glb[3] = {0.f, 0.f, 0.f};
-  std::array<double,3> loc = {mGeo->anodePos(), 0.f, 0.f};
-  std::array<double,3> driftstart = {mGeo->anodePos()-mGeo->camHght()/2-mGeo->craHght(), 0.f, 0.f}; // position of the start of the drift region
-  std::array<double,3> driftend = {mGeo->anodePos()-mGeo->camHght()/2, 0.f, 0.f}; // position of the end of the drift region and start of the amplification region
-  std::array<double,3> amplificationend = {mGeo->anodePos()+mGeo->camHght()/2, 0.f, 0.f}; // position of the end of amplification region
-  std::array<double,3> glb = {0.f, 0.f, 0.f};
-  std::array<double,3> glbdriftstart = {0.f, 0.f, 0.f};
-  std::array<double,3> glbdriftend = {0.f, 0.f, 0.f};
-  std::array<double,3> glbamplificationend = {0.f, 0.f, 0.f};
+  // o2::math_utilgpu::Transform3D matrix = geo->getMatrixT2L(0);
+  // double loc[3] = {geo->anodePos(), 0.f, 0.f};
+  // double glb[3] = {0.f, 0.f, 0.f};
+  std::array<double, 3> loc = {mGeo->anodePos(), 0.f, 0.f};
+  std::array<double, 3> driftstart = {mGeo->anodePos() - mGeo->camHght() / 2 - mGeo->craHght(), 0.f, 0.f}; // position of the start of the drift region
+  std::array<double, 3> driftend = {mGeo->anodePos() - mGeo->camHght() / 2, 0.f, 0.f};                     // position of the end of the drift region and start of the amplification region
+  std::array<double, 3> amplificationend = {mGeo->anodePos() + mGeo->camHght() / 2, 0.f, 0.f};             // position of the end of amplification region
+  std::array<double, 3> glb = {0.f, 0.f, 0.f};
+  std::array<double, 3> glbdriftstart = {0.f, 0.f, 0.f};
+  std::array<double, 3> glbdriftend = {0.f, 0.f, 0.f};
+  std::array<double, 3> glbamplificationend = {0.f, 0.f, 0.f};
   for (int32_t iDet = 0; iDet < o2::trd::constants::NCHAMBER; ++iDet) {
-    //matrix = mGeo->getMatrixT2L(iDet);
-    //matrix.print();
-    //ApplyInverse(loc,glb,matrix);
-    std::array<double,12> m{0};
+    // matrix = mGeo->getMatrixT2L(iDet);
+    // matrix.print();
+    // ApplyInverse(loc,glb,matrix);
+    std::array<double, 12> m{0};
     mGeo->getMatrixT2L(iDet).GetComponents(m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11]);
-    enum Transform3DMatrixIndex { kXX = 0, kXY = 1, kXZ = 2, kDX = 3, kYX = 4, kYY = 5, kYZ = 6, kDY = 7, kZX = 8, kZY = 9, kZZ = 10, kDZ = 11 };
+    enum Transform3DMatrixIndex { kXX = 0,
+                                  kXY = 1,
+                                  kXZ = 2,
+                                  kDX = 3,
+                                  kYX = 4,
+                                  kYY = 5,
+                                  kYZ = 6,
+                                  kDY = 7,
+                                  kZX = 8,
+                                  kZY = 9,
+                                  kZZ = 10,
+                                  kDZ = 11 };
     const double tmp[3] = {loc[0] - m[kDX], loc[1] - m[kDY], loc[2] - m[kDZ]};
     glb[0] = m[kXX] * tmp[0] + m[kYX] * tmp[1] + m[kZX] * tmp[2];
     glb[1] = m[kXY] * tmp[0] + m[kYY] * tmp[1] + m[kZY] * tmp[2];
@@ -1069,123 +1105,111 @@ bool RawDataManager::buildTrackSegments(bool onlydigits)
     glbdriftend[0] = m[kXX] * tmpde[0] + m[kYX] * tmpde[1] + m[kZX] * tmpde[2];
     glbdriftend[1] = m[kXY] * tmpde[0] + m[kYY] * tmpde[1] + m[kZY] * tmpde[2];
     glbdriftend[2] = m[kXZ] * tmpde[0] + m[kYZ] * tmpde[1] + m[kZZ] * tmpde[2];
-    const double tmpae[3] = {amplificationend[0] - m[kDX],amplificationend[1] - m[kDY],amplificationend[2] - m[kDZ]};
+    const double tmpae[3] = {amplificationend[0] - m[kDX], amplificationend[1] - m[kDY], amplificationend[2] - m[kDZ]};
     glbamplificationend[0] = m[kXX] * tmpae[0] + m[kYX] * tmpae[1] + m[kZX] * tmpae[2];
     glbamplificationend[1] = m[kXY] * tmpae[0] + m[kYY] * tmpae[1] + m[kZY] * tmpae[2];
     glbamplificationend[2] = m[kXZ] * tmpae[0] + m[kYZ] * tmpae[1] + m[kZZ] * tmpae[2];
-   // matrix.LocalToMaster(loc, glb);
-   // LOGP(info,"{} ---> {} default {} {} {} {} {} {}",loc[0],glb[0],300.2f, 312.8f, 325.4f, 338.0f, 350.6f, 363.2f);
+    // matrix.LocalToMaster(loc, glb);
+    // LOGP(info,"{} ---> {} default {} {} {} {} {} {}",loc[0],glb[0],300.2f, 312.8f, 325.4f, 338.0f, 350.6f, 363.2f);
     mR[iDet] = glb[0];
     mRdriftstart[iDet] = glbdriftstart[0];
     mRdriftend[iDet] = glbdriftend[0];
     mRamplificationend[iDet] = glbamplificationend[0];
-    LOGP(info,"iDet:{} R:{} driftstart:{} driftend:{} ampend:{}",iDet, glb[0],glbdriftstart[0],glbdriftend[0],glbamplificationend[0]);
+    LOGP(info, "iDet:{} R:{} driftstart:{} driftend:{} ampend:{}", iDet, glb[0], glbdriftstart[0], glbdriftend[0], glbamplificationend[0]);
     glb.fill(0.f);
     glbdriftstart.fill(0.f);
     glbdriftend.fill(0.f);
     glbamplificationend.fill(0.f);
-    //static constexpr float ANODEPOS = CRAH + CDRH + CAMH / 2.0 - CHSV / 2.0;
-    //mRadiusOfDrift[iDet] = glb[0]; 
+    // static constexpr float ANODEPOS = CRAH + CDRH + CAMH / 2.0 - CHSV / 2.0;
+    // mRadiusOfDrift[iDet] = glb[0];
   }
 
-  TFile *vdriftexbf = TFile::Open("o2-trd-CalVdriftExB.root");
-  if(vdriftexbf==nullptr) {
-
+  TFile* vdriftexbf = TFile::Open("o2-trd-CalVdriftExB.root");
+  if (vdriftexbf == nullptr) {
   }
-  o2::trd::CalVdriftExB *calvdriftexb{0};
+  o2::trd::CalVdriftExB* calvdriftexb{0};
   vdriftexbf->GetObject("ccdb_object", calvdriftexb);
-  if(calvdriftexb == nullptr){
-
+  if (calvdriftexb == nullptr) {
   }
   mTransformer.init();
   mTransformer.setCalVdriftExB(calvdriftexb);
-  
+
   // --------------------------------------------------------------------
   // loop over timeframes
-  int trackcounter=0;
-  int tracktimewindowcounter=0;
-  int tracklowptcounter=0;
-  //ntimeframe=2;
-// buildsegments is called per timeframe, so dont loop over timeframe
-//  for(int timeframe=1;timeframe<ntimeframe;++timeframe) {
- /*   if (!mDataTree->GetEntry(timeframe)) {
-      LOGP(error,"Error getting time frame {}",timeframe);
-      continue;
-    }*/
+  int trackcounter = 0;
+  int tracktimewindowcounter = 0;
+  int tracklowptcounter = 0;
+  // ntimeframe=2;
+  // buildsegments is called per timeframe, so dont loop over timeframe
+  //  for(int timeframe=1;timeframe<ntimeframe;++timeframe) {
+  /*   if (!mDataTree->GetEntry(timeframe)) {
+       LOGP(error,"Error getting time frame {}",timeframe);
+       continue;
+     }*/
   mTrackletIndexArray.fill(-1);
-  prepareTracking();//,  trdTrigRecMask)
+  prepareTracking(); //,  trdTrigRecMask)
 
-    int goodtrackcounter=0;
-    //std::vector<o2::trd::CalibratedTracklet> trackletscal;
-    int numberoftracklets=mTracklets->size();
-    //LOGP(info,"Timeframe {}  number of tracklets {}",timeframe, numberoftracklets);
-    if(mTrgRecords->size()>mMaxTriggers){
-      LOGP(error,"We have a problem with too many trigger records : {} > {}",mTrgRecords->size(),mMaxTriggers);
-      exit(1);
-    }
-    for(auto &track : *mITSTPCTracks){
-    //auto propagator = o2::base::Propagator::Instance();
+  int goodtrackcounter = 0;
+  // std::vector<o2::trd::CalibratedTracklet> trackletscal;
+  int numberoftracklets = mTracklets->size();
+  // LOGP(info,"Timeframe {}  number of tracklets {}",timeframe, numberoftracklets);
+  if (mTrgRecords->size() > mMaxTriggers) {
+    LOGP(error, "We have a problem with too many trigger records : {} > {}", mTrgRecords->size(), mMaxTriggers);
+    exit(1);
+  }
+  for (auto& track : *mITSTPCTracks) {
+    // auto propagator = o2::base::Propagator::Instance();
     auto tpcid = track.getRefTPC();
     auto itsid = track.getRefITS();
-    int trigcount=0;
-    int collisionId=0;
-    for(auto& trdtrig : *mTrgRecords){
-      
-      auto triggertime=getTriggerTime(trdtrig,*mTFIDs, mTimeFrameNo-1);
+    int trigcount = 0;
+    int collisionId = 0;
+    for (auto& trdtrig : *mTrgRecords) {
+
+      auto triggertime = getTriggerTime(trdtrig, *mTFIDs, mTimeFrameNo - 1);
       auto ntracklets = trdtrig.getNumberOfTracklets();
       auto trackletstart = trdtrig.getFirstTracklet();
-     // LOGP(info,"Triggertime : {} collisionId {}",triggertime,collisionId);
+      // LOGP(info,"Triggertime : {} collisionId {}",triggertime,collisionId);
 
-//      std::vector<o2::dataformats::TrackTPCITS> TracksForThisEvent;
-      int trackcounter=0;
-      goodtrackcounter=0;
-  //    for(auto& track : *mITSTPCTracks){
-        auto ttrack=track;
-        trackcounter++;
-        if(!trackMatchesCollision(triggertime,ttrack.getTimeMUS().getTimeStamp())){
-          // LOGP(info," {} {} track.x={}",__func__,__LINE__,track.getX());
-          //accumulate stats of non time matched tracks?
-          continue; // track is not related to this trd trigger.
-        }
-        //GeneratePadRowTimeBin(track);
-
-        trackcounter++;
-        auto difftime = ttrack.getTimeMUS().getTimeStamp()-triggertime;
-        auto pt=track.getPt();
-        float timeWindow=4.0; // time is within 20us
-        if(difftime < timeWindow){
-         // TracksForThisEvent.push_back(track);
+      //      std::vector<o2::dataformats::TrackTPCITS> TracksForThisEvent;
+      int trackcounter = 0;
+      goodtrackcounter = 0;
+      auto ttrack = track;
+      trackcounter++;
+      if (trackMatchesCollision(triggertime, ttrack.getTimeMUS().getTimeStamp())) {
+      trackcounter++;
+      auto difftime = ttrack.getTimeMUS().getTimeStamp() - triggertime;
+      auto pt = track.getPt();
+      float timeWindow = 4.0; // time is within 20us
+      if (difftime < timeWindow) {
+        // TracksForThisEvent.push_back(track);
         //  Track_pad_row_timebin.push_back(GeneratePadRowTimeBin(track));
-          tracktimewindowcounter++;
-          if(pt>1.0){
-            //LOGP(info,"$$$$ Propagating track ..... {} {} track.x={} trigtime:{}   tracktime:{}  its:{}  tpc:{} trackcounter:{} collionsId:{} timeframe:{} eventno:{}",__func__,__LINE__,ttrack.getX(),triggertime,ttrack.getTimeMUS().getTimeStamp(),
-             //   (int)ttrack.getRefITS(),(int)ttrack.getRefTPC(),trackcounter,collisionId,mTimeFrameNo,mEventNo);
-            if (!propagateTrack(ttrack, .8f, 2.f, triggertime, trackletstart,collisionId)) {
+        tracktimewindowcounter++;
+        // if(pt>1.0){
+        // LOGP(info,"$$$$ Propagating track ..... {} {} track.x={} trigtime:{}   tracktime:{}  its:{}  tpc:{} trackcounter:{} collionsId:{} timeframe:{} eventno:{}",__func__,__LINE__,ttrack.getX(),triggertime,ttrack.getTimeMUS().getTimeStamp(),
+        //    (int)ttrack.getRefITS(),(int)ttrack.getRefTPC(),trackcounter,collisionId,mTimeFrameNo,mEventNo);
+        if (!propagateTrack(ttrack, .8f, 2.f, triggertime, trackletstart, collisionId)) {
 
-              //LOGP(info,"  track propagated..... collid:{} timeframe:{} eventno:{}",collisionId,mTimeFrameNo,mEventNo);
-              goodtrackcounter++;
-            }
-            else{
-            //LOGP(info," track failed to propagate ..... collid:{} timeframe:{} eventno:{}",collisionId,mTimeFrameNo,mEventNo);
-            }
-            //LOGP(info,"$$$$  Finished Propagating track ..... with track.x={} collid:{} timeframe:{} eventno:{}",track.getX(),collisionId,mTimeFrameNo,mEventNo);
-          }
+          // LOGP(info,"  track propagated..... collid:{} timeframe:{} eventno:{}",collisionId,mTimeFrameNo,mEventNo);
+          goodtrackcounter++;
+        } else {
+          // LOGP(info," track failed to propagate ..... collid:{} timeframe:{} eventno:{}",collisionId,mTimeFrameNo,mEventNo);
         }
-      collisionId++;
+        // LOGP(info,"$$$$  Finished Propagating track ..... with track.x={} collid:{} timeframe:{} eventno:{}",track.getX(),collisionId,mTimeFrameNo,mEventNo);
+        //}
       }
-     // LOGP(info,"Tracks in collisionid {} this event {} out of a total of {} good tracks from {} tracks, with {}% good events", collisionId, goodtrackcounter, trackcounter, (*mITSTPCTracks).size(), (float)goodtrackcounter/(float)trackcounter*100);
-    /********************************************************************************************/
-
-    /********************************************************************************************/
-
-      // now we have tracks and tracklets for a given "event" based on the time window, pair off and calculate distance.
-
     }
-    LOGP(info,"FOR TIMEFRAME {} totaltracks {} goodtracks {} nonlowptctracks {} timewindowtracks {}::{:.2}% lowpttracks {}::{:.2}%",mTimeFrameNo,trackcounter,goodtrackcounter,trackcounter-tracklowptcounter,tracktimewindowcounter, ((float)tracktimewindowcounter/(float)(trackcounter-tracklowptcounter))*100.0, tracklowptcounter,((float)tracklowptcounter/(float)trackcounter)*100.0);
+      collisionId++;
+    }
+    // LOGP(info,"Tracks in collisionid {} this event {} out of a total of {} good tracks from {} tracks, with {}% good events", collisionId, goodtrackcounter, trackcounter, (*mITSTPCTracks).size(), (float)goodtrackcounter/(float)trackcounter*100);
+    /********************************************************************************************/
+
+    /********************************************************************************************/
+
+    // now we have tracks and tracklets for a given "event" based on the time window, pair off and calculate distance.
+  }
+  LOGP(info, "FOR TIMEFRAME {} totaltracks {} goodtracks {} nonlowptctracks {} timewindowtracks {}::{:.2}% lowpttracks {}::{:.2}%", mTimeFrameNo, trackcounter, goodtrackcounter, trackcounter - tracklowptcounter, tracktimewindowcounter, ((float)tracktimewindowcounter / (float)(trackcounter - tracklowptcounter)) * 100.0, tracklowptcounter, ((float)tracklowptcounter / (float)trackcounter) * 100.0);
   return true;
 }
-
-
 
 bool RawDataManager::nextTimeFrame()
 {
@@ -1197,17 +1221,26 @@ bool RawDataManager::nextTimeFrame()
   mEventNo = 0;
   mTimeFrameNo++;
 
-  LOGP(info,"Loaded data for time frame #{} with {} TRD trigger records, {} digits and {} tracklets",
-         mTimeFrameNo, mTrgRecords->size(), mDigits->size(), mTracklets->size());
-    //  for(auto& track : *mITSTPCTracks){
-    //    if((int)track.getRefITS()==73 && (int)track.getRefTPC()>121000) LOGP(info,">>> {} {} track.x={} tracktime:{}  its:{}  tpc:{}",__func__,__LINE__,track.getX(),track.getTimeMUS().getTimeStamp(),(int)track.getRefITS(),(int)track.getRefTPC());
-    //  }
-  LOGP(info,"Building track segments for time frame {} that has {} tracks",mTimeFrameNo,mITSTPCTracks->size());
+  LOGP(info, "Loaded data for time frame #{} with {} TRD trigger records, {} digits and {} tracklets",
+       mTimeFrameNo, mTrgRecords->size(), mDigits->size(), mTracklets->size());
+  //  for(auto& track : *mITSTPCTracks){
+  //    if((int)track.getRefITS()==73 && (int)track.getRefTPC()>121000) LOGP(info,">>> {} {} track.x={} tracktime:{}  its:{}  tpc:{}",__func__,__LINE__,track.getX(),track.getTimeMUS().getTimeStamp(),(int)track.getRefITS(),(int)track.getRefTPC());
+  //  }
+  LOGP(info, "Building track segments for time frame {} that has {} tracks", mTimeFrameNo, mITSTPCTracks->size());
   auto tracksegmentstart = std::chrono::high_resolution_clock::now(); // measure total processing time
-  buildTrackSegments(true);
+  if(mTimeFrameNo>50 && mTimeFrameNo<60)buildTrackSegments(false);
+  std::stable_sort(mITSTPCTracks_segments.begin(),mITSTPCTracks_segments.end(),comp_tracksegments);
   auto tracksegmenttime = std::chrono::high_resolution_clock::now() - tracksegmentstart;
-  LOGP(info, "Built track segments for time frame {} in {} ms",mTimeFrameNo,std::chrono::duration_cast<std::chrono::microseconds>(tracksegmenttime).count());
-
+  LOGP(info, "Built {} track segments for time frame {} in {} ms", mITSTPCTracks_segments.size(), mTimeFrameNo, std::chrono::duration_cast<std::chrono::milliseconds>(tracksegmenttime).count());
+  std::array<int,75> collissionsegmentcount; collissionsegmentcount.fill(-1);
+  for(const auto& tg : mITSTPCTracks_segments ){
+    collissionsegmentcount[tg.getCollisionId()]++;
+  }
+  int counter=0;
+  for(auto& a : collissionsegmentcount){
+    LOGP(info,"collision [{}] has {} tracksegments",counter++,a);
+  }
+  // sort by collision_id;
   return true;
 }
 
@@ -1218,9 +1251,9 @@ bool RawDataManager::nextEvent()
     return false;
   }
   mTriggerRecord = mTrgRecords->at(mEventNo);
-  O2INFO("Processing event: orbit %d bc %04d with %d digits and %d tracklets",
-         mTriggerRecord.getBCData().orbit, mTriggerRecord.getBCData().bc,
-         mTriggerRecord.getNumberOfDigits(), mTriggerRecord.getNumberOfTracklets());
+  LOGP(info, "Processing event: orbit {} bc {:04d} with {} digits and {} and ITSTPC matched track segments {}",
+       mTriggerRecord.getBCData().orbit, mTriggerRecord.getBCData().bc,
+       mTriggerRecord.getNumberOfDigits(), mTriggerRecord.getNumberOfTracklets(), mITSTPCTracks_segments.size());
 
   if (mCollisionContext) {
 
@@ -1245,6 +1278,11 @@ bool RawDataManager::nextEvent()
       }
     }
   }
+  if (mITSTPCTracks_segments.size() > 0) {
+    // we have track segments for this timeframe.
+    //  they are time sorted so find the first one with in the
+    // if(mITSTPCTracks_segments.)
+  }
 
   mEventNo++;
   return true;
@@ -1260,7 +1298,6 @@ RawDataSpan RawDataManager::getEvent()
   ev.hits = boost::make_iterator_range(mHitPoints.begin(), mHitPoints.end());
 
   auto evtime = getTriggerTime();
-
   // if (tpctracks) {
   //   for (auto &track : *mTpcTracks) {
   //     //   // auto tracktime = track.getTimeMUS().getTimeStamp();
@@ -1271,22 +1308,22 @@ RawDataSpan RawDataManager::getEvent()
   //   }
   // }
 
-/*  if (mITSTPCTracks) {
-    for (auto& track : *mITSTPCTracks) {
-      //   // auto tracktime = track.getTimeMUS().getTimeStamp();
-      // auto dtime = track.getTimeMUS().getTimeStamp() - evtime;
-      // if (dtime > mMatchTimeMinTPC && dtime < mMatchTimeMaxTPC) {
-      //   ev.tracks.push_back(track);
+  /*  if (mITSTPCTracks) {
+      for (auto& track : *mITSTPCTracks) {
+        //   // auto tracktime = track.getTimeMUS().getTimeStamp();
+        // auto dtime = track.getTimeMUS().getTimeStamp() - evtime;
+        // if (dtime > mMatchTimeMinTPC && dtime < mMatchTimeMaxTPC) {
+        //   ev.tracks.push_back(track);
 
-      // for(int ly=0; ly<6; ++ly) {
-      //   auto point = extra.extrapolate(track.getParamOut(), ly);
-      //   if (point.isValid()) {
-      //     ev.evtrackpoints.push_back(point);
-      //   }
-      // }
-      // }
-    }
-  }*/
+        // for(int ly=0; ly<6; ++ly) {
+        //   auto point = extra.extrapolate(track.getParamOut(), ly);
+        //   if (point.isValid()) {
+        //     ev.evtrackpoints.push_back(point);
+        //   }
+        // }
+        // }
+      }
+    }*/
 
   // ev.trackpoints.begin() = ev.evtrackpoints.begin();
   // ev.trackpoints.end() = ev.evtrackpoints.end();
@@ -1297,10 +1334,10 @@ RawDataSpan RawDataManager::getEvent()
 o2::dataformats::TFIDInfo RawDataManager::getTimeFrameInfo()
 {
   if (mTFIDs) {
-   // LOGP(info,"mTFIDs is valid !");
+    // LOGP(info,"mTFIDs is valid !");
     return mTFIDs->at(mTimeFrameNo - 1);
   } else {
-    LOGP(info,"mTFIDs is invalid !");
+    LOGP(info, "mTFIDs is invalid !");
     return o2::dataformats::TFIDInfo();
   }
 }
@@ -1332,9 +1369,9 @@ std::string RawDataManager::describeFiles()
   if (mDataTree->GetFriend("TRDDigit")) {
     out << "digits" << std::endl;
   }
-/*  if (mDataTree->GetFriend("TPCITS")) {
-    out << "tpc its matches" << std::endl;
-  }*/
+  /*  if (mDataTree->GetFriend("TPCITS")) {
+      out << "tpc its matches" << std::endl;
+    }*/
 
   if (mTFIDs) {
     out << mTFIDs->size() << " TFIDs were read from o2_tfidinfo.root" << std::flush;

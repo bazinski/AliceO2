@@ -73,6 +73,8 @@ class ChamberSpacePoint
 
   bool isInMCM(int detector, int padrow, int mcmcol) const;
 
+  void setCollisionId(int id) { mCollisionId = id; }
+
   /// calculate MCM corresponding to pad row/column
   // int getMCM() const { return o2::trd::HelperMethods::getMCMfromPad(mPadrow, mPadcol); }
 
@@ -85,6 +87,7 @@ class ChamberSpacePoint
   int mID;
   int mDetector;
   float mPadrow, mPadcol, mTimebin;
+  int mCollisionId{0};
 
   // static constexpr float xscale = 1.0 / (o2::trd::Geometry::cheight() + o2::trd::Geometry::cspace());
   // static constexpr float xoffset = o2::trd::Geometry::getTime0(0);
@@ -141,6 +144,12 @@ class TrackSegment
 
   /// detector number
   int getDetector() const { return mStartPoint.getDetector(); }
+  int getPadRow() const { return mStartPoint.getPadRow();}
+  int getPadCol() const { return mStartPoint.getPadCol();}
+   
+  int getCollisionId() const { return mCollisionId;}
+  void setCollisionId(int id) { mCollisionId=id;}
+
 
   ChamberSpacePoint getStartPoint()const  { return mStartPoint; }
   ChamberSpacePoint getEndPoint() const { return mEndPoint; }
@@ -151,10 +160,10 @@ class TrackSegment
   ChamberSpacePoint mStartPoint, mEndPoint;
   std::array<ChamberSpacePoint,6> mDriftPoints, mAnodePoints; // [0] is the point of drift start and anode wires respectively
   int mTrackID;
+  int mCollisionId{0};
   float mSagita; // this is findable from the TrackID
   int mDetector;
   int mDetector2; // for those instances where the track finishes a layer in a different detector to that which is starts in.
-                                                               // 6 points in each
 };
 
 // std::ostream& operator<<(std::ostream& os, const ChamberSpacePoint& p);

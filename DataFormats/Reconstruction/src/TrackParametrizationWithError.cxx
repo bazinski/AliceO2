@@ -274,7 +274,7 @@ GPUd() bool TrackParametrizationWithError<value_T>::rotate(value_t alpha)
   // RS: check if rotation does no invalidate track model (cos(local_phi)>=0, i.e. particle
   // direction in local frame is along the X axis
   if ((csp * ca + snp * sa) < 0) {
-     LOGP(warning,"Rotation failed: local cos(phi) would become {:.2f}", csp * ca + snp * sa);
+     //LOGP(warning,"Rotation failed: local cos(phi) would become {:.2f}", csp * ca + snp * sa);
     return false;
   }
   //
