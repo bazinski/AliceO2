@@ -1113,7 +1113,7 @@ bool RawDataManager::buildTrackSegments(bool onlydigits)
     mRdriftstart[iDet] = glbdriftstart[0];
     mRdriftend[iDet] = glbdriftend[0];
     mRamplificationend[iDet] = glbamplificationend[0];
-    LOGP(info, "iDet:{} R:{} driftstart:{} driftend:{} ampend:{}", iDet, glb[0], glbdriftstart[0], glbdriftend[0], glbamplificationend[0]);
+    //LOGP(info, "iDet:{} R:{} driftstart:{} driftend:{} ampend:{}", iDet, glb[0], glbdriftstart[0], glbdriftend[0], glbamplificationend[0]);
     glb.fill(0.f);
     glbdriftstart.fill(0.f);
     glbdriftend.fill(0.f);
@@ -1229,6 +1229,7 @@ bool RawDataManager::nextTimeFrame()
   //if(mTimeFrameNo>50 && mTimeFrameNo<60)buildTrackSegments(false);
   buildTrackSegments(false);
   std::stable_sort(mITSTPCTracks_segments.begin(),mITSTPCTracks_segments.end(),comp_tracksegments);
+  //tracksegements are now trd trigger order.
   auto tracksegmenttime = std::chrono::high_resolution_clock::now() - tracksegmentstart;
   LOGP(info, "Built {} track segments for time frame {} in {} ms", mITSTPCTracks_segments.size(), mTimeFrameNo, std::chrono::duration_cast<std::chrono::milliseconds>(tracksegmenttime).count());
   std::array<int,75> collissionsegmentcount; collissionsegmentcount.fill(-1);
@@ -1237,7 +1238,9 @@ bool RawDataManager::nextTimeFrame()
   }
   int counter=0;
   for(auto& a : collissionsegmentcount){
+    if(a==-1) break;
     LOGP(info,"collision [{}] has {} tracksegments",counter++,a);
+
   }
   // sort by collision_id;
   return true;
@@ -1306,24 +1309,24 @@ RawDataSpan RawDataManager::getEvent()
   //     }
   //   }
   // }
-
-  /*  if (mITSTPCTracks) {
-      for (auto& track : *mITSTPCTracks) {
-        //   // auto tracktime = track.getTimeMUS().getTimeStamp();
-        // auto dtime = track.getTimeMUS().getTimeStamp() - evtime;
-        // if (dtime > mMatchTimeMinTPC && dtime < mMatchTimeMaxTPC) {
-        //   ev.tracks.push_back(track);
-
-        // for(int ly=0; ly<6; ++ly) {
-        //   auto point = extra.extrapolate(track.getParamOut(), ly);
-        //   if (point.isValid()) {
-        //     ev.evtrackpoints.push_back(point);
-        //   }
-        // }
-        // }
-      }
-    }*/
-
+  // find first tracksegment for this event.
+  //std::vector<TrackSegment>::iterator first;
+  //std::vector<TrackSegment>::iterator last;
+  int first=-1,last=9999999;
+  int counter=0;
+  for(auto& ts : mITSTPCTracks_TRD_segments ){
+    if(ts.getCollisionId()==mEventNo && first=-1){
+      first = counter;
+    }
+    if(first!=-1 && ts.getCollisionId()!=mEventNo){
+      last = counter;
+    }
+    ++counter;
+  }
+  // find last tracksegment for this event.
+  ev.tracks_itstpc_seg= 
+    boost::make_iterator_range(mITSTPCTracks_segments.begin()+first, mITSTPCTracks_segments.begin()+last);
+  LOGP(info,"mITSTPCTracks_segments.size() {} first {}  last {} ",mITSTPCTracks_segments.size(),first,last);
   // ev.trackpoints.begin() = ev.evtrackpoints.begin();
   // ev.trackpoints.end() = ev.evtrackpoints.end();
 
