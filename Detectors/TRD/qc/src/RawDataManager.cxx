@@ -1319,8 +1319,9 @@ RawDataSpan RawDataManager::getEvent()
   //std::vector<TrackSegment>::iterator last;
   int first=-1,last=9999999;
   int counter=0;
+  LOGP(info,"mITSTPCTracks_segments.size() {} first {}  last {} before finding first and last",mITSTPCTracks_segments.size(),first,last);
   for(auto& ts : mITSTPCTracks_TRD_segments ){
-    LOGP(info,"comparing tracksegments for extraction {} {} first {} last {}",ts.getCollisionId(),mEventNo,first,last);
+    LOGP(info,"comparing tracksegments for extraction {} {} first {} last {} counter {}",ts.getCollisionId(),mEventNo,first,last,counter);
     if(ts.getCollisionId()==mEventNo && first==-1){
       first = counter;
     }
