@@ -1322,7 +1322,7 @@ RawDataSpan RawDataManager::getEvent()
   int counter=0;
   //LOGP(info,"mITSTPCTracks_segments.size() {} first {}  last {} before finding first and last",mITSTPCTracks_segments.size(),first,last);
   for(auto& ts : mITSTPCTracks_segments ){
-    LOGP(info,"comparing tracksegments for extraction {} {} first {} last {} counter {}",ts.evtime(),evtime,first,last,counter);
+    LOGP(info,"comparing tracksegments for extraction {} {} first {} last {} counter {}",ts.getTriggerTime(),evtime,first,last,counter);
     if(ts.getTriggerTime()==evtime && first==-1){
       first = counter;
     }
