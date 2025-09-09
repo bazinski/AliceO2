@@ -101,8 +101,8 @@ bool comp_spacepoint(const ChamberSpacePoint& a, const ChamberSpacePoint& b)
 
 bool comp_tracksegments(const TrackSegment& a, const TrackSegment& b)
 {
-  if(a.getCollisionId() != b.getCollisionId()){
-    return a.getCollisionId() < b.getCollisionId();
+  if(a.getTriggerTime() != b.getTriggerTime()){
+    return a.getTriggerTime() < b.getTriggerTime();
   }
   if (a.getDetector() != b.getDetector()) {
     return a.getDetector() < b.getDetector();
