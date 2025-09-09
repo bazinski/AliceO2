@@ -1226,7 +1226,8 @@ bool RawDataManager::nextTimeFrame()
   //  }
   LOGP(info, "Building track segments for time frame {} that has {} tracks", mTimeFrameNo, mITSTPCTracks->size());
   auto tracksegmentstart = std::chrono::high_resolution_clock::now(); // measure total processing time
-  if(mTimeFrameNo>50 && mTimeFrameNo<60)buildTrackSegments(false);
+  //if(mTimeFrameNo>50 && mTimeFrameNo<60)buildTrackSegments(false);
+  buildTrackSegments(false);
   std::stable_sort(mITSTPCTracks_segments.begin(),mITSTPCTracks_segments.end(),comp_tracksegments);
   auto tracksegmenttime = std::chrono::high_resolution_clock::now() - tracksegmentstart;
   LOGP(info, "Built {} track segments for time frame {} in {} ms", mITSTPCTracks_segments.size(), mTimeFrameNo, std::chrono::duration_cast<std::chrono::milliseconds>(tracksegmenttime).count());
