@@ -1329,7 +1329,7 @@ RawDataSpan RawDataManager::getEvent()
     ++counter;
   }
   // find last tracksegment for this event.
-  ev.tracks_itstpc_seg= 
+  if(first !=-1 && last != 9999999) ev.tracks_itstpc_seg= 
     boost::make_iterator_range(mITSTPCTracks_segments.begin()+first, mITSTPCTracks_segments.begin()+last);
 
   LOGP(info,"mITSTPCTracks_segments.size() {} first {}  last {} ",mITSTPCTracks_segments.size(),first,last);
