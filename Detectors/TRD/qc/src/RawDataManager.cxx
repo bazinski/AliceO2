@@ -1327,6 +1327,7 @@ RawDataSpan RawDataManager::getEvent()
     }
     if(first!=-1 && ts.getCollisionId()!=mEventNo-1){
       last = counter;
+      break;
     }
     ++counter;
   }
