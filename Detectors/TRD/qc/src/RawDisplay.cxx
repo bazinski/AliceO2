@@ -231,5 +231,13 @@ void RawDisplay::drawMCTrackSegments()
 }
 
 void RawDisplay::drawTracks(){
+  TLine line;
+  line.SetLineColor(kBlue);
+  line.SetLineWidth(2.0);
+
+  for (auto& trkseg : mDataSpan.tracks_itstpc_seg) {
+    line.DrawLine(trkseg.getStartPoint().getPadCol(), trkseg.getStartPoint().getTimeBin(), trkseg.getEndPoint().getPadCol(), trkseg.getEndPoint().getTimeBin());
+  }
+
 
 }
