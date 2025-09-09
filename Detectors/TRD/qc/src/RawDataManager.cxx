@@ -975,7 +975,7 @@ bool RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e
         //TODO what to do if the tracksegment spans a padrow or mcm ?
         //postprocess the tracksegment and split it up?
 
-        //if (debugprint)
+        if (debugprint)
           LOGP(info, "TrackSegment padrow:padcol:timebin {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f} for det {}", tracksegment.getStartPoint().getPadRowF(), tracksegment.getStartPoint().getPadCol(), tracksegment.getStartPoint().getTimeBin(), tracksegment.getEndPoint().getPadRowF(), tracksegment.getEndPoint().getPadCol(), tracksegment.getEndPoint().getTimeBin(),currDet);
         if (debugprint)
           LOGP(info, "TrackSegment  x:y:z {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f}", localpoint.X(), localpoint.Y(), localpoint.Z(), localpointend.X(), localpointend.Y(), localpointend.Z());
@@ -1340,7 +1340,7 @@ RawDataSpan RawDataManager::getEvent()
   if(first !=-1 && last != 9999999) ev.tracks_itstpc_seg= 
     boost::make_iterator_range(mITSTPCTracks_segments.begin()+first, mITSTPCTracks_segments.begin()+last);
 
-  LOGP(info,"mITSTPCTracks_segments.size() {} first {}  last {} ",mITSTPCTracks_segments.size(),first,last);
+  LOGP(info,"mITSTPCTracks_segments {} ",last-first);
   // ev.trackpoints.begin() = ev.evtrackpoints.begin();
   // ev.trackpoints.end() = ev.evtrackpoints.end();
 
