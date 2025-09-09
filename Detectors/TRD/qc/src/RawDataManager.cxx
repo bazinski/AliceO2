@@ -1323,12 +1323,14 @@ RawDataSpan RawDataManager::getEvent()
   //LOGP(info,"mITSTPCTracks_segments.size() {} first {}  last {} before finding first and last",mITSTPCTracks_segments.size(),first,last);
   for(auto& ts : mITSTPCTracks_segments ){
     LOGP(info,"comparing tracksegments for extraction {} {} first {} last {} counter {}",ts.getTriggerTime(),evtime,first,last,counter);
-    if(std::abs(ts.getTriggerTime()-evtime)<0.5 && first==-1){
-      first = counter;
-    }
     if(first!=-1 && std::abs(ts.getTriggerTime()-evtime)<0.5){
+      LOGP(info,"setting last tracksegments for extraction {} {} first {} last {} counter {}",ts.getTriggerTime(),evtime,first,last,counter);
       last = counter;
       break;
+    }
+    if(std::abs(ts.getTriggerTime()-evtime)<0.5 && first==-1){
+    LOGP(info,"setting first tracksegments for extraction {} {} first {} last {} counter {}",ts.getTriggerTime(),evtime,first,last,counter);
+      first = counter;
     }
     ++counter;
   }
