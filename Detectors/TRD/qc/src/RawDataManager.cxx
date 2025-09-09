@@ -31,7 +31,7 @@
 #include "Framework/Logger.h"
 
 using namespace o2::trd;
-constexpr bool debugprint = true;
+constexpr bool debugprint = false;
 /// comparison function to order digits by det / row / MCM / -channel
 bool comp_digit(const o2::trd::Digit& a, const o2::trd::Digit& b)
 {
@@ -599,7 +599,7 @@ bool RawDataManager::propagateToLayerX(o2::dataformats::TrackTPCITS& track, floa
 //       LOGP(info,"b dx : {} xToGo:{} trackX:{}",dx,xToGo, track.getX());
   }
   track.setX(xToGo);
-   LOGP(info,"XXXXXXXXXXXXXXXXXXX x moved by {} to ",xToGo,track.getX());
+  // LOGP(info,"XXXXXXXXXXXXXXXXXXX x moved by {} to ",xToGo,track.getX());
  //   LOGP(info,"{} at line {}",__func__,__LINE__);
   return true;
 }
@@ -972,8 +972,8 @@ bool RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e
         //TODO what to do if the tracksegment spans a padrow or mcm ?
         //postprocess the tracksegment and split it up?
 
-        if (debugprint)
-          LOGP(info, "TrackSegment padrow:padcol:timebin {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f}", tracksegment.getStartPoint().getPadRowF(), tracksegment.getStartPoint().getPadCol(), tracksegment.getStartPoint().getTimeBin(), tracksegment.getEndPoint().getPadRowF(), tracksegment.getEndPoint().getPadCol(), tracksegment.getEndPoint().getTimeBin());
+        //if (debugprint)
+          LOGP(info, "TrackSegment padrow:padcol:timebin {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f} for det {}", tracksegment.getStartPoint().getPadRowF(), tracksegment.getStartPoint().getPadCol(), tracksegment.getStartPoint().getTimeBin(), tracksegment.getEndPoint().getPadRowF(), tracksegment.getEndPoint().getPadCol(), tracksegment.getEndPoint().getTimeBin(),currDet);
         if (debugprint)
           LOGP(info, "TrackSegment  x:y:z {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f}", localpoint.X(), localpoint.Y(), localpoint.Z(), localpointend.X(), localpointend.Y(), localpointend.Z());
         if (debugprint)
