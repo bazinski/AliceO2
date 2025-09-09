@@ -1319,6 +1319,7 @@ RawDataSpan RawDataManager::getEvent()
   int first=-1,last=9999999;
   int counter=0;
   for(auto& ts : mITSTPCTracks_TRD_segments ){
+    LOGP(info,"comparing tracksegments for extraction {} {} first {} last {}",ts.getCollisionId(),mEventNo,first,last);
     if(ts.getCollisionId()==mEventNo && first==-1){
       first = counter;
     }
