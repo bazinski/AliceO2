@@ -1265,7 +1265,7 @@ bool RawDataManager::nextEvent()
         mMCTree->GetEntry(i);
         // }
 
-        O2INFO("Loaded matching MC event #%d with time offset %f ns and %d hits",
+        LOGP(info, "Loaded matching MC event #{} with time offset {:.2f} ns and {} hits",
                i, mTriggerRecord.getBCData().differenceInBCNS(evrec), mHits->size());
 
         // convert hits to spacepoints
