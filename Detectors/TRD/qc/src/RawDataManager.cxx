@@ -1320,10 +1320,10 @@ RawDataSpan RawDataManager::getEvent()
   //LOGP(info,"mITSTPCTracks_segments.size() {} first {}  last {} before finding first and last",mITSTPCTracks_segments.size(),first,last);
   for(auto& ts : mITSTPCTracks_segments ){
     LOGP(info,"comparing tracksegments for extraction {} {} first {} last {} counter {}",ts.getCollisionId(),mEventNo,first,last,counter);
-    if(ts.getCollisionId()==mEventNo && first==-1){
+    if(ts.getCollisionId()==mEventNo-1 && first==-1){
       first = counter;
     }
-    if(first!=-1 && ts.getCollisionId()!=mEventNo){
+    if(first!=-1 && ts.getCollisionId()!=mEventNo-1){
       last = counter;
     }
     ++counter;
