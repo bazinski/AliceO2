@@ -971,6 +971,7 @@ bool RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e
         ChamberSpacePoint ae(currDet, 0, localpointend.X(), localpointend.Y(), localpointend.Z(), rcts, false);
         tracksegment.setEndPoint(ae);
         tracksegment.setCollisionId(collisionId);
+        tracksegment.setTriggerTime(triggertime);
         //TODO what to do if the tracksegment spans a padrow or mcm ?
         //postprocess the tracksegment and split it up?
 
@@ -1322,10 +1323,10 @@ RawDataSpan RawDataManager::getEvent()
   //LOGP(info,"mITSTPCTracks_segments.size() {} first {}  last {} before finding first and last",mITSTPCTracks_segments.size(),first,last);
   for(auto& ts : mITSTPCTracks_segments ){
     LOGP(info,"comparing tracksegments for extraction {} {} first {} last {} counter {}",ts.getCollisionId(),mEventNo,first,last,counter);
-    if(ts.getCollisionId()==mEventNo-1 && first==-1){
+    if(ts.getTriggerTime()==evtime && first==-1){
       first = counter;
     }
-    if(first!=-1 && ts.getCollisionId()!=mEventNo-1){
+    if(first!=-1 && ts.getTriggerTime()!=evtime){
       last = counter;
       break;
     }
