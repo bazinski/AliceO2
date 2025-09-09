@@ -596,11 +596,11 @@ bool RawDataManager::propagateToLayerX(o2::dataformats::TrackTPCITS& track, floa
           return false;
         }*/
     dx = xToGo - track.getX();
-    //   LOGP(info,"b dx : {} xToGo:{} trackX:{}",dx,xToGo, track.getX());
+       LOGP(info,"b dx : {} xToGo:{} trackX:{}",dx,xToGo, track.getX());
   }
   track.setX(xToGo);
-  // LOGP(info,"XXXXXXXXXXXXXXXXXXX x moved by {} to ",xToGo,track.getX());
-  //  LOGP(info,"{} at line {}",__func__,__LINE__);
+   LOGP(info,"XXXXXXXXXXXXXXXXXXX x moved by {} to ",xToGo,track.getX());
+    LOGP(info,"{} at line {}",__func__,__LINE__);
   return true;
 }
 
