@@ -150,6 +150,8 @@ class TrackSegment
   int getCollisionId() const { return mCollisionId;}
   void setCollisionId(int id) { mCollisionId=id;}
 
+  int getTriggerTime() const { return mTriggerTime;}
+  void setTriggerTime(float ttime) { mTriggerTime=ttime;}
 
   ChamberSpacePoint getStartPoint()const  { return mStartPoint; }
   ChamberSpacePoint getEndPoint() const { return mEndPoint; }
@@ -161,6 +163,7 @@ class TrackSegment
   std::array<ChamberSpacePoint,6> mDriftPoints, mAnodePoints; // [0] is the point of drift start and anode wires respectively
   int mTrackID;
   int mCollisionId{0};
+  float mTriggerTime{0.0};
   float mSagita; // this is findable from the TrackID
   int mDetector;
   int mDetector2; // for those instances where the track finishes a layer in a different detector to that which is starts in.
