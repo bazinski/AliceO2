@@ -1228,8 +1228,8 @@ bool RawDataManager::nextTimeFrame()
   //  }
   LOGP(info, "Building track segments for time frame {} that has {} tracks", mTimeFrameNo, mITSTPCTracks->size());
   auto tracksegmentstart = std::chrono::high_resolution_clock::now(); // measure total processing time
-  //if(mTimeFrameNo>50 && mTimeFrameNo<60)buildTrackSegments(false);
-  buildTrackSegments(false);
+  if(mTimeFrameNo>50 && mTimeFrameNo<60)buildTrackSegments(false);
+  //buildTrackSegments(false);
   LOGP(info,"sorting ITSTPC track segments with size : {}",mITSTPCTracks_segments.size());
   std::stable_sort(mITSTPCTracks_segments.begin(),mITSTPCTracks_segments.end(),comp_tracksegments);
   //tracksegements are now trd trigger order.
