@@ -74,7 +74,7 @@ PadRowDisplay::PadRowDisplay(RawDataSpan& padrowdata, int eventnum, TVirtualPad*
   }
 
   mName = Form("det%03d_padrow%d_event%d", det, padrow,eventnum);
-  mDesc = Form("Detector %03d_%d e:%d", det, padrow,event);
+  mDesc = Form("Detector %03d_%d e:%d", det, padrow,eventnum);
   
 
   // MCM column number on ROC [0..7]
