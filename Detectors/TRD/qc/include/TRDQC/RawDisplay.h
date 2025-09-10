@@ -62,14 +62,14 @@ class RawDisplay
 class MCMDisplay : public RawDisplay
 {
  public:
-  MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad = nullptr);
+  MCMDisplay(RawDataSpan& mcmdata, int eventnum=-1, TVirtualPad* pad = nullptr);
 };
 
 class PadRowDisplay : public RawDisplay
 {
 
   public:
-    PadRowDisplay(RawDataSpan& padrowdata, TVirtualPad* pad = nullptr);
+    PadRowDisplay(RawDataSpan& padrowdata, int eventnum=-1,TVirtualPad* pad = nullptr);
 
   private:
     int mPadRow;

@@ -49,7 +49,7 @@ RawDisplay::RawDisplay(RawDataSpan& dataspan, TVirtualPad* pad)
 {
 }
 
-PadRowDisplay::PadRowDisplay(RawDataSpan& padrowdata, TVirtualPad* pad)
+PadRowDisplay::PadRowDisplay(RawDataSpan& padrowdata, int eventnum, TVirtualPad* pad)
   : RawDisplay(padrowdata, pad) // initializes mDataSpan, mPad
 {
 // 
@@ -61,17 +61,21 @@ PadRowDisplay::PadRowDisplay(RawDataSpan& padrowdata, TVirtualPad* pad)
     padrow = x.getPadRow();
     padcol = x.getPadCol();
   } else if (std::distance(mDataSpan.tracklets.begin(), mDataSpan.tracklets.end())) {
-    auto x = *mDataSpan.tracklets.begin();
+    auto x = *(mDataSpan.tracklets.begin()+1);//begin();
     det = x.getDetector();
-    rob = x.getPadRow();
+    padrow = x.getPadRow();
+  } else if (std::distance(mDataSpan.tracks_itstpc_seg.begin(), mDataSpan.tracks_itstpc_seg.end())) {
+    auto x = *(mDataSpan.tracks_itstpc_seg.begin()+1);//begin();
+    det = x.getDetector();
+    padrow = x.getPadRow();
   } else {
-    O2ERROR("found neither digits nor tracklets in PadRow Display");
+    O2ERROR("found neither digits nor tracklets nor tracksegments in PadRow Display");
     assert(false);
   }
 
-  mName = Form("det%03d_padrow%d", det, padrow);
-  //mDesc = Form("Detector %02d_%d_%d ", det / 30, (det % 30) / 6, padrow, padcol, rob, mcm);
-  ;
+  mName = Form("det%03d_padrow%d_event%d", det, padrow,eventnum);
+  mDesc = Form("Detector %03d_%d e:%d", det, padrow,event);
+  
 
   // MCM column number on ROC [0..7]
 //  int mcmcol = mcm % constants::NMCMROBINCOL + HelperMethods::getROBSide(rob) * constants::NMCMROBINCOL;
@@ -99,7 +103,7 @@ PadRowDisplay::PadRowDisplay(RawDataSpan& padrowdata, TVirtualPad* pad)
  
 }
 
-MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad)
+MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, int eventnum, TVirtualPad* pad)
   : RawDisplay(mcmdata, pad) // initializes mDataSpan, mPad
 {
   int det = -1, rob = -1, mcm = -1;
@@ -119,8 +123,8 @@ MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad)
     assert(false);
   }
 
-  mName = Form("det%03d_rob%d_mcm%02d", det, rob, mcm);
-  mDesc = Form("Detector %02d_%d_%d (%03d) - MCM %d:%02d", det / 30, (det % 30) / 6, det % 6, det, rob, mcm);
+  mName = Form("det%03d_rob%d_mcm%02d_e%d", det, rob, mcm,eventnum);
+  mDesc = Form("Detector %02d_%d_%d (%03d) - MCM %d:%02d e:%d", det / 30, (det % 30) / 6, det % 6, det, rob, mcm,eventnum);
   ;
 
   // MCM column number on ROC [0..7]
@@ -232,10 +236,12 @@ void RawDisplay::drawMCTrackSegments()
 
 void RawDisplay::drawTracks(){
   TLine line;
-  line.SetLineColor(kBlue);
+  line.SetLineColor(kGreen);
   line.SetLineWidth(2.0);
 
+  LOGP(info,"Drawing tracks with {} track segments" ,mDataSpan.tracks_itstpc_seg.size());
   for (auto& trkseg : mDataSpan.tracks_itstpc_seg) {
+    LOGP(info," track drawing from {}:{} to {}:{}",trkseg.getStartPoint().getPadCol(), trkseg.getStartPoint().getTimeBin(), trkseg.getEndPoint().getPadCol(), trkseg.getEndPoint().getTimeBin());
     line.DrawLine(trkseg.getStartPoint().getPadCol(), trkseg.getStartPoint().getTimeBin(), trkseg.getEndPoint().getPadCol(), trkseg.getEndPoint().getTimeBin());
   }
 
