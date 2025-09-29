@@ -49,7 +49,7 @@ RawDisplay::RawDisplay(RawDataSpan& dataspan, TVirtualPad* pad)
 {
 }
 
-PadRowDisplay::PadRowDisplay(RawDataSpan& padrowdata, int eventnum, TVirtualPad* pad)
+PadRowDisplay::PadRowDisplay(RawDataSpan& padrowdata, int eventnum, int tf, TVirtualPad* pad)
   : RawDisplay(padrowdata, pad) // initializes mDataSpan, mPad
 {
 // 
@@ -73,8 +73,8 @@ PadRowDisplay::PadRowDisplay(RawDataSpan& padrowdata, int eventnum, TVirtualPad*
     assert(false);
   }
 
-  mName = Form("det%03d_padrow%d_event%d", det, padrow,eventnum);
-  mDesc = Form("Detector %03d_%d e:%d", det, padrow,eventnum);
+  mName = Form("det%03d_padrow%d_tf%d_event%d", det, padrow,tf,eventnum);
+  mDesc = Form("Detector %03d_%d tf:%d e:%d", det, padrow,tf,eventnum);
   
 
   // MCM column number on ROC [0..7]
@@ -103,7 +103,7 @@ PadRowDisplay::PadRowDisplay(RawDataSpan& padrowdata, int eventnum, TVirtualPad*
  
 }
 
-MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, int eventnum, TVirtualPad* pad)
+MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, int eventnum, int tf, TVirtualPad* pad)
   : RawDisplay(mcmdata, pad) // initializes mDataSpan, mPad
 {
   int det = -1, rob = -1, mcm = -1;
@@ -123,8 +123,8 @@ MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, int eventnum, TVirtualPad* pad)
     assert(false);
   }
 
-  mName = Form("det%03d_rob%d_mcm%02d_e%d", det, rob, mcm,eventnum);
-  mDesc = Form("Detector %02d_%d_%d (%03d) - MCM %d:%02d e:%d", det / 30, (det % 30) / 6, det % 6, det, rob, mcm,eventnum);
+  mName = Form("det%03d_rob%d_mcm%02d_tf%d_e%d", det, rob, mcm,tf,eventnum);
+  mDesc = Form("Detector %02d_%d_%d (%03d) - MCM %d:%02d tf:%d e:%d", det / 30, (det % 30) / 6, det % 6, det, rob, mcm,tf,eventnum);
   ;
 
   // MCM column number on ROC [0..7]

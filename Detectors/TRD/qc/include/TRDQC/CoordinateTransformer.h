@@ -144,7 +144,7 @@ class TrackSegment
 
   /// detector number
   int getDetector() const { return mStartPoint.getDetector(); }
-  int getPadRow() const { return mStartPoint.getPadRow();}
+  float getPadRow() const { return mStartPoint.getPadRowF();}
   int getPadCol() const { return mStartPoint.getPadCol();}
    
   int getCollisionId() const { return mCollisionId;}
@@ -158,15 +158,47 @@ class TrackSegment
   void setStartPoint(const ChamberSpacePoint& startpoint)  { mStartPoint=startpoint; }
   void setEndPoint(const ChamberSpacePoint& endpoint) {mEndPoint=endpoint; }
 
+  int getRefTPCId()const { return mRefTPCId;}
+  int getRefITSId()const { return mRefITSId;}
+  void setRefTPCId(int id) { mRefTPCId=id;}
+  void setRefITSId(int id) { mRefITSId=id;}
+
+  float getPt(){return mPt;}
+  float getSnp(){return mSnp;}
+  float getPhi(){return mPhi;}
+  float getAlpha(){return mAlpha;}
+  float getStartX(){return mStartX;}
+  float getStartY(){return mStartY;}
+  float getStartZ(){return mStartZ;}
+  void setPt(float pt){ mPt=pt;}
+  void setSnp(float snp){ mSnp=snp;}
+  void setPhi(float phi){ mPhi=phi;}
+  void setAlpha(float alpha){ mAlpha=alpha;}
+  void setStartX(float x){ mStartX=x;}
+  void setStartY(float y){ mStartY=y;}
+  void setStartZ(float z){ mStartZ=z;}
+
  protected:
   ChamberSpacePoint mStartPoint, mEndPoint;
   std::array<ChamberSpacePoint,6> mDriftPoints, mAnodePoints; // [0] is the point of drift start and anode wires respectively
   int mTrackID;
+  int mRefTPCId;
+  int mRefITSId;
   int mCollisionId{0};
   float mTriggerTime{0.0};
   float mSagita; // this is findable from the TrackID
   int mDetector;
   int mDetector2; // for those instances where the track finishes a layer in a different detector to that which is starts in.
+  float mPt{0.0};
+  float mPhi{0.0};
+  float mSnp{0.0};
+  float mStartX{0.0};
+  float mStartY{0.0};
+  float mStartZ{0.0};
+  float mAlpha{0.0};
+  
+
+
 };
 
 // std::ostream& operator<<(std::ostream& os, const ChamberSpacePoint& p);
