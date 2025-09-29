@@ -50,20 +50,24 @@ GPUd() bool TrackParametrizationWithError<value_T>::propagateTo(value_t xk, valu
   //----------------------------------------------------------------
   value_t dx = xk - this->getX();
   if (gpu::CAMath::Abs(dx) < constants::math::Almost0) {
+     //LOGP(info,"gpu::CAMath::Abs({}) < constants::math::Almost0) ",dx);
     return true;
   }
   value_t crv = this->getCurvature(b);
   value_t x2r = crv * dx;
   value_t f1 = this->getSnp(), f2 = f1 + x2r;
   if ((gpu::CAMath::Abs(f1) > constants::math::Almost1) || (gpu::CAMath::Abs(f2) > constants::math::Almost1)) {
+     //LOGP(info,"gpu::CAMath::Abs({}) > constants::math::Almost1) || (gpu::CAMath::Abs({}) > constants::math::Almost1))",f1,f2);
     return false;
   }
   value_t r1 = gpu::CAMath::Sqrt((1.f - f1) * (1.f + f1));
   if (gpu::CAMath::Abs(r1) < constants::math::Almost0) {
+    //LOGP(info,"gpu::CAMath::Abs({}) < constants::math::Almost0)",r1);
     return false;
   }
   value_t r2 = gpu::CAMath::Sqrt((1.f - f2) * (1.f + f2));
   if (gpu::CAMath::Abs(r2) < constants::math::Almost0) {
+    //LOGP(info,"gpu::CAMath::Abs({}) < constants::math::Almost0)",r2);
     return false;
   }
   double dy2dx = (f1 + f2) / (r1 + r2);
@@ -80,6 +84,7 @@ GPUd() bool TrackParametrizationWithError<value_T>::propagateTo(value_t xk, valu
     //
     auto arg = r1 * f2 - r2 * f1;
     if (gpu::CAMath::Abs(arg) > constants::math::Almost1) {
+     // LOGP(info,"gpu::CAMath::Abs({}) > constants::math::Almost1)   {}*{}-{}*{}",arg,r1,f2,r2,f1);
       return false;
     }
     value_t rot = gpu::CAMath::ASin(arg);           // more economic version from Yura.
@@ -443,29 +448,34 @@ GPUd() bool TrackParametrizationWithError<value_T>::propagateTo(value_t xk, cons
 
   value_t dx = xk - this->getX();
   if (gpu::CAMath::Abs(dx) < constants::math::Almost0) {
+    // LOGP(info,"{} {} (gpu::CAMath::Abs({}) < constants::math::Almost0)",__LINE__,__func__,dx);
     return true;
   }
   // Do not propagate tracks outside the ALICE detector
   if (gpu::CAMath::Abs(dx) > 1e5 || gpu::CAMath::Abs(this->getY()) > 1e5 || gpu::CAMath::Abs(this->getZ()) > 1e5) {
-    LOG(warning) << "Anomalous track, target X:" << xk;
+   // LOG(warning) << "Anomalous track, target X:" << xk;
     //    print();
     return false;
   }
   value_t crv = (gpu::CAMath::Abs(b[2]) < constants::math::Almost0) ? 0.f : this->getCurvature(b[2]);
   if (gpu::CAMath::Abs(crv) < constants::math::Almost0) {
+    //LOGP(info,"{} {}  (gpu::CAMath::Abs({}?v) < constants::math::Almost0) ",__LINE__,__func__,crv);
     return propagateTo(xk, 0.);
   }
   value_t x2r = crv * dx;
   value_t f1 = this->getSnp(), f2 = f1 + x2r;
   if ((gpu::CAMath::Abs(f1) > constants::math::Almost1) || (gpu::CAMath::Abs(f2) > constants::math::Almost1)) {
+    //LOGP(info," {} {}  ((gpu::CAMath::Abs({}) > constants::math::Almost1) || (gpu::CAMath::Abs({}) > constants::math::Almost1))",__LINE__,__func__,f1,f2);
     return false;
   }
   value_t r1 = gpu::CAMath::Sqrt((1.f - f1) * (1.f + f1));
   if (gpu::CAMath::Abs(r1) < constants::math::Almost0) {
+    //LOGP(info,"{} {} (gpu::CAMath::Abs() < constants::math::Almost0)",__LINE__,__func__,r1);
     return false;
   }
   value_t r2 = gpu::CAMath::Sqrt((1.f - f2) * (1.f + f2));
   if (gpu::CAMath::Abs(r2) < constants::math::Almost0) {
+   // LOGP(info,"{} {} (gpu::CAMath::Abs() < constants::math::Almost0)",__LINE__,__func__,r2);
     return false;
   }
 
@@ -477,6 +487,7 @@ GPUd() bool TrackParametrizationWithError<value_T>::propagateTo(value_t xk, cons
   // get the track x,y,z,px/p,py/p,pz/p,p,sinAlpha,cosAlpha in the Global System
   std::array<value_t, 9> vecLab{0.f};
   if (!this->getPosDirGlo(vecLab)) {
+    LOGP(info,"{} {} getPosDirGlo failed",__LINE__,__func__);
     return false;
   }
   //
@@ -576,6 +587,7 @@ GPUd() bool TrackParametrizationWithError<value_T>::propagateTo(value_t xk, cons
   value_t x = vecLab[0], y = vecLab[1], z = vecLab[2];
   if (gpu::CAMath::Abs(dx) > constants::math::Almost0) {
     if (gpu::CAMath::Abs(vecLab[3]) < constants::math::Almost0) {
+    LOGP(info,"{} {} (gpu::CAMath::Abs(vecLab[3]) < constants::math::Almost0)",__LINE__,__func__,vecLab[3]);
       return false;
     }
     dx = xk - vecLab[0];

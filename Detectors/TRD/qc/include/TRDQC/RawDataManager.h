@@ -136,7 +136,7 @@ class RawDataManager
   // void SetMatchWindowTPC(float min, float max)
   // { mMatchTimeMinTPC=min; mMatchTimeMaxTPC=max; }
 
-  bool nextTimeFrame();
+  bool nextTimeFrame(bool onlydigits=false);
   bool nextEvent();
 
   /// access time frame info
@@ -192,7 +192,7 @@ class RawDataManager
   o2::trd::TrackletTransformer mTransformer;
   bool propagateToLayerX(o2::dataformats::TrackTPCITS& track, float xToGo, float e, float maxStep);
   void prepareTracking();//std::array<int32_t,540*mMaxTriggers>& trdTrackletIndexArray);
-  bool propagateTrack(o2::dataformats::TrackTPCITS& track, float e, float maxStep, float triggertime, int& glbTrkltIdxOffset,  int collisionId);
+  int propagateTrack(o2::dataformats::TrackTPCITS& track, float e, float maxStep, float triggertime, int& glbTrkltIdxOffset,  int collisionId);
   int32_t getSector(float alpha);
   float getAlphaOfSector(const int32_t sec);
   int32_t getDetectorNumber(const float zPos, const float alpha, const int32_t layer);
