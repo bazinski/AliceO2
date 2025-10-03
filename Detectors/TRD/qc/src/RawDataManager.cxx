@@ -369,7 +369,7 @@ std::vector<TrackSegment> RawDataSpan::makeMCTrackSegments()
 }
 
 /// The RawDataManager constructor: connects all data files and sets up trees, readers etc.
-RawDataManager::RawDataManager(std::filesystem::path dir)
+RawDataManager::RawDataManager(std::filesystem::path dir, std::string treefname)
 {
 
   if (!std::filesystem::exists(dir) || !std::filesystem::is_directory(dir)) {
@@ -555,8 +555,9 @@ RawDataManager::RawDataManager(std::filesystem::path dir)
   }
   mTransformer.init();
   mTransformer.setCalVdriftExB(calvdriftexb);
-
-
+LOGP(info,"Setup root tree for output");
+   mfile = new TFile(treefname.c_str(),"RECREATE");
+   moutputtree = new TTree("t","tracklets and tracksegments");
 
 }
 /***********************************************************************************************/
@@ -932,6 +933,27 @@ bool RawDataManager::getYZAt(float xk, float b, float& y, float& z, o2::dataform
   return true;
 }
 
+int RawDataManager::findNearestTracklet(o2::trd::TrackSegment& tracksegment)
+{
+  auto triggertime = tracksegment.getTriggerTime();
+  //loop through tracklets and find closest.
+  //
+  //
+  //
+  ////// WE ARE HERE !!!!!!!
+  for(auto& trgrec : mTriggerRecord){
+      auto triggertime = getTriggerTime(trgrec, *mTFIDs, mTimeFrameNo - 1);
+      if (!trackMatchesCollision(triggertime, tracksegment.getTrackTime())) {
+        continue;
+      }
+      for(int trklt=trgrec.getFirstTracklet(); trklt<trgrec.getFirstTracklet()+trgrec.getNumberOfTracklets();++trklt){
+       
+      }
+
+
+  }
+
+}
 int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e, float maxStep, float triggertime, int& glbTrkltIdxOffset, int collisionId)
 {
   if (debugprint)
@@ -941,9 +963,33 @@ int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e,
   int layerCount = 0;
   const int32_t nMaxChambersToSearch = 18;
   int32_t trkltIdxOffset = collisionId * (o2::trd::constants::NCHAMBER + 1); // offset for accessing mTrackletIndexArray for given collision
+  std::vector<o2::trd::TrackSegment> btracksegments;
+  std::vector<o2::trd::Tracklet64> btracklets;
+  int timeframe;
+  int eventno;
+  int matched;
+  float trackalpha,tracksnp,pT,trackxstart;
+  float tracktime,trdtriggertime;
+  int itsindex,tpcindex;
+  int layers;
+  moutputtree->Branch("segment", &btracksegments);
+  moutputtree->Branch("tracklet", &btracklets);
+  moutputtree->Branch("timeframe",&timeframe);
+  //moutputtree->Branch("trackxstart",&trackxstart);
+  moutputtree->Branch("alpha",&trackalpha);
+  moutputtree->Branch("snp",&tracksnp);
+  moutputtree->Branch("pt",&pT);
+  moutputtree->Branch("itsindex",&itsindex);
+  moutputtree->Branch("tpcindex",&tpcindex);
+  moutputtree->Branch("event",&eventno);
+  moutputtree->Branch("matched",&matched);
+  moutputtree->Branch("triggertime",&trdtriggertime);
+  moutputtree->Branch("tracktime",&tracktime);
+  moutputtree->Branch("layers",&layers);
+                                                                             //
   for (int32_t iLayer = 0; iLayer < 6; ++iLayer) {
     //   nCurrHypothesis = 0;
-  //  if (debugprint)
+    if (debugprint)
       LOGP(info, " $$$$ Layer : {} layercount: {}", iLayer,layerCount);
     const o2::trd::PadPlane* pad = mGeo->getPadPlane(iLayer, 0);
     float tilt = std::tan(std::numbers::pi / 180.f * pad->getTiltingAngle());
@@ -973,8 +1019,7 @@ int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e,
     float zShiftTrk = (track.getTimeMUS().getTimeStamp() - triggertime) * mTPCVdrift * side;
 
     if (!isGeoFindable(track, iLayer, track.getAlpha(), zShiftTrk)) {
-           LOGP(info,"Track not geofindable");
-
+   //        LOGP(info,"Track not geofindable");
       continue;
     }
     layerCount++;
@@ -1006,7 +1051,6 @@ int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e,
     //     LOGP(info,"chambers to search : {}",s);
     //    LOGP(info,"chambers to search : {}",aa);
 
-    // look for tracklets in chamber(s)
     for (int32_t iDet = 0; iDet < nMaxChambersToSearch; iDet++) {
       int32_t currDet = det[iDet];
       if (currDet == -1) {
@@ -1023,11 +1067,11 @@ int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e,
         }
       }
       if (currSec != getSector(track.getAlpha())) {
-  //      if (debugprint)
+        if (debugprint)
           LOGP(info, "Track is in sector {} and we are in sector {}", getSector(track.getAlpha()), currSec);
         continue;
       }
-      // propagate track to radius of chamber
+      // propagate track to start radius of chamber drift start
       const PadPlane* pp = mGeo->getPadPlane(currDet);
       if (propagateToLayerX(track, mRdriftstart[currDet], 0.8f, 0.2f)) { // prop.propagateToX(mR[currDet], .8f, .2f)) {
         // we are at the start of a layer now propagate to the outter radius and build a tracksegment for the voxel of an mcm. TODO voxel of a padrow
@@ -1078,6 +1122,7 @@ int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e,
         tracksegment.setEndPoint(ae);
         tracksegment.setCollisionId(collisionId);
         tracksegment.setTriggerTime(triggertime);
+        tracksegment.setTrackTime(track.getTimeMUS().getTimeStamp());
         tracksegment.setRefTPCId(track.getRefTPC());
         tracksegment.setRefITSId(track.getRefITS());
         tracksegment.setPhi(track.getPhi());
@@ -1095,8 +1140,12 @@ int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e,
         if (debugprint)
           LOGP(info, "TrackSegmentG x:y:z {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f}", localpointG.X(), localpointG.Y(), localpointG.Z(), localpointendG.X(), localpointendG.Y(), localpointendG.Z());
         mITSTPCTracks_segments.push_back(tracksegment);
+        btracksegments.push_back(tracksegment);
+        //find nearest tracklet to this track segment.
+        int trackletindex=findNearestTracklet(tracksegment);
+        btracklet.push_back(mTracklets[trackletindex]);
       } else {
-        LOGP(info, "Track could not be propagated to radius of chamber {}", currDet);
+        LOGP(info, "Track could not be propagated to radius of chamber {} which is layer: {}", currDet, iLayer);
       }
     } // chamber loop
 
@@ -1105,9 +1154,21 @@ int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e,
   } // end of layer loop
   // if(layerCount>0) LOGP(info,"Layer count : {}",layerCount);
   /****************************************************************************************/
+  //now write the tree event ..
+      timeframe=getTimeFrameNumber();
+      eventno=getEventNumber();
+      trackalpha=track.getAlpha();
+      tracksnp=track.getSnp();
+      pT=track.getPt();
+      itsindex=track.getRefITS();
+      tpcindex=track.getRefTPC();
+      tracktime=track.getTimeMUS().getTimeStamp();
+      trdtriggertime=triggertime;;   
+      layers=layerCount;
+
  // if (layerCount > 2)
  //   return true;
- LOGP(info,"propagateTrack returning with layercount of {}",layerCount);
+ //LOGP(info,"propagateTrack returning with layercount of {}",layerCount);
   return layerCount;
 }
 /***********************************************************************************************/
@@ -1120,6 +1181,7 @@ bool RawDataManager::buildTrackSegments(bool onlydigits)
   //LOGP(info,"{} {}",__func__,__LINE__);
   bool timeframehasdigits = false;
   bool timeframehastracks = false;
+
   //clear the tracksegments
   mITSTPCTracks_segments.clear();
   if (onlydigits) {
@@ -1198,36 +1260,37 @@ bool RawDataManager::buildTrackSegments(bool onlydigits)
       auto ttrack = track;
       trackcounter++;
       if (trackMatchesCollision(triggertime, ttrack.getTimeMUS().getTimeStamp())) {
-        trackcounter++;
-        int numberOfLayers=0;
-        auto difftime = ttrack.getTimeMUS().getTimeStamp() - triggertime;
-        auto pt = track.getPt();
-        float timeWindow = 4.0; // time is within 20us
-        if (difftime < timeWindow && pt>0.5) {
-          // TracksForThisEvent.push_back(track);
-          //  Track_pad_row_timebin.push_back(GeneratePadRowTimeBin(track));
-          numberOfTimeTrackMatched++;
-          tracktimewindowcounter++;
-          // if(pt>1.0){
-          // LOGP(info,"$$$$ Propagating track ..... {} {} track.x={} trigtime:{}   tracktime:{}  its:{}  tpc:{} trackcounter:{} collionsId:{} timeframe:{} eventno:{}",__func__,__LINE__,ttrack.getX(),triggertime,ttrack.getTimeMUS().getTimeStamp(),
-          //    (int)ttrack.getRefITS(),(int)ttrack.getRefTPC(),trackcounter,collisionId,mTimeFrameNo,mEventNo);
-          numberOfLayers=propagateTrack(ttrack, .8f, 2.f, triggertime, trackletstart, collisionId);
-          totalNumberOfLayers+=numberOfLayers;
-          if (numberOfLayers > -1) {
-            // LOGP(info,"  track propagated..... collid:{} timeframe:{} eventno:{}",collisionId,mTimeFrameNo,mEventNo);
-            goodtrackcounter++; // we have at least a singular layer 0,1,2,3,4,5;
-          } else {
-            badtrackcounter++;
-            // LOGP(info," track failed to propagate ..... collid:{} timeframe:{} eventno:{}",collisionId,mTimeFrameNo,mEventNo);
-          }
-          LOGP(info,"$$$$  Finished Propagating track ..... with track.x={} collid:{} timeframe:{} eventno:{} layerscount:{} layersfromprop:{}, trackpt:{}",ttrack.getX(),collisionId,mTimeFrameNo,mEventNo,totalNumberOfLayers, numberOfLayers, ttrack.getPt());
-          //}
+        continue;
+      }
+      trackcounter++;
+      int numberOfLayers=0;
+      auto difftime = ttrack.getTimeMUS().getTimeStamp() - triggertime;
+      auto pt = track.getPt();
+      float timeWindow = 4.0; // time is within 20us
+      if (difftime < timeWindow && pt>2.0) {
+        // TracksForThisEvent.push_back(track);
+        //  Track_pad_row_timebin.push_back(GeneratePadRowTimeBin(track));
+        numberOfTimeTrackMatched++;
+        tracktimewindowcounter++;
+        // if(pt>1.0){
+        // LOGP(info,"$$$$ Propagating track ..... {} {} track.x={} trigtime:{}   tracktime:{}  its:{}  tpc:{} trackcounter:{} collionsId:{} timeframe:{} eventno:{}",__func__,__LINE__,ttrack.getX(),triggertime,ttrack.getTimeMUS().getTimeStamp(),
+        //    (int)ttrack.getRefITS(),(int)ttrack.getRefTPC(),trackcounter,collisionId,mTimeFrameNo,mEventNo);
+        numberOfLayers=propagateTrack(ttrack, .8f, 2.f, triggertime, trackletstart, collisionId);
+        totalNumberOfLayers+=numberOfLayers;
+        if (numberOfLayers > -1) {
+          // LOGP(info,"  track propagated..... collid:{} timeframe:{} eventno:{}",collisionId,mTimeFrameNo,mEventNo);
+          goodtrackcounter++; // we have at least a singular layer 0,1,2,3,4,5;
+        } else {
+          badtrackcounter++;
+          // LOGP(info," track failed to propagate ..... collid:{} timeframe:{} eventno:{}",collisionId,mTimeFrameNo,mEventNo);
         }
+        //LOGP(info,"$$$$  Finished Propagating track ..... with track.x={} collid:{} timeframe:{} eventno:{} layerscount:{} layersfromprop:{}, trackpt:{}",ttrack.getX(),collisionId,mTimeFrameNo,mEventNo,totalNumberOfLayers, numberOfLayers, ttrack.getPt());
+        //}
       }
 
       collisionId++;
     }
-    LOGP(info,"Tracks in collisionid {} this event {} out of a total of {} good tracks from {} tracks, with {}% good events, track matched {} times numberoflayers:{}", collisionId, goodtrackcounter, trackcounter, (*mITSTPCTracks).size(), (float)goodtrackcounter/(float)trackcounter*100,numberOfTimeTrackMatched,totalNumberOfLayers);
+    //LOGP(info,"Tracks in collisionid {} this event {} out of a total of {} good tracks from {} tracks, with {}% good events, track matched {} times numberoflayers:{}", collisionId, goodtrackcounter, trackcounter, (*mITSTPCTracks).size(), (float)goodtrackcounter/(float)trackcounter*100,numberOfTimeTrackMatched,totalNumberOfLayers);
     /********************************************************************************************/
 
     /********************************************************************************************/
@@ -1442,6 +1505,6 @@ std::string RawDataManager::describeEvent()
   out << "## TF:Event " << mTimeFrameNo << ":" << mEventNo << ":  "
       //  << hits->getsize() << " hits   "
       << mTriggerRecord.getNumberOfDigits() << " digits and "
-      << mTriggerRecord.getNumberOfTracklets() << " tracklets";
+      << mTriggerRecord.getNumberOiTracklets() << " tracklets";
   return out.str();
 }

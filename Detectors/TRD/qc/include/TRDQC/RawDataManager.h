@@ -242,6 +242,9 @@ class RawDataManager
   
   float mAverageRadii[6] = {300.2f, 312.8f, 325.4f, 338.0f, 350.6f, 363.2f}; // used as default value in case no transformation matrix can be obtained
 //GPUTRDGeometry mGeogpu;     // TRD geometry
+// only used for those times we write the track to tracklet matching to a root tree.
+   TFile *mfile=nullptr;
+   TTree *moutputtree=nullptr;
 //
 //
 //const int kNStacks=5;
