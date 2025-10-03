@@ -151,7 +151,9 @@ class TrackSegment
   void setCollisionId(int id) { mCollisionId=id;}
 
   int getTriggerTime() const { return mTriggerTime;}
-  void setTriggerTime(float ttime) { mTriggerTime=ttime;}
+  void setTriggerTime(float time) { mTriggerTime=time;}
+  int getTrackTime() const { return mTrackTime;}
+  void setTrackTime(float time) { mTrackTime=time;}
 
   ChamberSpacePoint getStartPoint()const  { return mStartPoint; }
   ChamberSpacePoint getEndPoint() const { return mEndPoint; }
@@ -177,6 +179,8 @@ class TrackSegment
   void setStartX(float x){ mStartX=x;}
   void setStartY(float y){ mStartY=y;}
   void setStartZ(float z){ mStartZ=z;}
+  int getLayer(){ return mLayer;}
+  void setLayer(int layer){mLayer=layer;}
 
  protected:
   ChamberSpacePoint mStartPoint, mEndPoint;
@@ -186,6 +190,7 @@ class TrackSegment
   int mRefITSId;
   int mCollisionId{0};
   float mTriggerTime{0.0};
+  float mTrackTime{0.0};
   float mSagita; // this is findable from the TrackID
   int mDetector;
   int mDetector2; // for those instances where the track finishes a layer in a different detector to that which is starts in.
@@ -196,7 +201,7 @@ class TrackSegment
   float mStartY{0.0};
   float mStartZ{0.0};
   float mAlpha{0.0};
-  
+  int mLayer; 
 
 
 };
@@ -243,6 +248,8 @@ class CoordinateTransformer
 
   // recalculate given a new t0, cdrift and exb
   std::array<float, 3> RecalculateRCT(int det, float x, float y, float z, float t0, float vdrift, float exb);
+  std::array<float, 3> RecalculateRCT(int det, o2::trd::ChamberSpacePoint& point, float t0, float vdrift, float exb);
+  std::array<float, 3> RecalculateRCT(int det,o2::trd::ChamberSpacePoint& point);
   std::array<float, 3> RecalculateRCT(int det, float x, float y, float z);
 
   /// Legacy, less accurate method to convert local spatial to row/column/time coordinate.

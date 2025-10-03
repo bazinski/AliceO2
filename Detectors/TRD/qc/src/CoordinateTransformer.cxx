@@ -145,6 +145,26 @@ std::array<float, 3> CoordinateTransformer::RecalculateRCT(int det, float x, flo
   mVdrift=vdrift;
   return Local2RCT(det,x,y,z);
 }
+std::array<float, 3> CoordinateTransformer::RecalculateRCT(int det, ChamberSpacePoint& p, float t0, float vdrift, float exb)
+{
+  float x,y,z;
+  x=p.getX();
+  y=p.getY();
+  z=p.getZ();
+  mT0=t0;
+  mExB=exb;
+  mVdrift=vdrift;
+  return Local2RCT(det,x,y,z);
+}
+
+std::array<float, 3> CoordinateTransformer::RecalculateRCT(int det, ChamberSpacePoint& p)
+{
+  float x,y,z;
+  x=p.getX();
+  y=p.getY();
+  z=p.getZ();
+  return Local2RCT(det,x,y,z);
+}
 
 std::array<float, 3> CoordinateTransformer::RecalculateRCT(int det, float x, float y, float z)
 {
