@@ -369,7 +369,7 @@ std::vector<TrackSegment> RawDataSpan::makeMCTrackSegments()
 }
 
 /// The RawDataManager constructor: connects all data files and sets up trees, readers etc.
-RawDataManager::RawDataManager(std::filesystem::path dir, std::string treefname)
+RawDataManager::RawDataManager(std::filesystem::path dir)
 {
 
   if (!std::filesystem::exists(dir) || !std::filesystem::is_directory(dir)) {
@@ -556,7 +556,7 @@ RawDataManager::RawDataManager(std::filesystem::path dir, std::string treefname)
   mTransformer.init();
   mTransformer.setCalVdriftExB(calvdriftexb);
 LOGP(info,"Setup root tree for output");
-   mfile = new TFile(treefname.c_str(),"RECREATE");
+   mfile = new TFile("track2tracklet.root","RECREATE");
    moutputtree = new TTree("t","tracklets and tracksegments");
 
 }
@@ -935,25 +935,38 @@ bool RawDataManager::getYZAt(float xk, float b, float& y, float& z, o2::dataform
 
 int RawDataManager::findNearestTracklet(o2::trd::TrackSegment& tracksegment)
 {
-  auto triggertime = tracksegment.getTriggerTime();
   //loop through tracklets and find closest.
   //
   //
   //
   ////// WE ARE HERE !!!!!!!
-  for(auto& trgrec : mTriggerRecord){
-      auto triggertime = getTriggerTime(trgrec, *mTFIDs, mTimeFrameNo - 1);
-      if (!trackMatchesCollision(triggertime, tracksegment.getTrackTime())) {
-        continue;
-      }
-      for(int trklt=trgrec.getFirstTracklet(); trklt<trgrec.getFirstTracklet()+trgrec.getNumberOfTracklets();++trklt){
-       
-      }
-
-
+  float mindistance=2.0;
+  int closesttracklet=-1;
+  auto& trgrec = mTriggerRecord;
+  auto triggertime = getTriggerTime(trgrec, *mTFIDs, mTimeFrameNo - 1);
+  //if (!trackMatchesCollision(triggertime, tracksegment.getTrackTime())) {
+  //  continue;
+ // }
+  for(int trklt=trgrec.getFirstTracklet(); trklt<trgrec.getFirstTracklet()+trgrec.getNumberOfTracklets();++trklt){
+    auto tracklet=(*mTracklets)[trklt]; 
+    if(!(tracklet.getDetector()==tracksegment.getDetector())){
+      continue;
+    }
+    LOGP(info,"Comparing tracklet padrow {} to segment padrow {}",tracklet.getPadRow(),tracksegment.getPadRow());
+   // LOGP(info,"Comparing tracklet det {} to segment det {}",tracklet.getDetector(),tracksegment.getDetector());
+    if(!(tracklet.getPadRow()==tracksegment.getPadRow())){
+      continue;
+    }
+    float distance = std::abs(tracklet.getPadCol() - tracksegment.getPadColAtTimeBin());
+    if(distance<mindistance){
+      mindistance=distance;
+      closesttracklet=trklt;
+    }
   }
-
+  return closesttracklet;
 }
+
+
 int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e, float maxStep, float triggertime, int& glbTrkltIdxOffset, int collisionId)
 {
   if (debugprint)
@@ -1095,6 +1108,7 @@ int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e,
         //-------------------------------------/
         // convert global to local ROC x,y,z:
         rct = ctrans->RecalculateRCT(currDet, localpoint.X(), localpoint.Y(), localpoint.Z(), ctrans->GetT0(), ctrans->GetVdrift(), ctrans->GetExB());
+        //ChamberSpacePoint a(track.getRefTPC(),currDet,  localpoint.X(), localpoint.Y(), localpoint.Z(), rct, false);
         ChamberSpacePoint a(track.getRefTPC(),currDet,  localpoint.X(), localpoint.Y(), localpoint.Z(), rct, false);
 
         tracksegment.setStartPoint(a);
@@ -1116,7 +1130,7 @@ int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e,
         auto localpointendG = t2gmatrix * trackxyzend;
         auto localpointend = l2gmatrix * localpointendG;
         if (debugprint)
-          LOGP(info, "{} {} end of track local pos: {:.2f} {:.2f} {:.2f} pt:{:.4f} its:{} tpc:{}", __func__, __LINE__, localpointend.X(), localpointend.Y(), localpointend.Z(), track.getPt(), (int)track.getRefITS(), (int)track.getRefTPC());
+          LOGP(info, "{} {} end of track local pos: {:.2f} {:.2f} {:.2f} pt:{:.4f} its:{} tpc:{} rct:{}:{}:{}", __func__, __LINE__, localpointend.X(), localpointend.Y(), localpointend.Z(), track.getPt(), (int)track.getRefITS(), (int)track.getRefTPC(),rct[0],rct[1],rct[2]);
         rcts = ctrans->RecalculateRCT(currDet, localpointend.X(), localpointend.Y(), localpointend.Z(), ctrans->GetT0(), ctrans->GetVdrift(), ctrans->GetExB());
         ChamberSpacePoint ae(track.getRefTPC(),currDet, localpointend.X(), localpointend.Y(), localpointend.Z(), rcts, false);
         tracksegment.setEndPoint(ae);
@@ -1133,7 +1147,7 @@ int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e,
         //TODO what to do if the tracksegment spans a padrow or mcm ?
         //postprocess the tracksegment and split it up?
 
-        if (debugprint)
+       // if (debugprint)
           LOGP(info, "TrackSegment padrow:padcol:timebin {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f} for det:{} and padrow:{}", tracksegment.getStartPoint().getPadRowF(), tracksegment.getStartPoint().getPadCol(), tracksegment.getStartPoint().getTimeBin(), tracksegment.getEndPoint().getPadRowF(), tracksegment.getEndPoint().getPadCol(), tracksegment.getEndPoint().getTimeBin(),currDet,tracksegment.getPadRow());
         if (debugprint)
           LOGP(info, "TrackSegment  x:y:z {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f}", localpoint.X(), localpoint.Y(), localpoint.Z(), localpointend.X(), localpointend.Y(), localpointend.Z());
@@ -1143,7 +1157,7 @@ int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e,
         btracksegments.push_back(tracksegment);
         //find nearest tracklet to this track segment.
         int trackletindex=findNearestTracklet(tracksegment);
-        btracklet.push_back(mTracklets[trackletindex]);
+        btracklets.push_back((*mTracklets)[trackletindex]);
       } else {
         LOGP(info, "Track could not be propagated to radius of chamber {} which is layer: {}", currDet, iLayer);
       }
@@ -1327,8 +1341,8 @@ bool RawDataManager::nextTimeFrame(bool onlydigits)
   }
   //LOGP(info, "Building track segments for time frame {} that has {} tracks, with pt>1.0 {} with pt>2.0 {}", mTimeFrameNo, mITSTPCTracks->size(),highpttracks,higherpttracks);
   auto tracksegmentstart = std::chrono::high_resolution_clock::now(); // measure total processing time
-  //if(mTimeFrameNo==50 )buildTrackSegments(onlydigits);
-  buildTrackSegments(onlydigits);
+  if(mTimeFrameNo>6)buildTrackSegments(onlydigits);
+  //buildTrackSegments(onlydigits);
   //LOGP(info,"sorting ITSTPC track segments with size : {} mTimeFrameNo : {}",mITSTPCTracks_segments.size(),mTimeFrameNo);
   std::stable_sort(mITSTPCTracks_segments.begin(),mITSTPCTracks_segments.end(),comp_tracksegments);
   //tracksegements are now trd trigger order.
@@ -1505,6 +1519,6 @@ std::string RawDataManager::describeEvent()
   out << "## TF:Event " << mTimeFrameNo << ":" << mEventNo << ":  "
       //  << hits->getsize() << " hits   "
       << mTriggerRecord.getNumberOfDigits() << " digits and "
-      << mTriggerRecord.getNumberOiTracklets() << " tracklets";
+      << mTriggerRecord.getNumberOfTracklets() << " tracklets";
   return out.str();
 }
