@@ -144,7 +144,8 @@ class TrackSegment
 
   /// detector number
   int getDetector() const { return mStartPoint.getDetector(); }
-  float getPadRow() const { return mStartPoint.getPadRowF();}
+  float getPadRowF() const { return mStartPoint.getPadRowF();}
+  int getPadRow() const { return mStartPoint.getPadRow();}
   int getPadCol() const { return mStartPoint.getPadCol();}
    
   int getCollisionId() const { return mCollisionId;}
@@ -172,6 +173,10 @@ class TrackSegment
   float getStartX(){return mStartX;}
   float getStartY(){return mStartY;}
   float getStartZ(){return mStartZ;}
+  float getEventNo(){return mEventNo;}
+  float getTimeFrame(){return mEventNo;}
+  void setTimeFrame(int tf){mTimeFrame=tf;}
+  void setEventNo(int eventno){mEventNo=eventno;}
   void setPt(float pt){ mPt=pt;}
   void setSnp(float snp){ mSnp=snp;}
   void setPhi(float phi){ mPhi=phi;}
@@ -191,6 +196,8 @@ class TrackSegment
   int mCollisionId{0};
   float mTriggerTime{0.0};
   float mTrackTime{0.0};
+  int mTimeFrame{0};
+  int mEventNo{0};
   float mSagita; // this is findable from the TrackID
   int mDetector;
   int mDetector2; // for those instances where the track finishes a layer in a different detector to that which is starts in.

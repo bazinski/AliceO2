@@ -41,9 +41,9 @@ GPUd() int GeometryBase::getStack(float z, int layer) const
     zmax = pp->getRow0();
     int nrows = pp->getNrows();
     zmin = zmax - 2 * pp->getLengthOPad() - (nrows - 2) * pp->getLengthIPad() - (nrows - 1) * pp->getRowSpacing();
- //   printf("zmax : %f, zmin: %f nrows: %d, ipadlength : %f, padrowspacing: %f\n",zmax,zmin,nrows,pp->getLengthIPad(), pp->getRowSpacing());
+    //LOGP(info,"zmax : {}, zmin: {} nrows: {}, ipadlength : {}, padrowspacing: {}",zmax,zmin,nrows,pp->getLengthIPad(), pp->getRowSpacing());
   } while ((z < zmin) || (z > zmax));
-//    printf("z %f zmax : %f, zmin: %f \n",z,zmax,zmin);
+    //LOGP(info,"z {} zmax : {}, zmin: {} ",z,zmax,zmin);
   
   return istck;
 }

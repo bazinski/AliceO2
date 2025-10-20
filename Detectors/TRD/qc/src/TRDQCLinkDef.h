@@ -29,6 +29,9 @@
 #pragma link C++ class o2::trd::RawDisplay + ;
 #pragma link C++ class o2::trd::MCMDisplay + ;
 #pragma link C++ class o2::trd::TrackletTrackDebug + ;
+#pragma link C++ class std::vector<o2::trd::ChamberSpacePoint> + ;
+#pragma link C++ class std::vector<o2::trd::HitPoint> + ;
+#pragma link C++ class std::vector<o2::trd::TrackSegment> + ;
 #pragma link C++ class std::vector<o2::trd::TrackletTrackDebug> + ;
 
 
