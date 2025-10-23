@@ -413,6 +413,8 @@ bool Digitizer::convertSignalsToADC(SignalContainer& signalMapCont, DigitContain
   double adcConvert = mSimParam.getADCoutRange() / mSimParam.getADCinRange();   // ADC conversion factor
   double baseline = mSimParam.getADCbaseline() / adcConvert;                    // The electronics baseline in mV
   double baselineEl = baseline / convert;                                       // The electronics baseline in electrons
+  // seed random number for the random phase as no trigger sim for the pretrigphase of the digits.
+  std::srand(std::time(nullptr)); // seed once
 
   for (auto& signalMapIter : signalMapCont) {
     const auto key = signalMapIter.first;
@@ -467,17 +469,18 @@ bool Digitizer::convertSignalsToADC(SignalContainer& signalMapCont, DigitContain
     digits.emplace_back(det, row, col, adcs);
     if (mCreateSharedDigits) {
       auto digit = digits.back();
+      int randomphase = std::rand() % 4; // 0–3
       if ((digit.getChannel() == 2) && !((digit.getROB() % 2 != 0) && (digit.getMCM() % NMCMROBINCOL == 3))) {
         // shared left, if not leftmost MCM of left ROB of chamber
         int robShared = (digit.getMCM() % NMCMROBINCOL == 3) ? digit.getROB() + 1 : digit.getROB(); // for the leftmost MCM on a ROB the shared digit is added to the neighbouring ROB
         int mcmShared = (robShared == digit.getROB()) ? digit.getMCM() + 1 : digit.getMCM() - 3;
-        digits.emplace_back(det, robShared, mcmShared, NADCMCM - 1, adcs);
+        digits.emplace_back(det, robShared, mcmShared, NADCMCM - 1, adcs,-2);
         signalMapIter.second.isShared = true;
       } else if ((digit.getChannel() == 18 || digit.getChannel() == 19) && !((digit.getROB() % 2 == 0) && (digit.getMCM() % NMCMROBINCOL == 0))) {
         // shared right, if not rightmost MCM of right ROB of chamber
         int robShared = (digit.getMCM() % NMCMROBINCOL == 0) ? digit.getROB() - 1 : digit.getROB(); // for the rightmost MCM on a ROB the shared digit is added to the neighbouring ROB
         int mcmShared = (robShared == digit.getROB()) ? digit.getMCM() - 1 : digit.getMCM() + 3;
-        digits.emplace_back(det, robShared, mcmShared, digit.getChannel() - NCOLMCM, adcs);
+        digits.emplace_back(det, robShared, mcmShared, digit.getChannel() - NCOLMCM, adcs,randomphase);
         signalMapIter.second.isShared = true;
       }
     }

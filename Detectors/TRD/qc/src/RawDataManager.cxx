@@ -973,8 +973,8 @@ bool RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e
         //TODO what to do if the tracksegment spans a padrow or mcm ?
         //postprocess the tracksegment and split it up?
 
-        if (debugprint)
-          LOGP(info, "TrackSegment padrow:padcol:timebin {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f} for det {}", tracksegment.getStartPoint().getPadRowF(), tracksegment.getStartPoint().getPadCol(), tracksegment.getStartPoint().getTimeBin(), tracksegment.getEndPoint().getPadRowF(), tracksegment.getEndPoint().getPadCol(), tracksegment.getEndPoint().getTimeBin(),currDet);
+        //if (debugprint)
+          LOGP(info, "TrackSegment padrow:padcol:timebin {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f} for det {} padrow {} its:{} tpc:{} ", tracksegment.getStartPoint().getPadRowF(), tracksegment.getStartPoint().getPadCol(), tracksegment.getStartPoint().getTimeBin(), tracksegment.getEndPoint().getPadRowF(), tracksegment.getEndPoint().getPadCol(), tracksegment.getEndPoint().getTimeBin(),currDet,);
         if (debugprint)
           LOGP(info, "TrackSegment  x:y:z {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f}", localpoint.X(), localpoint.Y(), localpoint.Z(), localpointend.X(), localpointend.Y(), localpointend.Z());
         if (debugprint)
@@ -1229,8 +1229,8 @@ bool RawDataManager::nextTimeFrame()
   //  }
   LOGP(info, "Building track segments for time frame {} that has {} tracks", mTimeFrameNo, mITSTPCTracks->size());
   auto tracksegmentstart = std::chrono::high_resolution_clock::now(); // measure total processing time
-  if(mTimeFrameNo>50 && mTimeFrameNo<60)buildTrackSegments(false);
-  //buildTrackSegments(false);
+  //if(mTimeFrameNo>50 && mTimeFrameNo<60)buildTrackSegments(false);
+  buildTrackSegments(false);
   LOGP(info,"sorting ITSTPC track segments with size : {}",mITSTPCTracks_segments.size());
   std::stable_sort(mITSTPCTracks_segments.begin(),mITSTPCTracks_segments.end(),comp_tracksegments);
   //tracksegements are now trd trigger order.
