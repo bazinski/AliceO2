@@ -58,7 +58,7 @@ Digit::Digit(int det, int rob, int mcm, int channel, int pretrigphase) // add ad
 
 void Digit::setPreTrigPhase(int phase)
 {
-  mDetector = ((((phase)&0x3) << 12) | (mDetector & 0xfff));
+  mDetector = ((((phase) & 0x3) << 12) | (mDetector & 0xfff));
 }
 
 bool Digit::isSharedDigit() const
