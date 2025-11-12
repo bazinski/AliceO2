@@ -82,12 +82,12 @@ class ChamberSpacePoint
   // int getROB() const { return o2::trd::HelperMethods::getROBfromPad(mPadrow, mPadcol); }
 
  protected:
-  float mX, mY, mZ;
-  bool mInDrift;
-  int mID;
-  int mDetector;
-  float mPadrow, mPadcol, mTimebin;
-  int mCollisionId{0};
+  float mX{-999.0}, mY{-999.0}, mZ{-999.0};
+  bool mInDrift{false};
+  int mID{-1};
+  int mDetector{-99};
+  float mPadrow{-1.0}, mPadcol{-1.0}, mTimebin{-1.0};
+  int mCollisionId{-1};
 
   // static constexpr float xscale = 1.0 / (o2::trd::Geometry::cheight() + o2::trd::Geometry::cspace());
   // static constexpr float xoffset = o2::trd::Geometry::getTime0(0);

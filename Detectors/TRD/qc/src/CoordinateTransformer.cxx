@@ -49,7 +49,7 @@ CoordinateTransformer::CoordinateTransformer()
 
 std::array<float, 3> CoordinateTransformer::Local2RCT(int det, float x, float y, float z)
 {
-//  LOGP(info," {} {} det:{} x:{} y:{} z:{}",__func__,__LINE__,det,x,y,z);
+  //LOGP(info," {} {} det:{} x:{} y:{} z:{}",__func__,__LINE__,det,x,y,z);
   std::array<float, 3> rct;
 
   auto padPlane = mGeo->getPadPlane((det) % 6, (det / 6) % 5);
@@ -58,11 +58,14 @@ std::array<float, 3> CoordinateTransformer::Local2RCT(int det, float x, float y,
   int row = padPlane->getPadRow(z);
   if (row == 0 || row == padPlane->getNrows() - 1) {
     rct[0] = float(row) + padPlane->getPadRowOffsetROC(row, z) / padPlane->getLengthOPad();
+   // LOGP(info," {} {} rct[0]  row {} + padrowoffsetroc {} / padlengthO : {} for row {} and z {}",__func__,__LINE__, float(row), padPlane->getPadRowOffsetROC(row, z) , padPlane->getLengthOPad(),row,z);
   } else {
     rct[0] = float(row) + padPlane->getPadRowOffsetROC(row, z) / padPlane->getLengthIPad();
+  //  LOGP(info," {} {} rct[0] row {} + padrowoffsetroc {} / padlengthI : {} for row {} and z {}",__func__,__LINE__, float(row), padPlane->getPadRowOffsetROC(row, z) , padPlane->getLengthIPad(),row,z);
   }
 
   // the y-coordinate is calculated directly by the padPlane object
+  //LOGP(info," {} {} getpad({},{})",__func__,__LINE__, y,z);
   rct[1] = padPlane->getPad(y, z);
 
   // we calculate the time coordinate by hand
@@ -71,15 +74,18 @@ std::array<float, 3> CoordinateTransformer::Local2RCT(int det, float x, float y,
     //   account for offset between anode and cathode wires: add 0.35
     //   convert drift velocity to from cm/us to cm/timebin
     rct[2] = mT0 - (x + 0.35) / (mVdrift / 10.0);
+    //LOGP(info," {} {} rct[2] mT0:{} - ({}+0.35)/({}/10.0) = {}",__func__,__LINE__, mT0,x,mVdrift,rct[2]);
   } else {
     // anode region: very rough guess
     rct[2] = mT0 - 1.0 + fabs(x);
+    //LOGP(info," {} {} rct[2] mT0:{} - 1.0+fabs({})",__func__,__LINE__, mT0,x);
   }
 
   // Correct for Lorentz angle, but only in the drift region. ExB in the anode region causes a small offset (ca. 0.1
   // pads) that is constant for all clusters in the drift region.
   rct[1] += (x + 0.35) * mExB;
- // LOGP(info," {} {} det:{} rct:{:.2f}:{:.2f}:{:.2f}",__func__,__LINE__,det,rct[0],rct[1],rct[2]);
+  //LOGP(info," {} {} rct[1] mT0:{} - 1.0+fabs({})",__func__,__LINE__, mT0,x);
+  //LOGP(info," {} {} det:{} rct:{:.2f}:{:.2f}:{:.2f}",__func__,__LINE__,det,rct[0],rct[1],rct[2]);
   return rct;
 }
 
