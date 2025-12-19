@@ -194,6 +194,7 @@ class RawDataManager
   void prepareTracking();//std::array<int32_t,540*mMaxTriggers>& trdTrackletIndexArray);
   int findNearestTracklet(o2::trd::TrackSegment& tracksegment);
   int propagateTrack(o2::dataformats::TrackTPCITS& track, float e, float maxStep, float triggertime, int& glbTrkltIdxOffset,  int collisionId);
+  bool AdjustSector(o2::dataformats::TrackTPCITS& track);
   int32_t getSector(float alpha);
   float getAlphaOfSector(const int32_t sec);
   int32_t getDetectorNumber(const float zPos, const float alpha, const int32_t layer);

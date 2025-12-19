@@ -165,11 +165,13 @@ void RawDisplay::drawTracklets()
   TLine trkl;
   trkl.SetLineColor(kRed);
   trkl.SetLineWidth(3);
-
+  int counter=0;
   for (auto tracklet : mDataSpan.tracklets) {
     auto pos = PadColF(tracklet);
     auto slope = -tracklet.getSlopeBinSigned() * constants::GRANULARITYTRKLSLOPE / constants::ADDBITSHIFTSLOPE;
+    LOGP(info," tracklet : {} pos : {} slope : {} ",counter,pos,slope);
     trkl.DrawLine(pos, 0, pos + 30 * slope, 30);
+    ++counter;
   }
 }
 
@@ -236,7 +238,7 @@ void RawDisplay::drawMCTrackSegments()
 
 void RawDisplay::drawTracks(){
   TLine line;
-  line.SetLineColor(kGreen);
+  line.SetLineColor(kBlack);
   line.SetLineWidth(2.0);
 
   LOGP(info,"Drawing tracks with {} track segments" ,mDataSpan.tracks_itstpc_seg.size());

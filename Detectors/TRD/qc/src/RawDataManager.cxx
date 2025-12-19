@@ -952,7 +952,7 @@ int RawDataManager::findNearestTracklet(o2::trd::TrackSegment& tracksegment)
     if(!(tracklet.getDetector()==tracksegment.getDetector())){
       continue;
     }
-    LOGP(info,"Comparing tracklet padrow {} to segment padrow {}",tracklet.getPadRow(),tracksegment.getPadRow());
+    //LOGP(info,"Comparing tracklet padrow {} to segment padrow {}",tracklet.getPadRow(),tracksegment.getPadRow());
    // LOGP(info,"Comparing tracklet det {} to segment det {}",tracklet.getDetector(),tracksegment.getDetector());
     if(!(tracklet.getPadRow()==tracksegment.getPadRow())){
       continue;
@@ -964,6 +964,53 @@ int RawDataManager::findNearestTracklet(o2::trd::TrackSegment& tracksegment)
     }
   }
   return closesttracklet;
+}
+
+
+bool RawDataManager::AdjustSector(o2::dataformats::TrackTPCITS& track)
+{
+  //--------------------------------------------------------------------
+  // rotate track in new sector if necessary and
+  // propagate to previous x afterwards
+  // cancel if track crosses two sector boundaries
+  //--------------------------------------------------------------------
+  float alpha = mGeo->getAlpha();
+  float xTmp = track.getX();
+  float y = track.getY();
+  float yMax = track.getX() * tan(0.5f * alpha);
+  float alphaCurr = track.getAlpha();
+
+  if (std::abs(y) > 2.f * yMax) {
+      if(debugprint)LOGP(info,"AdjustSector: y too big {}>{} [max:{}] Track its:{} tpc:{} with pT = {} crossing two sector boundaries at x = {}", std::abs(y),2.f*yMax,yMax,(int)track.getRefITS(),(int)track.getRefTPC(), track.getPt(), track.getX());
+    return false;
+  }
+
+  int32_t nTries = 0;
+  while (std::abs(y) > yMax) {
+    if (nTries >= 2) {
+      LOGP(info,"AdjustSector: y too big {}>{} Track its:{} tpc:{} with pT = {} crossing two sector boundaries at x = {}", std::abs(y),yMax,(int)track.getRefITS(),(int)track.getRefTPC(), track.getPt(), track.getX());
+      return false;
+    }
+    int32_t sign = (y > 0) ? 1 : -1;
+    float alphaNew = alphaCurr + alpha * sign;
+    if (alphaNew > std::numbers::pi) {
+      alphaNew -= 2 * std::numbers::pi;
+    } else if (alphaNew < -std::numbers::pi) {
+      alphaNew += 2 * std::numbers::pi;
+    }
+    if (!track.rotate(alphaNew)) {
+       if(debugprint)LOGP(info,"AdjustSector: failed to rotate track by {} too big {}>{} Track its:{} tpc:{} with pT = {} crossing two sector boundaries at x = {}",alphaNew, std::abs(y),yMax,(int)track.getRefITS(),(int)track.getRefTPC(), track.getPt(), track.getX());
+      return false;
+    }
+    if (!mProp->PropagateToXBxByBz(track,xTmp,.8f, 2.f)) {
+    //if (!mProp->propagateToX(xTmp,.8f, 2.f)) {
+       if(debugprint)LOGP(info,"AdjustSector: failed to propagatetrack to xTmp:{}   y:: {}>{} Track its:{} tpc:{} with pT = {} crossing two sector boundaries at x = {}",xTmp,alphaNew, std::abs(y),yMax,(int)track.getRefITS(),(int)track.getRefTPC(), track.getPt(), track.getX());
+      return false;
+    }
+    y = track.getY();
+    ++nTries;
+  }
+  return true;
 }
 
 
@@ -1017,15 +1064,13 @@ int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e,
       continue;
     }
     // LOGP(info," {} {} track.x={}",__func__,__LINE__,track.getX());
-    /*
+    
     // rotate track in new sector in case of sector crossing
-    if (!AdjustSector(prop, trkWork)) {
-      if (ENABLE_INFO) {
-        GPUInfo("Adjusting sector failed for track %i candidate %i in layer %i", iTrk, iCandidate, iLayer);
-      }
+    if (!AdjustSector(track)) {
+       // LOGP(info,"Adjusting sector failed for layer {}", iLayer);
       continue;
     }
-*/
+
     // check if track is findable
     float mTPCVdrift = 2.58f;
     float side = 1.0f;
@@ -1147,7 +1192,7 @@ int RawDataManager::propagateTrack(o2::dataformats::TrackTPCITS& track, float e,
         //TODO what to do if the tracksegment spans a padrow or mcm ?
         //postprocess the tracksegment and split it up?
 
-       // if (debugprint)
+        if (debugprint)
           LOGP(info, "TrackSegment padrow:padcol:timebin {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f} for det:{} and padrow:{}", tracksegment.getStartPoint().getPadRowF(), tracksegment.getStartPoint().getPadCol(), tracksegment.getStartPoint().getTimeBin(), tracksegment.getEndPoint().getPadRowF(), tracksegment.getEndPoint().getPadCol(), tracksegment.getEndPoint().getTimeBin(),currDet,tracksegment.getPadRow());
         if (debugprint)
           LOGP(info, "TrackSegment  x:y:z {:.2f}:{:.2f}:{:.2f} --> {:.2f}:{:.2f}:{:.2f}", localpoint.X(), localpoint.Y(), localpoint.Z(), localpointend.X(), localpointend.Y(), localpointend.Z());
@@ -1341,7 +1386,7 @@ bool RawDataManager::nextTimeFrame(bool onlydigits)
   }
   //LOGP(info, "Building track segments for time frame {} that has {} tracks, with pt>1.0 {} with pt>2.0 {}", mTimeFrameNo, mITSTPCTracks->size(),highpttracks,higherpttracks);
   auto tracksegmentstart = std::chrono::high_resolution_clock::now(); // measure total processing time
-  if(mTimeFrameNo>6)buildTrackSegments(onlydigits);
+  buildTrackSegments(onlydigits);
   //buildTrackSegments(onlydigits);
   //LOGP(info,"sorting ITSTPC track segments with size : {} mTimeFrameNo : {}",mITSTPCTracks_segments.size(),mTimeFrameNo);
   std::stable_sort(mITSTPCTracks_segments.begin(),mITSTPCTracks_segments.end(),comp_tracksegments);

@@ -28,7 +28,7 @@ void Tracklet64::print() const
 #ifndef GPUCA_GPUCODE_DEVICE
 void Tracklet64::printStream(std::ostream& stream) const
 {
-  stream << "Tracklet64 : 0x" << std::hex << getTrackletWord();
+  stream << "Tracklet64 : 0x" << std::hex << getTrackletWord() << std::dec;
   stream << "\t hcid : " << getHCID() << " row:" << getPadRow() << " col:" << getColumn()
          << " Position:" << getPosition() << " slope:" << getSlope()
          << " PID:0x" << getPID()

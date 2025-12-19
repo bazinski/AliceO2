@@ -155,7 +155,7 @@ void TRDEventDisplayFeedSpec::writeDigits(gsl::span<const Digit> digits, int iEv
 {
   const auto& trigRec = mTrigRecs[iEvent];
   for (int det = 0; det < constants::MAXCHAMBER; det += 6) {
-    if (mUsedDetectors[det]) {
+    if (1){//mUsedDetectors[det]) {
       int sector = mGeo->getSector(det);
       int stack = mGeo->getStack(det);
 

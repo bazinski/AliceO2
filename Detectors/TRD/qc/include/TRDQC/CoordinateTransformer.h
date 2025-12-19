@@ -136,6 +136,12 @@ class TrackSegment
   {
     return mStartPoint.getPadCol() - getSlope() * (mStartPoint.getTimeBin() - timebin);
   }
+  
+  /// position of track segment at timebin 0
+  float getPadColAtTimeBinReverse(float timebin = 0) const
+  {
+    return mEndPoint.getPadCol() + getSlope() * (mEndPoint.getTimeBin() + timebin);
+  }
 
   float getSlope() const
   {

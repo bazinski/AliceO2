@@ -922,7 +922,7 @@ GPUd() bool GPUTRDTracker_t<TRDTRK, PROP>::AdjustSector(PROP* prop, TRDTRK* t) c
     if (!prop->rotate(alphaNew)) {
       return false;
     }
-    if (!prop->propagateToX(xTmp, .8f, 2.f)) {
+    if (!prop->mProp->PropagateToXBxByBz(mPropAux,xTmp, .8f, 2.f)) {
       return false;
     }
     y = t->getY();
