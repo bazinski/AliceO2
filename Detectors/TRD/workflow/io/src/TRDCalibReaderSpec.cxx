@@ -53,6 +53,7 @@ void TRDCalibReader::connectTree()
   };
   attachBranch("AngularResids", &mAngResidPtr);
   attachBranch("PulseHeight", &mPHDataPtr);
+  attachBranch("PulseHeightHD", &mPHDataPtr);
   attachBranch("calibdatagain", &mGainData);
   LOG(info) << "Loaded tree from " << mInFileName << " with " << mTree->GetEntries() << " entries";
 }
@@ -65,6 +66,7 @@ void TRDCalibReader::run(ProcessingContext& pc)
   LOG(info) << "Pushing angular residual histograms filled with " << mAngResids.getNEntries() << " entries at tree entry " << currEntry;
   pc.outputs().snapshot(Output{o2::header::gDataOriginTRD, "ANGRESHISTS", 0}, mAngResids);
   pc.outputs().snapshot(Output{o2::header::gDataOriginTRD, "PULSEHEIGHT", 0}, mPHData);
+  pc.outputs().snapshot(Output{o2::header::gDataOriginTRD, "PULSEHEIGHTHD", 0}, mPHDataHD);
   pc.outputs().snapshot(Output{o2::header::gDataOriginTRD, "GAINCALIBHISTS", 0}, mGainData);
 
   if (mTree->GetReadEntry() + 1 >= mTree->GetEntries()) {
@@ -78,6 +80,7 @@ DataProcessorSpec getTRDCalibReaderSpec()
   std::vector<OutputSpec> outputs;
   outputs.emplace_back(o2::header::gDataOriginTRD, "ANGRESHISTS", 0, Lifetime::Timeframe);
   outputs.emplace_back(o2::header::gDataOriginTRD, "PULSEHEIGHT", 0, Lifetime::Timeframe);
+  outputs.emplace_back(o2::header::gDataOriginTRD, "PULSEHEIGHTHD", 0, Lifetime::Timeframe);
   outputs.emplace_back(o2::header::gDataOriginTRD, "GAINCALIBHISTS", 0, Lifetime::Timeframe);
 
   return DataProcessorSpec{

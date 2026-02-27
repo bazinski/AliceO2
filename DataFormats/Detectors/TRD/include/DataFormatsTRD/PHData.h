@@ -103,10 +103,10 @@ class PHDataHD
 
   // the ADC sum for given time bin for up to three neighbours
   int getADC() const { return mADC; }
-  // the TRD detector number
-  int getDetector() const { return mDetector; }
+  // the TRD detector number, it comes in as in digit class with the phase
+  int getDetector() const { return mDetector & 0xfff; }
   // the given time bin
-  int getTimebin() const { return mTimeBin; }
+  int getTimebin() const { return (mTimeBin << 2) + ((mDetector >> 12) & 0x3); }
   // number of neighbouring digits for which the ADC is accumulated
   int getNNeighbours() const { return mNNeighbours; }
   // the origin of this point: digit on ITS-TPC-TRD track, ... (see enum Origin above)

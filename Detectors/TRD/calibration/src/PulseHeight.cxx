@@ -180,17 +180,17 @@ void PulseHeight::findDigitsForTracklet(const Tracklet64& trklt, const TriggerRe
       mDistances.push_back(digitTrackletDistance);
       for (int iTb = 0; iTb < TIMEBINS; ++iTb) {
         uint16_t phVal = digit.getADC()[iTb];
-        uint16_t phValHD = (digit.getADC()[iTb] << 2) + digit.getPreTrigPhase();
+        uint16_t phValHD = digit.getADC()[iTb];
         if (left) {
           phVal += digitLeft->getADC()[iTb];
-          phValHD += (digitLeft->getADC()[iTb] << 2) + digit.getPreTrigPhase();
+          phValHD += digitLeft->getADC()[iTb];
         }
         if (right) {
           phVal += digitRight->getADC()[iTb];
-          phValHD += (digitRight->getADC()[iTb] << 2) + digit.getPreTrigPhase();
+          phValHD += digitRight->getADC()[iTb];
         }
         mPHValues.emplace_back(phVal, trkltDet, iTb, nNeighbours, type);
-        mPHValuesHD.emplace_back(phValHD, trkltDet, iTb, nNeighbours, type);
+        mPHValuesHD.emplace_back(phValHD, digit.getDetectorInFull(), iTb, nNeighbours, type);
       }
     }
   }

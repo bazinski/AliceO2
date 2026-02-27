@@ -45,6 +45,7 @@ class TRDCalibReader : public o2::framework::Task
   std::string mInTreeName{"calibdata"};
   o2::trd::AngularResidHistos mAngResids, *mAngResidPtr = &mAngResids;
   std::vector<o2::trd::PHData> mPHData, *mPHDataPtr = &mPHData;
+  std::vector<o2::trd::PHDataHD> mPHDataHD, *mPHDataHDPtr = &mPHDataHD;
   std::vector<int> mGainData, *mGainDataPtr = &mGainData;
 };
 
