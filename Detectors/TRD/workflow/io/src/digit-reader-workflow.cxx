@@ -50,6 +50,7 @@ WorkflowSpec defineDataProcessing(ConfigContext const& configcontext)
   auto dataSubspec = configcontext.options().get<int>("digit-subspec");
   WorkflowSpec specs;
   specs.emplace_back(o2::trd::getTRDDigitReaderSpec(useMC, sendTriggerRecords, dataSubspec));
+  specs.emplace_back(o2::trd::getTRDTrackletReaderSpec(useMC, sendTriggerRecords, dataSubspec));
   o2::raw::HBFUtilsInitializer hbfIni(configcontext, specs);
   return specs;
 }
