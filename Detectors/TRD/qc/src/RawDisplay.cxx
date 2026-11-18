@@ -19,6 +19,9 @@
 #include <TCanvas.h>
 #include <TH2.h>
 #include <TLine.h>
+#include <TLegend.h>
+
+#include <algorithm>
 #include <TMarker.h>
 
 using namespace o2::trd;
@@ -27,7 +30,7 @@ namespace o2::trd
 {
 
 /// Modified version of o2::trd::Tracklet64::getPadCol returning a float
-float PadColF(o2::trd::Tracklet64& tracklet)
+float PadColF(const o2::trd::Tracklet64& tracklet)
 {
   // obtain pad number relative to MCM center
   float padLocal = tracklet.getPositionBinSigned() * constants::GRANULARITYTRKLPOS;
@@ -116,6 +119,60 @@ void RawDisplay::drawTracklets()
     auto pos = PadColF(tracklet);
     auto slope = -tracklet.getSlopeBinSigned() * constants::GRANULARITYTRKLSLOPE / constants::ADDBITSHIFTSLOPE;
     trkl.DrawLine(pos, 0, pos + 30 * slope, 30);
+  }
+}
+
+void RawDisplay::drawRecoTracks(o2::dataformats::GlobalTrackID::mask_t sources)
+{
+  if (!mPad || !mDigitsHisto || mDataSpan.recoTracks.empty()) {
+    return;
+  }
+  mPad->cd();
+  using ID = o2::dataformats::GlobalTrackID;
+  constexpr std::array<int, 4> colors{kAzure + 2, kMagenta + 2, kGreen + 3, kOrange + 7};
+  constexpr std::array<const char*, 4> labels{"ITS-TPC", "ITS-TPC-TRD", "ITS-TPC-TOF", "ITS-TPC-TRD-TOF"};
+  std::array<TLine*, 4> examples{};
+  TLegend legend(0.12, 0.74, 0.42, 0.89);
+  const auto* axis = mDigitsHisto->GetXaxis();
+  for (const auto& track : mDataSpan.recoTracks) {
+    const bool showTOF = track.hasTOF && sources[track.tofMatch.getSource()];
+    if (!showTOF && (!track.parentAssociated || !sources[track.track.getSource()])) {
+      continue;
+    }
+    const int style = int(track.track.getSource() == ID::ITSTPCTRD) + 2 * showTOF;
+    const bool attached = track.trackletIndex >= 0;
+    float x0 = track.pad0, y0 = track.time0, x1 = track.pad1, y1 = track.time1;
+    if (attached) {
+      const auto& raw = track.tracklet;
+      x0 = PadColF(raw);
+      y0 = 0.f;
+      y1 = mDigitsHisto->GetYaxis()->GetXmax();
+      const float slope = -raw.getSlopeBinSigned() * constants::GRANULARITYTRKLSLOPE / constants::ADDBITSHIFTSLOPE;
+      x1 = x0 + y1 * slope;
+    }
+    if (std::max(x0, x1) < axis->GetXmin() || std::min(x0, x1) > axis->GetXmax()) {
+      continue;
+    }
+    const float start = std::clamp(x0, float(axis->GetXmin()), float(axis->GetXmax()));
+    const float end = std::clamp(x1, float(axis->GetXmin()), float(axis->GetXmax()));
+    if (x0 != x1) {
+      const float slope = (y1 - y0) / (x1 - x0);
+      y1 = y0 + (end - x0) * slope;
+      y0 += (start - x0) * slope;
+    }
+    TLine line;
+    line.SetLineColor(colors[style]);
+    line.SetLineWidth(attached ? 1 : 2);
+    // The thin solid line highlights an attached raw tracklet. The thicker
+    // line is the projected track crossing, drawn in the same source colour.
+    auto* drawn = line.DrawLine(start, y0, end, y1);
+    if (!examples[style]) {
+      examples[style] = drawn;
+      legend.AddEntry(drawn, labels[style], "l");
+    }
+  }
+  if (legend.GetNRows()) {
+    legend.DrawClone();
   }
 }
 

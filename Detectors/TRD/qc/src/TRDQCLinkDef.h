@@ -21,6 +21,7 @@
 #pragma link C++ class o2::trd::HalfChamberStatusQC + ;
 
 #pragma link C++ class o2::trd::RawDataManager + ;
+#pragma link C++ class o2::trd::RecoTrackOverlay + ;
 #pragma link C++ class o2::trd::RawDataSpan + ;
 #pragma link C++ class o2::trd::ChamberSpacePoint + ;
 #pragma link C++ class o2::trd::HitPoint + ;

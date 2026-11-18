@@ -9,13 +9,26 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
+#include "DetectorsBase/GeometryManager.h"
+#include "DetectorsBase/Propagator.h"
+
 /// This macro demonstrates how to use the o2::trd::RawDataManager and
 /// o2::trd:MCMDisplay to visualize TRD digits and tracklets.
 /// You probably want to copy it and adjust it for your use case.
-void DrawMCMs(std::string dirname = ".")
+/// Pass the run's geometry and GRP files to enable projected tracks. The
+/// ITS-TPC timing overlays also require o2_tfidinfo.root in dirname.
+void DrawMCMs(std::string dirname = ".", std::string geometry = "", std::string grp = "",
+              float timeWindowMUS = 2.2f)
 {
   // instantiate the class that handles all the data access
   auto dman = o2::trd::RawDataManager(dirname);
+  if (!geometry.empty() && !grp.empty()) {
+    o2::base::GeometryManager::loadGeometry(geometry);
+    if (o2::base::Propagator::initFieldFromGRP(grp) == 0) {
+      dman.setTrackProjectionBz(o2::base::Propagator::Instance()->getNominalBz());
+    }
+  }
+  dman.setTrackTimeWindow(timeWindowMUS);
   cout << dman.describeFiles() << endl;
 
   // Here we can specify how many plots we want for each MCMs. The default is 0.
@@ -47,12 +60,12 @@ void DrawMCMs(std::string dirname = ".")
 
       cout << dman.describeEvent() << endl;
 
-      for (auto& mcm : dman.getEvent().iterateByMCM()) {
+      for (auto& mcm : ev.iterateByMCM()) {
         // skip MCMs without digits
         if (mcm.digits.size() == 0) {
           continue;
         }
-        if (mcm.tracklets.size() == 0) {
+        if (mcm.tracklets.empty() && mcm.recoTracks.empty()) {
           continue;
         }
 
@@ -89,6 +102,7 @@ void DrawMCMs(std::string dirname = ".")
 
         disp.drawHits();
         disp.drawMCTrackSegments();
+        disp.drawRecoTracks();
       }
 
     } // event/trigger record loop

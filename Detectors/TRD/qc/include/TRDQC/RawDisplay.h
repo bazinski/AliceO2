@@ -34,6 +34,8 @@ class RawDisplay
   RawDisplay(RawDataSpan& dataspan, TVirtualPad* pad = nullptr);
   void drawDigits(std::string opt = "colz");
   void drawTracklets();
+  /// Draw reconstructed crossings and mark TRD tracklets used in the fit.
+  void drawRecoTracks(o2::dataformats::GlobalTrackID::mask_t sources = o2::dataformats::GlobalTrackID::MASK_ALL);
   void drawClusters();
   void drawHits();
   void drawMCTrackSegments();
@@ -42,6 +44,7 @@ class RawDisplay
   {
     drawDigits();
     drawTracklets();
+    drawRecoTracks();
   }
 
  protected:
