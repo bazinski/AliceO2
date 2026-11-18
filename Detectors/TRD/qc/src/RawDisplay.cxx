@@ -22,6 +22,8 @@
 #include <TLegend.h>
 
 #include <algorithm>
+#include <array>
+#include <stdexcept>
 #include <TMarker.h>
 
 using namespace o2::trd;
@@ -74,7 +76,6 @@ MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad)
 
   mName = Form("det%03d_rob%d_mcm%02d", det, rob, mcm);
   mDesc = Form("Detector %02d_%d_%d (%03d) - MCM %d:%02d", det / 30, (det % 30) / 6, det % 6, det, rob, mcm);
-  ;
 
   // MCM column number on ROC [0..7]
   int mcmcol = mcm % constants::NMCMROBINCOL + HelperMethods::getROBSide(rob) * constants::NMCMROBINCOL;
@@ -82,23 +83,86 @@ MCMDisplay::MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad)
   mFirstPad = mcmcol * constants::NCOLMCM - 1;
   mLastPad = (mcmcol + 1) * constants::NCOLMCM + 2;
 
-  if (pad == nullptr) {
-    mPad = new TCanvas(mName.c_str(), mDesc.c_str(), 800, 600);
+  createDigitHistogram(800);
+  for (const auto& digit : mDataSpan.digits) {
+    fillDigit(digit);
+  }
+}
+
+PadRowDisplay::PadRowDisplay(RawDataSpan& rowData, TVirtualPad* pad)
+  : RawDisplay(rowData, pad)
+{
+  int detector = -1, row = -1;
+  auto checkRow = [&](int det, int padRow) {
+    if (detector < 0) {
+      detector = det;
+      row = padRow;
+    }
+    if (det != detector || padRow != row) {
+      throw std::invalid_argument("PadRowDisplay requires data from a single chamber pad row");
+    }
+  };
+
+  std::array<const Digit*, constants::NCOLUMN> digitsByPad{};
+  for (const auto& digit : rowData.digits) {
+    checkRow(digit.getDetector(), digit.getPadRow());
+    const int col = digit.getPadCol();
+    if (col < 0 || col >= constants::NCOLUMN) {
+      continue;
+    }
+    auto*& selected = digitsByPad[col];
+    // Read one ADC waveform per physical pad, preferring the primary channel.
+    if (!selected || (selected->isSharedDigit() && !digit.isSharedDigit())) {
+      selected = &digit;
+    }
+  }
+  for (const auto& tracklet : rowData.tracklets) {
+    checkRow(tracklet.getDetector(), tracklet.getPadRow());
+  }
+  for (const auto& hit : rowData.hits) {
+    checkRow(hit.getDetector(), hit.getPadRow());
+  }
+  for (const auto& track : rowData.recoTracks) {
+    checkRow(track.detector, track.row);
+  }
+  if (detector < 0) {
+    throw std::invalid_argument("PadRowDisplay requires a non-empty pad-row span");
+  }
+
+  mName = Form("det%03d_row%02d", detector, row);
+  mDesc = Form("Detector %02d_%d_%d (%03d) - Pad row %d",
+               HelperMethods::getSector(detector), HelperMethods::getStack(detector),
+               HelperMethods::getLayer(detector), detector, row);
+  mFirstPad = 0;
+  mLastPad = constants::NCOLUMN;
+  createDigitHistogram(1200);
+  for (const auto* digit : digitsByPad) {
+    if (digit) {
+      fillDigit(*digit);
+    }
+  }
+}
+
+void RawDisplay::createDigitHistogram(int canvasWidth)
+{
+  if (!mPad) {
+    mPad = new TCanvas(mName.c_str(), mDesc.c_str(), canvasWidth, 600);
   } else {
-    mPad = pad;
     mPad->SetName(mName.c_str());
     mPad->SetTitle(mDesc.c_str());
   }
-
-  mDigitsHisto = new TH2F(mName.c_str(), (mDesc + ";pad;time bin").c_str(), (mLastPad - mFirstPad), mFirstPad, mLastPad, 30, 0., 30.);
-
-  for (auto digit : mDataSpan.digits) {
-    auto adc = digit.getADC();
-    for (int tb = 0; tb < 30; ++tb) {
-      mDigitsHisto->Fill(digit.getPadCol(), tb, adc[tb]);
-    }
-  }
+  mDigitsHisto = new TH2F(mName.c_str(), (mDesc + ";pad;time bin").c_str(),
+                         mLastPad - mFirstPad, mFirstPad, mLastPad,
+                         constants::TIMEBINS, 0., constants::TIMEBINS);
   mDigitsHisto->SetStats(0);
+}
+
+void RawDisplay::fillDigit(const Digit& digit)
+{
+  const auto& adc = digit.getADC();
+  for (int tb = 0; tb < constants::TIMEBINS; ++tb) {
+    mDigitsHisto->Fill(digit.getPadCol(), tb, adc[tb]);
+  }
 }
 
 void RawDisplay::drawDigits(std::string opt)

@@ -13,3 +13,7 @@ o2_add_test_root_macro(DrawMCMs.C
                        PUBLIC_LINK_LIBRARIES O2::TRDBase
                                              O2::TRDQC
                        LABELS trd)
+
+o2_add_test_root_macro(DrawPadRow.C
+                       PUBLIC_LINK_LIBRARIES O2::TRDQC
+                       LABELS trd)

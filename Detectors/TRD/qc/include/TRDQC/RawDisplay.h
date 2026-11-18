@@ -48,6 +48,8 @@ class RawDisplay
   }
 
  protected:
+  void createDigitHistogram(int canvasWidth);
+  void fillDigit(const Digit& digit);
   RawDataSpan& mDataSpan;
   TVirtualPad* mPad{0};
   TH2* mDigitsHisto{0};
@@ -64,6 +66,14 @@ class MCMDisplay : public RawDisplay
 {
  public:
   MCMDisplay(RawDataSpan& mcmdata, TVirtualPad* pad = nullptr);
+};
+
+/// Display one chamber pad row across all eight MCMs.
+class PadRowDisplay : public RawDisplay
+{
+ public:
+  /// Pass a span from RawDataSpan::iterateByPadRow().
+  PadRowDisplay(RawDataSpan& rowData, TVirtualPad* pad = nullptr);
 };
 
 } // namespace o2::trd

@@ -29,5 +29,6 @@
 #pragma link C++ class o2::trd::CoordinateTransformer + ;
 #pragma link C++ class o2::trd::RawDisplay + ;
 #pragma link C++ class o2::trd::MCMDisplay + ;
+#pragma link C++ class o2::trd::PadRowDisplay + ;
 
 #endif
